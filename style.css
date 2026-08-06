@@ -503,6 +503,54 @@
   filter: blur(calc(var(--hero-scroll) * 6px));
 }
 
+/* Services section intro — "BRXDGE TO POSSIBILITIES" + the CTA buttons,
+   relocated here from the hero. .hero-title/.hero-title-mask/.hero-title-
+   line are reused for a matching look, but two things need re-hooking
+   since ".hero h1"/".hero h1 em" and the .hero-anim/.play entrance are
+   both scoped to .hero specifically and don't reach this element:
+     1. Typography (size/weight/chrome-gradient em) is redeclared here,
+        scoped to #services instead.
+     2. The per-line mask reveal is re-armed off THIS section's own
+        scroll-into-view .reveal/.active toggle (see the sectionObserver
+        in script.js) rather than .hero-anim.play — that trigger only
+        ever arms the first .hero-anim element in the document, so a
+        second copy of the title here would never fire and would stay
+        stuck at .hero-title-line's invisible at-rest state. */
+.services-intro{
+  max-width: 960px;
+  margin: 0 auto 56px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.services-intro .hero-title{
+  font-size: clamp(80px, 12vw, 144px);
+  font-weight: 1000;
+  line-height: 1.02;
+}
+.services-intro .hero-title em{
+  font-style: normal;
+  background: var(--chrome);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: chrome-sweep 10s ease-in-out infinite alternate;
+}
+#services.reveal.active .services-intro .hero-title-line{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0px);
+}
+.services-intro .hero-actions{ margin-top: 44px; justify-content: center; }
+@media (max-width: 760px){
+  .services-intro{ margin-bottom: 36px; }
+  .services-intro .hero-title{ font-size: clamp(36px, 9vw, 56px); }
+}
+@media (prefers-reduced-motion: reduce){
+  .services-intro .hero-title em{ animation: none !important; background-position: 50% 50% !important; }
+}
+
 /* Initial state: dramatically offset; direction depends on data-reveal.
    Uses only transform + opacity (no filter/3D-perspective) so the browser
    can composite the animation on the GPU instead of repainting each frame. */
@@ -605,6 +653,30 @@
   letter-spacing: -0.02em;
   display: block;
   align-items: center;
+}
+
+/* ---------- BRIDGE CROSSING FLASH ----------
+   Sits above the page (below the loader, which is only ever visible on
+   first load anyway) and stays fully transparent/inert until
+   brand-orbit.js adds .flash-active at the peak of the click-to-cross
+   burst — a quick bright wash that ties the bridge's expand-and-fade to
+   the smooth-scroll happening underneath it, so the two read as one
+   transition instead of two coincidentally-overlapping animations. */
+.cross-flash{
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.95), rgba(235,238,244,0.4) 42%, transparent 74%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+.cross-flash.flash-active{
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+@media (prefers-reduced-motion: reduce){
+  .cross-flash{ transition: none !important; opacity: 0 !important; }
 }
 
   #loader {
@@ -988,6 +1060,97 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   .hero{ padding:180px 0 100px; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; }
   .hero-grid{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:40px; width:100%; }
   .hero-copy{ display:flex; flex-direction:column; align-items:center; max-width:960px; margin:0 auto; position:relative; z-index:1; }
+
+  /* ---------- HERO 3D BRAND MARK ----------
+     Sits above the headline, driven by brand-orbit.js (three.js). Ships
+     "fallback-visible" by default — the flat SVG bridge mark shows until
+     brand-orbit.js confirms WebGL actually works and adds .is-ready, at
+     which point the canvas takes over and the fallback hides. That order
+     (fallback first, canvas second) means a slow/failed script load or an
+     unsupported browser never leaves an empty gap where the mark should be. */
+  .hero-orbit-mark{
+    position: relative;
+    width: clamp(280px, 38vw, 560px);
+    aspect-ratio: 2 / 1.05;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* It's a <button> now (click-to-cross interaction), so strip all the
+       default button chrome back down to the plain layout box this was
+       already designed around. */
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hero-orbit-mark:focus-visible{
+    outline: 2px solid rgba(232,234,240,0.65);
+    outline-offset: 12px;
+    border-radius: 12px;
+  }
+  .hero-orbit-mark::before{
+    content: '';
+    position: absolute;
+    inset: -20% -10%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(220,224,232,0.30), transparent 68%);
+    filter: blur(30px);
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, filter 0.4s ease;
+  }
+  /* Hover/focus invites the click — a quiet brighten, nothing flashy. */
+  .hero-orbit-mark:hover::before,
+  .hero-orbit-mark:focus-visible::before{ opacity: 1.4; }
+  .hero-orbit-mark:hover canvas,
+  .hero-orbit-mark:focus-visible canvas{ filter: brightness(1.08); }
+  /* Spin-up phase of the click interaction (see brand-orbit.js) — the glow
+     flares brighter while the bridge whirls, ahead of the burst below. */
+  .hero-orbit-mark.is-launching::before{
+    opacity: 2;
+    filter: blur(36px);
+  }
+  /* Burst: the mark expands past the viewport and fades — the same
+     "expand past the viewport and fade like a burst" language #introOverlay
+     already uses for its own dismissal elsewhere in this file — right
+     before brand-orbit.js smooth-scrolls to the next section. */
+  .hero-orbit-mark.mark-burst{
+    transition: transform 0.62s cubic-bezier(0.6, 0, 0.9, 0.15), opacity 0.5s ease 0.14s;
+    transform: scale(5.2);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .hero-orbit-mark canvas{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: none;
+    transition: filter 0.3s ease;
+  }
+  .hero-orbit-mark.is-ready canvas{ display: block; }
+  .hero-orbit-fallback{
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-orbit-fallback svg{ width: 58%; height: 58%; }
+  .hero-orbit-mark.is-ready .hero-orbit-fallback{ display: none; }
+  /* Plays first in the hero's staggered entrance, ahead of the eyebrow. */
+  .hero-orbit-mark.hero-anim-item{ transition-delay: 0.02s; }
+  @media (max-width: 640px){
+    .hero-orbit-mark{ width: clamp(220px, 62vw, 340px); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hero-orbit-mark.mark-burst{ transition: none !important; transform: none !important; opacity: 1 !important; }
+  }
 
   /* Fixed glow shapes anchored to the hero's left/right edges. Hovering
      over that side "smudges" it — grows, blurs further, and deepens —
