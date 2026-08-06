@@ -32,7 +32,7 @@ app.use(express.json()); // Essential for receiving JSON from your frontend
 
 // --- FILE STORAGE SETUP (uploads still live on disk — only the talent
 // data itself moved into the database) ---
-const uploadDir = 'data/uploads';
+const uploadDir = 'uploads';
 const fs = require('fs');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
@@ -90,7 +90,7 @@ app.post('/api/logout', (req, res) => {
 app.use(express.static(path.join(__dirname, '..')));
 
 // Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Image Upload Endpoint — requires a signed-in manager
 app.post('/upload', requireAuth, upload.single('talentImage'), (req, res) => {
