@@ -6,8 +6,27 @@
 // when the server starts — that's normal and harmless.)
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
+const fs = require('fs');
 
-const db = new DatabaseSync(path.join(__dirname, 'brxdge.db'));
+// Persistent volume directory. On Railway this is mounted at
+// talent-backend/data (see the Volumes tab in the Railway dashboard) so the
+// database survives every future redeploy instead of living on the
+// container's temporary disk. DATA_DIR isn't set anywhere, so this just
+// falls back to a plain local "data" folder next to this file — meaning
+// local development without a volume still works exactly the same.
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const DB_PATH = path.join(DATA_DIR, 'brxdge.db');
+// The original, git-committed database — never written to again once
+// DB_PATH exists. Its only job is seeding a brand-new/empty volume on
+// first boot, so a fresh volume doesn't start out blank.
+const SEED_DB_PATH = path.join(__dirname, 'brxdge.db');
+if (!fs.existsSync(DB_PATH) && fs.existsSync(SEED_DB_PATH)) {
+  fs.copyFileSync(SEED_DB_PATH, DB_PATH);
+}
+
+const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;'); // so ON DELETE CASCADE actually cascades
 
 db.exec(`
