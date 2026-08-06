@@ -1058,8 +1058,48 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
 
   /* ---------- HERO / ORBIT ---------- */
   .hero{ padding:180px 0 100px; min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; overflow:hidden; }
-  .hero-grid{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:40px; width:100%; }
+  .hero-grid{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; width:100%; }
   .hero-copy{ display:flex; flex-direction:column; align-items:center; max-width:960px; margin:0 auto; position:relative; z-index:1; }
+  /* The BRXDGE / CA wordmark spans use the shared .eyebrow class, which
+     carries its own margin-bottom for use elsewhere on the page — here
+     that stacked on top of .hero-grid's own gap, doubling up the space
+     between "BRXDGE" and "CA". Zeroing it out leaves gap as the single
+     source of truth for spacing in this cluster. */
+  .hero-grid .eyebrow{ margin-bottom: 0; line-height: 1; }
+  /* Pull "CA" up closer to "BRXDGE" specifically, without touching the
+     gap between the bridge and "BRXDGE" above it (that one still uses
+     the plain .hero-grid gap and looks right as-is). This adjacent-sibling
+     selector only matches an .eyebrow directly following another .eyebrow
+     — i.e. just this pair — since the bridge button isn't itself an
+     .eyebrow. */
+  .hero-grid .eyebrow + .eyebrow{ margin-top: -12px; }
+
+  /* EST. / MMXXVI — flank the bridge mark directly (one word on each side)
+     instead of sitting together as a single line above it. Positioned
+     absolute against .hero-orbit-mark itself (position:relative, a fixed
+     clamp()'d box), vertically centered on it via top:50%/translateY(-50%)
+     so they track the mark's own size at every breakpoint down to where
+     there's no longer room beside it (see the mobile override below). */
+  .hero-orbit-flank{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    z-index: 1;
+  }
+  .hero-orbit-flank--left{ right: calc(100% + 28px); text-align: right; }
+  .hero-orbit-flank--right{ left: calc(100% + 28px); text-align: left; }
+  @media (max-width: 760px){
+    /* Not enough room beside a mark that's already down near its 280px
+       floor at this width — rather than crowd or truncate, drop them
+       instead of forcing an awkward fit. */
+    .hero-orbit-flank{ display: none; }
+  }
 
   /* ---------- HERO 3D BRAND MARK ----------
      Sits above the headline, driven by brand-orbit.js (three.js). Ships
@@ -1070,7 +1110,7 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
      unsupported browser never leaves an empty gap where the mark should be. */
   .hero-orbit-mark{
     position: relative;
-    width: clamp(280px, 38vw, 560px);
+    width: clamp(320px, 42vw, 640px);
     aspect-ratio: 2 / 1.05;
     margin: 0 auto;
     display: flex;
@@ -1146,7 +1186,12 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   /* Plays first in the hero's staggered entrance, ahead of the eyebrow. */
   .hero-orbit-mark.hero-anim-item{ transition-delay: 0.02s; }
   @media (max-width: 640px){
-    .hero-orbit-mark{ width: clamp(220px, 62vw, 340px); }
+    /* Meaningfully bigger than the old 220-340px range — the bridge was
+       reading small and lonely on phones compared to how much presence
+       it has on desktop. 88vw lets it fill most of the screen width
+       while the floor/ceiling keep it sane on the smallest and largest
+       phones. */
+    .hero-orbit-mark{ width: clamp(280px, 88vw, 420px); }
   }
   @media (prefers-reduced-motion: reduce){
     .hero-orbit-mark.mark-burst{ transition: none !important; transform: none !important; opacity: 1 !important; }

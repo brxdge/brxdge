@@ -229,7 +229,7 @@
   
 
     <div class="hero-copy hero-anim">
-      <span class="eyebrow hero-anim-item">EST. MMXXVI</span>
+      <span class="eyebrow hero-anim-item">Tap the Object</span>
 
       <div class="hero-side-zone hero-side-zone--left"><div class="hero-side-glow"></div></div>
   <div class="hero-side-zone hero-side-zone--right"><div class="hero-side-glow"></div></div>
@@ -242,6 +242,12 @@
          the click-to-cross interaction brand-orbit.js wires up is keyboard-
          operable for free — Enter/Space trigger it exactly like a click. -->
     <button type="button" class="hero-orbit-mark hero-anim-item" id="heroOrbitMark" aria-label="Cross the bridge — jump to the next section">
+      <!-- "EST." / "MMXXVI" flank the bridge itself now (rather than
+           sitting together above it) — positioned absolute against this
+           button (position:relative, fixed aspect-ratio box), vertically
+           centered on it. aria-hidden since the button's own aria-label
+           already covers what this control does. -->
+      <span class="hero-orbit-flank hero-orbit-flank--left" aria-hidden="true">EST:</span>
       <canvas id="heroOrbitCanvas" aria-hidden="true"></canvas>
       <div class="hero-orbit-fallback" aria-hidden="true">
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -257,6 +263,7 @@
           </defs>
         </svg>
       </div>
+      <span class="hero-orbit-flank hero-orbit-flank--right" aria-hidden="true">2026</span>
     </button>
 
     <span class="eyebrow hero-anim-item">B R X D G E</span>
@@ -269,7 +276,17 @@
            .hero-anim.play trigger that's already set on page load.
            Scroll: .hero-copy also carries a scroll-driven fade/lift/blur
            (--hero-scroll, set by initHeroScrollTransition() in script.js). -->
+  </div>
 </section>
+<!-- Unique id — this section (headline + CTAs, relocated from the hero)
+     is the bridge's click-to-cross landing target (see scrollToSection('services')
+     in brandorbit.js). The actual "WHAT WE DO?" section below has its own
+     id="what-we-do" specifically so the two don't collide — they used to
+     both be id="services", which silently broke getElementById('services')
+     lookups (the bridge landed here fine, but anything targeting the real
+     "what we do" section — like the typewriter headline trigger — grabbed
+     this section instead, since duplicate IDs always resolve to the first
+     match in the DOM). -->
 <section id="services" class="reveal" data-reveal="up">
   <div class="wrap">
     <!-- "BRXDGE TO POSSIBILITIES" + CTA buttons, relocated here from the
@@ -313,10 +330,10 @@
 </section>
 
 
-<section id="services" class="reveal" data-reveal="up">
+<section id="what-we-do" class="reveal" data-reveal="up">
 <div>
   <div>
-    
+
   </div>
 </div>
   <div class="wrap">
