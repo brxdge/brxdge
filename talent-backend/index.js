@@ -5,7 +5,6 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 const db = require('./db');
 
 const app = express();
@@ -21,10 +20,19 @@ app.set('trust proxy', 1);
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
-// Email notification settings (Gmail App Password — see setup notes below)
+// Email notification settings. Sent through Resend's HTTPS API (see the
+// sendContactNotification() function further down) rather than raw Gmail
+// SMTP — Railway blocks outbound SMTP on the Free/Trial/Hobby plans, but
+// plain HTTPS requests like this one are never blocked on any plan.
 const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_TO = process.env.EMAIL_TO || EMAIL_USER;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// The "from" address Resend sends as. onboarding@resend.dev works out of
+// the box with zero setup, but only delivers to the email address you used
+// to sign up for Resend — sign up with the same address as EMAIL_TO above.
+// Once you verify your own domain in Resend, set RESEND_FROM to something
+// like notifications@yourdomain.com instead.
+const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
 // --- MIDDLEWARE ---
 app.use(cors());
@@ -380,12 +388,29 @@ app.post('/api/roster', requireAuth, (req, res) => {
 });
 
 // --- CONTACT FORM MESSAGES ---
-let mailTransporter = null;
-if (EMAIL_USER && EMAIL_PASS) {
-  mailTransporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+
+// Sends the "someone messaged you" notification via Resend's HTTPS API.
+// Resolves silently (does nothing) if RESEND_API_KEY isn't configured, so
+// contact-form saves keep working even before Resend is set up.
+async function sendContactNotification({ name, email, talent, message }) {
+  if (!RESEND_API_KEY) return;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: EMAIL_TO,
+      subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+      text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
+    }),
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Resend API request failed (status ${res.status}): ${body}`);
+  }
 }
 
 const insertMessage = db.prepare(`
@@ -413,16 +438,9 @@ app.post('/api/contact', async (req, res) => {
 
     // 3. Best-effort email notification, fired in the background — failure
     // here can't fail the request since we've already responded.
-    if (mailTransporter) {
-      mailTransporter.sendMail({
-        from: EMAIL_USER,
-        to: EMAIL_TO,
-        subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
-        text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
-      }).catch(mailErr => {
-        console.error('Email notification failed (message was still saved):', mailErr);
-      });
-    }
+    sendContactNotification({ name, email, talent, message }).catch(mailErr => {
+      console.error('Email notification failed (message was still saved):', mailErr);
+    });
   } catch (err) {
     console.error('contact error:', err);
     res.status(500).json({ error: 'Failed to save message' });
