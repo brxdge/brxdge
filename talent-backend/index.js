@@ -534,8 +534,13 @@ app.get('/api/tiktok-oembed', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'url is required' });
 
-    const oembedRes = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
-    if (!oembedRes.ok) throw new Error('TikTok oEmbed request failed — is this a valid, public video URL?');
+    const oembedRes = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    if (!oembedRes.ok) throw new Error(`TikTok oEmbed request failed (status ${oembedRes.status}) — is this a valid, public video URL?`);
     const data = await oembedRes.json();
 
     res.json({
