@@ -30,11 +30,27 @@ const EMAIL_TO = process.env.EMAIL_TO || EMAIL_USER;
 app.use(cors());
 app.use(express.json()); // Essential for receiving JSON from your frontend
 
-// --- FILE STORAGE SETUP (uploads still live on disk — only the talent
-// data itself moved into the database) ---
-const uploadDir = 'uploads';
+// --- FILE STORAGE SETUP ---
+// Persistent volume directory (see db.js for the full explanation — same
+// Railway volume, mounted once at talent-backend/data, covers both the
+// database and these uploaded photos).
 const fs = require('fs');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const uploadDir = path.join(DATA_DIR, 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
+// One-time seed: copy over whatever's in the git-committed uploads/ folder
+// the first time this runs against a brand-new/empty volume, so existing
+// photos aren't blank until each one gets re-uploaded by hand. Only ever
+// copies a file that isn't already on the volume, so this is safe to leave
+// in permanently — it's a no-op on every boot after the first.
+const SEED_UPLOAD_DIR = path.join(__dirname, 'uploads');
+if (fs.existsSync(SEED_UPLOAD_DIR)) {
+  for (const file of fs.readdirSync(SEED_UPLOAD_DIR)) {
+    const dest = path.join(uploadDir, file);
+    if (!fs.existsSync(dest)) fs.copyFileSync(path.join(SEED_UPLOAD_DIR, file), dest);
+  }
+}
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
@@ -89,8 +105,11 @@ app.post('/api/logout', (req, res) => {
 // talent-backend folder.
 app.use(express.static(path.join(__dirname, '..')));
 
-// Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded images — from the persistent volume now, not the
+// git-committed talent-backend/uploads/ folder (that folder's only job now
+// is seeding a brand-new volume on first boot — see the FILE STORAGE SETUP
+// block above).
+app.use('/uploads', express.static(uploadDir));
 
 // Image Upload Endpoint — requires a signed-in manager
 app.post('/upload', requireAuth, upload.single('talentImage'), (req, res) => {
