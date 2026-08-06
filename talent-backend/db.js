@@ -7,7 +7,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 
-const db = new DatabaseSync(path.join(__dirname, 'brxdge.db'));
+const db = new DatabaseSync(path.join(__dirname, 'data', 'brxdge.db'));
 db.exec('PRAGMA foreign_keys = ON;'); // so ON DELETE CASCADE actually cascades
 
 db.exec(`
