@@ -1,0 +1,286 @@
+[
+  {
+    "id": "t3",
+    "name": "Zora Bennett",
+    "niche": "Comedy",
+    "gender": "Male",
+    "photo": "http://localhost:3000/uploads/1785339646461.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785664384839.png",
+    "gallery": [
+      "http://localhost:3000/uploads/1785474151189.jpg",
+      "http://localhost:3000/uploads/1785474151214.jpg",
+      "http://localhost:3000/uploads/1785474151225.jpg",
+      "http://localhost:3000/uploads/1785474151235.jpg",
+      "http://localhost:3000/uploads/1785474151274.jpg",
+      "http://localhost:3000/uploads/1785474151285.jpg",
+      "http://localhost:3000/uploads/1785474151295.jpg"
+    ],
+    "bio": "Skits about surviving your twenties.",
+    "socials": [
+      {
+        "platform": "TikTok",
+        "url": "https://tiktok.com",
+        "followers": "3.1M",
+        "posts": [
+          {
+            "thumbnail": "https://p16-common-sign.tiktokcdn.com/tos-useast8-p-0068-tx2/ooQEAtqIkLEDyBVnAuVBJfEnFEARNCZm3Ace1I~tplv-tiktokx-origin.image?dr=14575&x-expires=1785510000&x-signature=SwHNMMNHnICxcCFl8cOFObabQSc%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=sg1",
+            "title": "#fyp #movie #fury #foryou #tiktok ",
+            "link": "https://www.tiktok.com/@revaleelofing94/video/7666423774606150942?is_from_webapp=1&sender_device=pc",
+            "sourceUrl": "https://www.tiktok.com/@revaleelofing94/video/7666423774606150942?is_from_webapp=1&sender_device=pc"
+          },
+          {
+            "thumbnail": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/oIY0SDgrqoBNLqv2BjFEgCDyENARF5ZIIefDct~tplv-tiktokx-origin.image?dr=14575&x-expires=1785510000&x-signature=omjoTh5YM0%2BCtPVWUkNlUpVKeLs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=sg1",
+            "title": "Happy Father’s Day to all the dads who chose to step up and love children as their own, even when they weren’t.  Your sacrifice, guidance, and unwavering presence have made a lasting impact. You are appreciated and celebrated today too. ❤️",
+            "link": "https://www.tiktok.com/@ryancanda/video/7653534529663077640?is_from_webapp=1&sender_device=pc",
+            "sourceUrl": "https://www.tiktok.com/@ryancanda/video/7653534529663077640?is_from_webapp=1&sender_device=pc"
+          },
+          {
+            "thumbnail": "https://p16-common-sign.tiktokcdn.com/tos-maliva-p-0068/oYJHIikKgPi0CCeIQgXeeCAHDj47LS2y6gZPuH~tplv-tiktokx-origin.image?dr=14575&x-expires=1785510000&x-signature=m2iN0PaX96obg8S9IWxm8EIzOX0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=sg1",
+            "title": "",
+            "link": "https://www.tiktok.com/@graceanneeeeeee/video/7246034341279649030?is_from_webapp=1&sender_device=pc",
+            "sourceUrl": "https://www.tiktok.com/@graceanneeeeeee/video/7246034341279649030?is_from_webapp=1&sender_device=pc"
+          },
+          {
+            "thumbnail": "https://p16-common-sign.tiktokcdn.com/tos-maliva-p-0068/oILDLLweITGEJTcB2jonbBERdiAeAdZQbggkQU~tplv-tiktokx-origin.image?dr=14575&x-expires=1785510000&x-signature=0poOExcLWwHDK%2FYqeFzm9wlHL78%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=sg1",
+            "title": "(⁠•⁠ ⁠▽⁠ ⁠•)",
+            "link": "https://www.tiktok.com/@graceanneeeeeee/video/7237733095930383621?is_from_webapp=1&sender_device=pc",
+            "sourceUrl": "https://www.tiktok.com/@graceanneeeeeee/video/7237733095930383621?is_from_webapp=1&sender_device=pc"
+          }
+        ],
+        "stats": {
+          "avgViews": "",
+          "avgLikes": "",
+          "engagementRate": "",
+          "growth": ""
+        }
+      },
+      {
+        "platform": "Instagram",
+        "url": "https://instagram.com",
+        "followers": "720K",
+        "posts": []
+      },
+      {
+        "platform": "YouTube",
+        "url": "https://www.youtube.com/@DanicaOntengco",
+        "followers": "5.2M",
+        "posts": [],
+        "stats": {
+          "avgViews": "",
+          "avgLikes": "",
+          "engagementRate": "",
+          "growth": ""
+        }
+      },
+      {
+        "platform": "Twitch",
+        "url": "",
+        "followers": "500K",
+        "posts": []
+      },
+      {
+        "platform": "Facebook",
+        "url": "",
+        "followers": "524K",
+        "posts": []
+      },
+      {
+        "platform": "Twitter / X",
+        "url": "",
+        "followers": "56K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t4",
+    "name": "Milo Santana",
+    "niche": "Gaming",
+    "gender": "Male",
+    "photo": "http://localhost:3000/uploads/1785339739030.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785339739047.jpg",
+    "gallery": [
+      "http://localhost:3000/uploads/1785339739064.png",
+      "http://localhost:3000/uploads/1785339739090.png",
+      "http://localhost:3000/uploads/1785339739115.png",
+      "http://localhost:3000/uploads/1785339739137.png",
+      "http://localhost:3000/uploads/1785339739159.png"
+    ],
+    "bio": "Rating the city one patty at a time.",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "https://instagram.com",
+        "followers": "480K",
+        "posts": []
+      },
+      {
+        "platform": "YouTube",
+        "url": "https://youtube.com",
+        "followers": "160K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t5",
+    "name": "Indie Park",
+    "niche": "Music",
+    "gender": "Female",
+    "photo": "http://localhost:3000/uploads/1785667151587.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785339773454.jpg",
+    "gallery": [
+      "http://localhost:3000/uploads/1785339773466.png",
+      "http://localhost:3000/uploads/1785339773489.png",
+      "http://localhost:3000/uploads/1785339773509.png",
+      "http://localhost:3000/uploads/1785339773529.png",
+      "http://localhost:3000/uploads/1785339773546.png",
+      "http://localhost:3000/uploads/1785339773566.png"
+    ],
+    "bio": "Bedroom pop covers and behind-the-scenes drops.",
+    "socials": [
+      {
+        "platform": "TikTok",
+        "url": "https://tiktok.com",
+        "followers": "1.2M",
+        "posts": [],
+        "stats": {
+          "avgViews": "",
+          "avgLikes": "",
+          "engagementRate": "",
+          "growth": ""
+        }
+      },
+      {
+        "platform": "YouTube",
+        "url": "https://youtube.com",
+        "followers": "340K",
+        "posts": [],
+        "stats": {
+          "avgViews": "",
+          "avgLikes": "",
+          "engagementRate": "",
+          "growth": ""
+        }
+      },
+      {
+        "platform": "Instagram",
+        "url": "https://instagram.com",
+        "followers": "210K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t1785339827782",
+    "name": "Brian",
+    "niche": "Gaming",
+    "gender": "Male",
+    "photo": "http://localhost:3000/uploads/1785339827660.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785339827670.jpg",
+    "gallery": [
+      "http://localhost:3000/uploads/1785339827681.png",
+      "http://localhost:3000/uploads/1785339827706.png",
+      "http://localhost:3000/uploads/1785339827727.png",
+      "http://localhost:3000/uploads/1785339827749.png",
+      "http://localhost:3000/uploads/1785339827768.png"
+    ],
+    "bio": "Hello testing",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "",
+        "followers": "1.5M",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t1785339878081",
+    "name": "Shiela",
+    "niche": "Fitness",
+    "gender": "Female",
+    "photo": "http://localhost:3000/uploads/1785339877959.jpg",
+    "coverPhoto": "",
+    "gallery": [
+      "http://localhost:3000/uploads/1785339877969.png",
+      "http://localhost:3000/uploads/1785339877994.png",
+      "http://localhost:3000/uploads/1785339878016.png",
+      "http://localhost:3000/uploads/1785339878042.png",
+      "http://localhost:3000/uploads/1785339878063.png"
+    ],
+    "bio": "Hello",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "",
+        "followers": "500K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t1785339958879",
+    "name": "Zajj",
+    "niche": "Lifestyle",
+    "gender": "Male",
+    "photo": "http://localhost:3000/uploads/1785339958805.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785339958816.jpg",
+    "gallery": [
+      "http://localhost:3000/uploads/1785339958826.jpg",
+      "http://localhost:3000/uploads/1785339958835.jpg",
+      "http://localhost:3000/uploads/1785339958844.jpg",
+      "http://localhost:3000/uploads/1785339958867.jpg",
+      "http://localhost:3000/uploads/1785339958875.jpg"
+    ],
+    "bio": "Hi",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "",
+        "followers": "590K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t1785340004671",
+    "name": "Brian",
+    "niche": "Music",
+    "gender": "Male",
+    "photo": "http://localhost:3000/uploads/1785340004653.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785340004663.png",
+    "gallery": [],
+    "bio": "Testing",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "",
+        "followers": "500K",
+        "posts": []
+      }
+    ]
+  },
+  {
+    "id": "t1785340061847",
+    "name": "Cristine",
+    "niche": "Food",
+    "gender": "Female",
+    "photo": "http://localhost:3000/uploads/1785340061801.jpg",
+    "coverPhoto": "http://localhost:3000/uploads/1785340061812.jpg",
+    "gallery": [
+      "http://localhost:3000/uploads/1785340061822.jpg",
+      "http://localhost:3000/uploads/1785340061833.jpg",
+      "http://localhost:3000/uploads/1785340061842.jpg"
+    ],
+    "bio": "Test",
+    "socials": [
+      {
+        "platform": "Instagram",
+        "url": "",
+        "followers": "50K",
+        "posts": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,44 @@
+<svg width="1200" height="160" viewBox="0 0 1200 160" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chrome" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#E0E0E0"/>
+      <stop offset="20%"  stop-color="#FFFFFF"/>
+      <stop offset="55%"  stop-color="#B8B8B8"/>
+      <stop offset="80%"  stop-color="#F0F0F0"/>
+      <stop offset="100%" stop-color="#787878"/>
+    </linearGradient>
+    <linearGradient id="cable" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#1A1A1A"/>
+      <stop offset="18%"  stop-color="#787878"/>
+      <stop offset="42%"  stop-color="#E8E8E8"/>
+      <stop offset="58%"  stop-color="#F8F8F8"/>
+      <stop offset="82%"  stop-color="#787878"/>
+      <stop offset="100%" stop-color="#1A1A1A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="160" fill="#0C0C0C"/>
+
+  <!-- Logo group centered -->
+  <!-- Wordmark -->
+  <text x="600" y="88"
+    text-anchor="middle"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="52" font-weight="800" letter-spacing="14"
+    fill="url(#chrome)">BRXDGE</text>
+
+  <!-- Suspension cable arc -->
+  <path d="M 300 120 Q 600 96 900 120" fill="none" stroke="url(#cable)" stroke-width="1.8"/>
+
+  <!-- Hangers -->
+  <line x1="336" y1="117" x2="336" y2="120" stroke="#505050" stroke-width="1"/>
+  <line x1="390" y1="111" x2="390" y2="120" stroke="#505050" stroke-width="1"/>
+  <line x1="450" y1="104" x2="450" y2="120" stroke="#505050" stroke-width="1"/>
+  <line x1="524" y1="98"  x2="524" y2="120" stroke="#555"    stroke-width="1"/>
+  <line x1="600" y1="96"  x2="600" y2="120" stroke="#606060" stroke-width="1"/>
+  <line x1="676" y1="98"  x2="676" y2="120" stroke="#555"    stroke-width="1"/>
+  <line x1="750" y1="104" x2="750" y2="120" stroke="#505050" stroke-width="1"/>
+  <line x1="810" y1="111" x2="810" y2="120" stroke="#505050" stroke-width="1"/>
+  <line x1="864" y1="117" x2="864" y2="120" stroke="#505050" stroke-width="1"/>
+</svg>

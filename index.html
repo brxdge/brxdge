@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRXDGE — Talent Management for Creators</title>
+<meta name="description" content="BRXDGE is a talent management agency representing creators across TikTok, Instagram, and YouTube — handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.brxdge.com/">
+<meta name="theme-color" content="#0C0C0C">
+
+<!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BRXDGE">
+<meta property="og:title" content="BRXDGE — Talent Management for Creators">
+<meta property="og:description" content="A talent management agency representing creators across TikTok, Instagram, and YouTube — bridging the gap between raw talent and the opportunities it deserves.">
+<meta property="og:url" content="https://www.brxdge.com/">
+<meta property="og:image" content="https://www.brxdge.com/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BRXDGE — Talent Management for Creators">
+<meta name="twitter:description" content="A talent management agency representing creators across TikTok, Instagram, and YouTube.">
+<meta name="twitter:image" content="https://www.brxdge.com/assets/og-image.jpg">
+
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "BRXDGE",
+  "description": "Talent management agency representing creators across TikTok, Instagram, and YouTube.",
+  "url": "https://www.brxdge.com/"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+<script>
+  // Applied before first paint so the loader/site never flashes the wrong theme.
+  (function () {
+    try {
+      var saved = localStorage.getItem('brxdge-theme');
+      var wantsDark = saved !== 'light';
+      if (wantsDark) document.documentElement.classList.add('dark-mode');
+    } catch (e) {
+      /* storage unavailable — still default to the brand's dark theme */
+      document.documentElement.classList.add('dark-mode');
+    }
+  })();
+</script>
+</head>
+<body>
+
+<!-- Ambient background line, echoing the bridge-cable motif from the logo.
+     Fixed, faint, and quiet — a texture rather than a graphic. -->
+<div class="brand-lines-bg" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+    <defs>
+      <radialGradient id="glowDotGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="currentColor" stop-opacity="0.95"/>
+        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- FAR LAYER: a second, higher and fainter span suggesting depth, like
+         a sister bridge further back in the haze. Parallaxes slower than
+         the near layer so it reads as further away. -->
+    <g class="cable-layer cable-layer--far">
+      <path class="cable-base-far" d="M -80 400 Q 800 214 1680 400"/>
+      <line class="hanger-far" x1="180" y1="300" x2="180" y2="400"/>
+      <line class="hanger-far" x1="420" y1="252" x2="420" y2="400"/>
+      <line class="hanger-far" x1="660" y1="224" x2="660" y2="400"/>
+      <line class="hanger-far" x1="900" y1="216" x2="900" y2="400"/>
+      <line class="hanger-far" x1="1140" y1="227" x2="1140" y2="400"/>
+      <line class="hanger-far" x1="1380" y1="258" x2="1380" y2="400"/>
+      <line class="hanger-far" x1="1620" y1="304" x2="1620" y2="400"/>
+    </g>
+
+    <!-- NEAR LAYER: the primary bridge-cable motif from the logo -->
+    <g class="cable-layer cable-layer--near">
+      <!-- Hangers dropping from the cable, matching the logo's proportions -->
+      <line class="hanger" x1="100" y1="446" x2="100" y2="590"/>
+      <line class="hanger" x1="280" y1="385" x2="280" y2="590"/>
+      <line class="hanger" x1="460" y1="342" x2="460" y2="590"/>
+      <line class="hanger" x1="640" y1="317" x2="640" y2="590"/>
+      <line class="hanger" x1="820" y1="310" x2="820" y2="590"/>
+      <line class="hanger" x1="1000" y1="321" x2="1000" y2="590"/>
+      <line class="hanger" x1="1180" y1="350" x2="1180" y2="590"/>
+      <line class="hanger" x1="1360" y1="397" x2="1360" y2="590"/>
+      <line class="hanger" x1="1540" y1="462" x2="1540" y2="590"/>
+
+      <!-- Tiny deck lights where each hanger meets the roadway, twinkling
+           like a suspension bridge lit up at dusk -->
+      <circle class="hanger-light" cx="100" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="280" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="460" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="640" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="820" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1000" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1180" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1360" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1540" cy="590" r="2.4"/>
+
+      <!-- Cable: a faint base line plus a slow-traveling glint, like light on the wire -->
+      <path id="cablePathNear" class="cable-base" d="M -50 510 Q 800 310 1650 510"/>
+      <path class="cable-shimmer" d="M -50 510 Q 800 310 1650 510"/>
+
+      <!-- Soft glowing orb that drifts the full span of the cable, like a
+           light crossing the bridge at night -->
+      <circle class="cable-glow-dot" r="5" fill="url(#glowDotGrad)">
+        <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
+          <mpath xlink:href="#cablePathNear" href="#cablePathNear"/>
+        </animateMotion>
+      </circle>
+    </g>
+  </svg>
+</div>
+<div class="grain-overlay" aria-hidden="true"></div>
+
+
+<div id="loader">
+  <div class="loader-content">
+    <div class="loader-mark-drop-zone">
+      <svg class="loader-mark" id="loaderMark" viewBox="0 0 100 100">
+        <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
+        <path class="loader-arc" d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#loaderGrad)" stroke-width="3"/>
+        <line class="loader-hanger" x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <line class="loader-hanger" x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line class="loader-hanger" x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
+        <line class="loader-hanger" x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line class="loader-hanger" x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <defs>
+          <linearGradient id="loaderGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
+    </div>
+    <div class="percentage" id="loadPercent">0%</div>
+    <div class="bar"><div class="fill" id="loadBar"></div></div>
+    <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
+      <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
+      <span class="lw-underline" aria-hidden="true"></span>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <!-- Left column -->
+  <div class="nav-col nav-col-left">
+    <div class="nav-links left-links">
+      <a href="#home"><span>Home</span></a>
+      <a href="#about"><span>About Us</span></a>
+      <a href="#managers"><span>Managers</span></a>
+    </div>
+    <!-- Mobile-only: single "Contact" link shown top-left instead of the full nav-links list -->
+    <a href="#contact" class="mobile-top-link">Contact</a>
+  </div>
+
+  <!-- Center Logo -->
+  <a href="#home" class="brand" aria-label="BRXDGE — back to home">
+    <span class="brand-mark-wrap">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path class="brand-mark-arc" d="M8 64 Q50 28 92 64" fill="none" stroke="url(#navMarkGrad)" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="8" cy="67" r="6.5" fill="url(#navMarkGrad)"/>
+        <circle cx="92" cy="67" r="6.5" fill="url(#navMarkGrad)"/>
+        <defs>
+          <linearGradient id="navMarkGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="50%" stop-color="#9A9A9A"/>
+            <stop offset="100%" stop-color="#FFFFFF"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+    <span class="brand-name">BRXDGE</span>
+  </a>
+
+  <!-- Right column -->
+  <div class="nav-col nav-col-right right-group">
+    <div class="nav-links right-links">
+      <a href="#roster"><span>Talent Roster</span></a>
+      <a href="#contact"><span>Contact Us</span></a>
+    </div>
+
+    <a href="admin.html" id="navLoginBtn" class="nav-login-link">
+      <span class="login-label"> Login</span>
+      <svg class="login-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
+      <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE BOTTOM TAB BAR (replaces the old hamburger + slide-down menu below 860px) -->
+<nav class="mobile-tabbar" id="mobileTabbar">
+  <a href="#home">Home</a>
+  <a href="#about">About Us</a>
+  <a href="#roster">Talent Roster</a>
+  <a href="#managers">Managers</a>
+  <button class="theme-toggle" id="themeToggleMobile" aria-label="Toggle dark mode" type="button">
+    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+  </button>
+</nav>
+
+<main>
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-side-zone hero-side-zone--left"><div class="hero-side-glow"></div></div>
+  <div class="hero-side-zone hero-side-zone--right"><div class="hero-side-glow"></div></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy hero-anim">
+      <span class="eyebrow hero-anim-item">EST. MMXXVI</span>
+      <!-- Entrance: each line rises out of its own overflow:hidden mask
+           (.hero-title-mask) rather than the plain fade+slide every other
+           .hero-anim-item uses — see .hero-title-line in style.css and the
+           .hero-anim.play trigger that's already set on page load.
+           Scroll: .hero-copy also carries a scroll-driven fade/lift/blur
+           (--hero-scroll, set by initHeroScrollTransition() in script.js). -->
+      <h1 class="hero-title">
+        <span class="hero-title-mask"><span class="hero-title-line">BRXDGE TO</span></span>
+        <span class="hero-title-mask"><em class="hero-title-line">POSSIBILITIES</em></span>
+      </h1>
+      
+      <div class="hero-actions hero-anim-item">
+        <button class="btn btn-primary" onclick="scrollToSection('roster')">
+          <span class="btn-label">View The Roster</span>
+          <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="scrollToSection('contact')">
+          <svg class="btn-icon btn-icon-lead" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-2.5 2.5a3.5 3.5 0 0 0 5 5l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="btn-label">Partner With Us</span>
+        </button>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+
+<section id="services" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center;">
+      <div style="text-align:center; width:100%;">
+        <span class="featured-italic" id="servicesEyebrow">WHAT WE DO?</span>
+        <h2 id="servicesHeading">THREE WAYS WE MOVE FORWARD</h2>
+      </div>
+    </div>
+  </div>
+
+  <center>
+    <div class="tilt-cards-row">
+
+      <div class="container noselect">
+        <div class="canvas">
+          <div class="tracker tr-1"></div>
+          <div class="tracker tr-2"></div>
+          <div class="tracker tr-3"></div>
+          <div class="tracker tr-4"></div>
+          <div class="tracker tr-5"></div>
+          <div class="tracker tr-6"></div>
+          <div class="tracker tr-7"></div>
+          <div class="tracker tr-8"></div>
+          <div class="tracker tr-9"></div>
+          <div class="tilt-card">
+            <div class="card-content">
+              <div class="card-photo" style="background-image:url('assets/card-talent.jpg')"></div>
+              <div class="card-glare"></div>
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="tilt-prompt">BRXDGE</p>
+              <div class="title">TALENT<br />MANAGEMENT</div>
+              <div class="glowing-elements">
+                <div class="glow-1"></div>
+                <div class="glow-2"></div>
+                <div class="glow-3"></div>
+              </div>
+              <div class="subtitle">
+                <span>WE MANAGE</span>
+                <span class="highlight">THE VOICES</span>
+              </div>
+              <div class="card-particles">
+                <span></span><span></span><span></span> <span></span><span></span
+                ><span></span>
+              </div>
+              <div class="corner-elements">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="scan-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container noselect">
+        <div class="canvas">
+          <div class="tracker tr-1"></div>
+          <div class="tracker tr-2"></div>
+          <div class="tracker tr-3"></div>
+          <div class="tracker tr-4"></div>
+          <div class="tracker tr-5"></div>
+          <div class="tracker tr-6"></div>
+          <div class="tracker tr-7"></div>
+          <div class="tracker tr-8"></div>
+          <div class="tracker tr-9"></div>
+          <div class="tilt-card">
+            <div class="card-content">
+              <div class="card-photo" style="background-image:url('assets/card-brand.jpg')"></div>
+              <div class="card-glare"></div>
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="tilt-prompt">TO</p>
+              <div class="title">BRAND<br />PARTNERSHIPS</div>
+              <div class="glowing-elements">
+                <div class="glow-1"></div>
+                <div class="glow-2"></div>
+                <div class="glow-3"></div>
+              </div>
+              <div class="subtitle">
+                <span>WE BUILD</span>
+                <span class="highlight">THE DEALS</span>
+              </div>
+              <div class="card-particles">
+                <span></span><span></span><span></span> <span></span><span></span
+                ><span></span>
+              </div>
+              <div class="corner-elements">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="scan-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container noselect">
+        <div class="canvas">
+          <div class="tracker tr-1"></div>
+          <div class="tracker tr-2"></div>
+          <div class="tracker tr-3"></div>
+          <div class="tracker tr-4"></div>
+          <div class="tracker tr-5"></div>
+          <div class="tracker tr-6"></div>
+          <div class="tracker tr-7"></div>
+          <div class="tracker tr-8"></div>
+          <div class="tracker tr-9"></div>
+          <div class="tilt-card">
+            <div class="card-content">
+              <div class="card-photo" style="background-image:url('assets/card-content.jpg')"></div>
+              <div class="card-glare"></div>
+              <div class="cyber-lines">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p class="tilt-prompt">POSSIBILITIES</p>
+              <div class="title">CONTENT<br />STRATEGY</div>
+              <div class="glowing-elements">
+                <div class="glow-1"></div>
+                <div class="glow-2"></div>
+                <div class="glow-3"></div>
+              </div>
+              <div class="subtitle">
+                <span>WE DRIVE</span>
+                <span class="highlight">THE REACH</span>
+              </div>
+              <div class="card-particles">
+                <span></span><span></span><span></span> <span></span><span></span
+                ><span></span>
+              </div>
+              <div class="corner-elements">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="scan-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </center>
+
+  <div class="wrap">
+    <p class="services-caption">BRXDGE IS A TALENT MANAGEMENT AGENCY REPRESENTING CREATORS ACROSS TIKTOK, INSTAGRAM, AND YOUTUBE — FROM CONTENT STRATEGY AND BRAND DEALS TO CONTRACT NEGOTIATION.</p>
+  </div>
+</section>
+
+
+
+<!-- SHOWCASE SLIDER — assembled photo grid with a continuous, looping
+     "twinkle" fade in/out on each photo. No longer tied to scroll position. -->
+<section class="slider-section" id="showcase" aria-label="Content showcase">
+  <div class="slider-spacer">
+    <div class="slider-wrapper">
+<div class="slide-box" style="--bg: url('talent-backend/assets/1.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/2.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/3.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/4.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/7.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/5.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/6.jpg')"></div>
+      <div class="slide-box" style="--bg: url('talent-backend/assets/8.jpg')"></div>
+
+          <a href="#home" class="slide-center-icon" aria-label="BRXDGE — Brxdge to Possibilities">
+            <svg class="slide-center-icon-img" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+              <defs>
+                <linearGradient id="brxdgeIconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stop-color="#1E1E1E"/>
+                  <stop offset="100%" stop-color="#0C0C0C"/>
+                </linearGradient>
+                <linearGradient id="brxdgeIconCable" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#2A2A2A"/>
+                  <stop offset="25%"  stop-color="#D0D0D0"/>
+                  <stop offset="50%"  stop-color="#FFFFFF"/>
+                  <stop offset="75%"  stop-color="#D0D0D0"/>
+                  <stop offset="100%" stop-color="#2A2A2A"/>
+                </linearGradient>
+              </defs>
+
+              <rect width="400" height="400" rx="80" fill="url(#brxdgeIconBg)"/>
+              <rect x="1" y="1" width="398" height="398" rx="79" fill="none" stroke="#2E2E2E" stroke-width="1.5"/>
+
+              <path d="M 55 270 Q 200 155 345 270" fill="none" stroke="url(#brxdgeIconCable)" stroke-width="5"/>
+
+              <line x1="55" y1="270" x2="345" y2="270" stroke="#282828" stroke-width="2"/>
+
+              <line x1="90"  y1="250" x2="90"  y2="270" stroke="#787878" stroke-width="2"/>
+              <line x1="122" y1="228" x2="122" y2="270" stroke="#848484" stroke-width="2"/>
+              <line x1="157" y1="203" x2="157" y2="270" stroke="#909090" stroke-width="2"/>
+              <line x1="200" y1="155" x2="200" y2="270" stroke="#A0A0A0" stroke-width="2"/>
+              <line x1="243" y1="203" x2="243" y2="270" stroke="#909090" stroke-width="2"/>
+              <line x1="278" y1="228" x2="278" y2="270" stroke="#848484" stroke-width="2"/>
+              <line x1="310" y1="250" x2="310" y2="270" stroke="#787878" stroke-width="2"/>
+            </svg>
+          </a>
+
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+<!-- Replace your static gallery section with this -->
+<div id="root"></div> 
+
+<!-- Add the script that Vite generates after you build your React app -->
+<!-- Replace your static gallery section with this -->
+<div id="root"></div> 
+
+<!-- Add the script that Vite generates after you build your React app -->
+
+
+
+
+
+<!-- ABOUT -->
+<section id="about" class="reveal" data-reveal="right">
+  <div class="wrap about-grid">
+    <div class="about-photo">
+      <div class="about-logo-card">
+        <svg class="about-logo-mark" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BRXDGE — Brxdge to Possibilities">
+          <defs>
+            <linearGradient id="aboutChrome" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"   stop-color="#888888"/>
+              <stop offset="20%"  stop-color="#C0C0C0"/>
+              <stop offset="55%"  stop-color="#707070"/>
+              <stop offset="80%"  stop-color="#A8A8A8"/>
+              <stop offset="100%" stop-color="#484848"/>
+            </linearGradient>
+            <linearGradient id="aboutCable" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#555555"/>
+              <stop offset="18%"  stop-color="#909090"/>
+              <stop offset="42%"  stop-color="#C8C8C8"/>
+              <stop offset="58%"  stop-color="#D8D8D8"/>
+              <stop offset="82%"  stop-color="#909090"/>
+              <stop offset="100%" stop-color="#555555"/>
+            </linearGradient>
+          </defs>
+          <text x="400" y="210" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="110" font-weight="800" letter-spacing="18" fill="url(#aboutChrome)">BRXDGE</text>
+          <path d="M 80 300 Q 400 220 720 300" fill="none" stroke="url(#aboutCable)" stroke-width="3.8"/>
+          <line x1="130" y1="293" x2="130" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="190" y1="278" x2="190" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="255" y1="260" x2="255" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="318" y1="245" x2="318" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="400" y1="220" x2="400" y2="300" stroke="#909090" stroke-width="1.6"/>
+          <line x1="482" y1="245" x2="482" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="545" y1="260" x2="545" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="610" y1="278" x2="610" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <line x1="670" y1="293" x2="670" y2="300" stroke="#808080" stroke-width="1.6"/>
+          <text x="400" y="348" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" font-weight="300" letter-spacing="7" fill="#888888">BRXDGE TO POSSIBILITIES</text>
+        </svg>
+      </div>
+    </div>
+    <div class="about-copy">
+      <span class="featured-italic" id="aboutEyebrow">WHO ARE WE?</span>
+      <h2 class="about-headline">Built by creators, run for creators.</h2>
+      <p>BRXDGE started as a group chat between three friends helping their favorite local creators land their first brand deals. Today we manage a growing roster of talent across <strong>TikTok, Instagram, and YouTube</strong> — handling everything from content strategy to contract negotiation, so our talent can focus on making things people actually want to watch. We exist to bridge the gap between raw talent and the opportunities it deserves.</p>
+      <p>We're <strong>hands-on, relationship-first</strong>, and allergic to cookie-cutter management. Every creator on our roster gets a strategy built around their audience, not a template.</p>
+
+      <div class="about-stats-bar">
+        <div class="stat">
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <span class="num" data-count-to="47">0</span>
+          <span class="lbl">Creators repped</span>
+        </div>
+        <div class="stat">
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M7.8 8.2a6 6 0 0 0 0 7.6M16.2 8.2a6 6 0 0 1 0 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.6 4.8a11 11 0 0 0 0 14.4M19.4 4.8a11 11 0 0 1 0 14.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <span class="num" data-count-to="310000000" data-suffix="+">0</span>
+          <span class="lbl">Combined reach</span>
+        </div>
+        <div class="stat">
+          <div class="stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="num" data-count-to="128">0</span>
+          <span class="lbl">Brand deals closed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+<!-- MANAGERS -->
+<section id="managers" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="featured-italiccc">The Team</span>
+        <span class="profiles-bold">MANAGERS</span>
+      </div>
+      <a class="btn btn-ghost" href="admin.html">Manager Login →</a>
+    </div>
+    <div class="managers-section-inner">
+      <div class="managers-col managers-col-cards">
+        <div class="managers-grid" id="managersGrid"></div>
+      </div>
+
+      <div class="managers-col managers-col-photo">
+        <!-- Hover-reactive background layer: one .bg-layer per manager, cross-faded via JS -->
+        <div class="managers-bg" id="managersBg" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES (showcase only — not a filter) -->
+<section id="categories" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="category-head">
+      <span class="featured-italic">WHAT WE</span>
+      <span class="profiles-bold">REPRESENT</span>
+      <p class="category-sub">The lanes our roster creates in — every talent we sign is building an audience in one of these worlds.</p>
+    </div>
+    <!-- Hover/focus-reveal list (was a static 3x2 card grid). Each row expands on
+         hover, tints toward its --tone, and floats a preview thumbnail that tracks
+         the cursor (see .category-row-preview + initCategoryPreviews() in script.js).
+         The thumbnail is a --tone gradient placeholder for now — swap the markup
+         inside .category-row-preview-inner for an <img>/<video> per category
+         (or per talent niche) once real photos/clips are ready. Touch devices skip
+         the cursor-follow JS and just get the tint + description reveal. -->
+    <div class="category-list">
+      <div class="category-row stagger-item" data-tone="1" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 10c-3.3 0-6-2.2-6-5 1.7 0 3.3.5 4.5 1.4C8.4 5.4 9 4 9 4s.6 1.4 1.5 2.4C11.7 5.5 13.3 5 15 5c0 2.8-2.7 5-6 5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M4 10c1 5 3.5 9 5 9s4-4 5-9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 10c3.3 0 6-2.2 6-5-1.7 0-3.3.5-4.5 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="7.2" cy="12.5" r=".9" fill="currentColor"/><circle cx="11.8" cy="13.6" r=".9" fill="currentColor"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Comedy</h3>
+          <p class="category-row-desc">Sketches, skits &amp; the timing that keeps audiences coming back.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/comedy.jpg')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-row stagger-item" data-tone="2" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="8" width="19" height="10" rx="5" stroke="currentColor" stroke-width="1.4"/><path d="M8 11v4M6 13h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="16" cy="11.5" r="1" fill="currentColor"/><circle cx="18.2" cy="13.7" r="1" fill="currentColor"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Gaming</h3>
+          <p class="category-row-desc">Ranked grinds, co-op chaos &amp; live chat energy.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/gamer.jpg')"></div>
+        </div>
+      </div>
+
+      <div class="category-row stagger-item" data-tone="3" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 17V5.6a1 1 0 0 1 1.2-1L19 3v11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="2.5" stroke="currentColor" stroke-width="1.4"/><circle cx="16.5" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Music</h3>
+          <p class="category-row-desc">Original drops, covers &amp; behind-the-scenes sound.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/music.jpg')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-row stagger-item" data-tone="4" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 9.5 4 7l2.5-2.5M17.5 9.5 20 7l-2.5-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="10" width="3" height="4" rx=".8" stroke="currentColor" stroke-width="1.4"/><rect x="15" y="10" width="3" height="4" rx=".8" stroke="currentColor" stroke-width="1.4"/><path d="M9 12h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Fitness</h3>
+          <p class="category-row-desc">Training logs, form breakdowns &amp; the daily grind.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/fitness.jpg')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-row stagger-item" data-tone="5" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3.5 13.8 8l4.7.6-3.5 3.2 1 4.7L12 14.2 7.9 16.5l1-4.7L5.5 8.6 10.2 8 12 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Lifestyle</h3>
+          <p class="category-row-desc">Style, spaces &amp; everyday moments made worth watching.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/lifestyle.jpg')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="category-row stagger-item" data-tone="6" tabindex="0">
+        <span class="category-row-index"></span>
+        <div class="category-row-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3v7a2 2 0 0 0 2 2v9M6 3v5M8 3v5M6 10h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 3c-1.7 0-3 2.2-3 6s1.3 5.5 3 5.5V21" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="category-row-text">
+          <h3 class="category-row-title">Food</h3>
+          <p class="category-row-desc">Ratings, recipes &amp; the city's best bites, reviewed.</p>
+        </div>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner">
+          <div class="category-row-preview-inner category-row-preview-inner--photo" style="background-image:url('assets/food.jpg')"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROSTER -->
+<section id="roster" class="reveal" data-reveal="scale">
+  <div class="roster-ambient" aria-hidden="true">
+    <span class="roster-orb roster-orb-1"></span>
+    <span class="roster-orb roster-orb-2"></span>
+  </div>
+  <div class="wrap">
+    <div class="section-head">
+      <!-- The container class handles the overall alignment -->
+<div style="text-align: center; width: 100%;">
+  <span class="featured-italic">FEATURED </span>
+  <span class="profiles-bold">TALENT</span>
+</div>
+    </div>
+    <div class="roster-toolbar" id="rosterToolbar" style="display:none;">
+      <button class="btn btn-primary" id="addTalentBtn">+ Add Talent</button>
+    </div>
+    <div class="roster-grid" id="rosterGrid"></div>
+    <div class="view-all-wrap">
+      <button class="btn btn-ghost view-all-btn" id="viewAllTalentBtn">
+        <span>View All Talent</span>
+        <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- BRANDS MARQUEE -->
+<section id="brands" class="reveal" data-reveal="fade">
+  <div class="wrap brands-head">
+    <span class="profiles-bold">OUR </span>
+    <span class="profiles-bold">BRAND </span>
+    <span class="featured-italic">Partners</span>
+  </div>
+  <div class="brands-marquee" id="brandsMarquee" role="region" aria-label="Brand partner names — drag or hover to browse">
+    <div class="brands-marquee-track" id="brandsMarqueeTrack">
+      <div class="brands-marquee-group">
+        <span class="brand-word">Aurelia</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Northfield</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Vessel</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Lumen Beauty</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Strata</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Orbit Media</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Paloma</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+        <span class="brand-word">Fernweh</span><span class="brand-dot" aria-hidden="true">&#9670;</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BRAND LOGO WALL — second brand marquee. Same mechanic as the text
+     ticker above (drag, hover-pause, seamless clone-and-wrap loop) but
+     pure pictorial marks instead of wordmarks, and running the opposite
+     direction — left to right instead of right to left — so the two
+     rows read as a pair rather than a repeat. -->
+<section id="brandLogos" class="reveal" data-reveal="fade">
+  <div class="logo-marquee" id="logoMarquee" role="region" aria-label="Brand partner logos — drag or hover to browse">
+    <div class="logo-marquee-track" id="logoMarqueeTrack">
+      <div class="logo-marquee-group">
+        <div class="logo-tile" title="Aurelia">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <g stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <line x1="32" y1="10" x2="32" y2="18"/><line x1="32" y1="46" x2="32" y2="54"/>
+              <line x1="10" y1="32" x2="18" y2="32"/><line x1="46" y1="32" x2="54" y2="32"/>
+              <line x1="16.5" y1="16.5" x2="22" y2="22"/><line x1="42" y1="42" x2="47.5" y2="47.5"/>
+              <line x1="47.5" y1="16.5" x2="42" y2="22"/><line x1="22" y1="42" x2="16.5" y2="47.5"/>
+            </g>
+            <circle cx="32" cy="32" r="7" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Northfield">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="32" cy="32" r="20" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+            <path d="M32 13 L38.5 32 L32 51 L25.5 32 Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <line x1="32" y1="13" x2="32" y2="51" stroke="currentColor" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Vessel">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="32" cy="17" r="4"/><line x1="32" y1="21" x2="32" y2="46"/>
+              <line x1="21" y1="28" x2="43" y2="28"/><path d="M18 36 Q20 48 32 50 Q44 48 46 36" fill="none"/>
+            </g>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Lumen Beauty">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M32 14 C33 24 34 30 44 32 C34 34 33 40 32 50 C31 40 30 34 20 32 C30 30 31 24 32 14 Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Strata">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M14 24 Q32 16 50 24"/><path d="M14 32 Q32 24 50 32"/><path d="M14 40 Q32 32 50 40"/>
+            </g>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Orbit Media">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <ellipse cx="32" cy="32" rx="20" ry="9" stroke="currentColor" stroke-width="1.6" transform="rotate(-18 32 32)"/>
+            <circle cx="32" cy="32" r="5" fill="currentColor"/>
+            <circle cx="14.5" cy="24" r="2" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Paloma">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M12 36 C20 24 28 24 32 30 C36 24 44 24 52 36 C42 32 36 34 32 40 C28 34 22 32 12 36 Z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="logo-tile" title="Fernweh">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="29" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M14 40 L24 24 L30 32 L36 22 L50 40 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="41" cy="19" r="3.5" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="reveal" data-reveal="left">
+  <div class="wrap contact-grid">
+    <div class="contact-info">
+      <span class="featured-italiccc">Get In Touch</span>
+      <h2>Let's work together.</h2>
+      <p class="lede">Brand looking to book talent, or a creator looking for representation? Send us a message — a real human on the team will get back to you.</p>
+
+      <!-- Same approved numbers already shown in About, resurfaced here as a
+           quick trust signal right where someone's deciding whether to
+           actually fill out the form. The reply-time badge is a real
+           commitment, not a stat — keep it honest to whatever your actual
+           turnaround is. -->
+      <div class="contact-trust">
+        <div class="trust-item">
+          <span class="trust-num" data-count-to="47">0</span>
+          <span class="trust-lbl">Creators repped</span>
+        </div>
+        <div class="trust-divider" aria-hidden="true"></div>
+        <div class="trust-item">
+          <span class="trust-num" data-count-to="128">0</span>
+          <span class="trust-lbl">Brand deals closed</span>
+        </div>
+        <div class="trust-divider" aria-hidden="true"></div>
+        <div class="trust-item">
+          <span class="trust-num trust-num-static">24h</span>
+          <span class="trust-lbl">Avg. reply time</span>
+        </div>
+      </div>
+
+      <div class="socials">
+        <a class="social-btn" href="#" aria-label="Instagram" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"/></svg>
+        </a>
+        <a class="social-btn" href="#" aria-label="TikTok" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 3v11.2a3.4 3.4 0 1 1-2.6-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3c.6 3 2.6 4.7 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </a>
+        <a class="social-btn" href="#" aria-label="YouTube" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-form-panel">
+      <form class="contact-form" id="contactForm">
+        <div class="field">
+          <label>I'm reaching out as a…</label>
+          <div class="inquiry-toggle" id="inquiryToggle" role="group" aria-label="Inquiry type">
+            <button type="button" class="inquiry-pill" data-type="Brand">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 8V6.4A2.4 2.4 0 0 1 10.9 4h2.2a2.4 2.4 0 0 1 2.4 2.4V8" stroke="currentColor" stroke-width="1.8"/><path d="M3 13.2c2.6 1.4 5.6 2.1 9 2.1s6.4-.7 9-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Brand
+            </button>
+            <button type="button" class="inquiry-pill" data-type="Creator">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5l2.1 4.6 4.9.6-3.6 3.5.9 5-4.3-2.5-4.3 2.5.9-5-3.6-3.5 4.9-.6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              Creator
+            </button>
+            <button type="button" class="inquiry-pill" data-type="Other">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7A2.5 2.5 0 0 1 17.5 16H10l-4.5 3.5V16h-1A2.5 2.5 0 0 1 2 13.5v-7A2.5 2.5 0 0 1 4.5 4" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              Other
+            </button>
+          </div>
+          <input type="hidden" id="contactInquiryType" value="">
+        </div>
+        <div class="field"><label for="contactName">Name</label><input type="text" id="contactName" required></div>
+        <div class="field"><label for="contactEmail">Email</label><input type="email" id="contactEmail" required></div>
+        <div class="field"><label for="contactMessage">Message</label><textarea id="contactMessage" required placeholder="Tell us about your brand or your content..."></textarea></div>
+        <button type="submit" class="btn btn-primary btn-contact-submit">
+          <span>Send Message</span>
+          <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <p class="form-reassurance">Real humans read every message — expect a reply within 1 business day.</p>
+      </form>
+
+      <div class="form-success" id="contactSuccess" style="display:none;">
+        <div class="success-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Message sent.</h3>
+        <p>Thanks for reaching out — a real human on the team will get back to you within 1 business day.</p>
+        <button type="button" class="btn btn-ghost" id="contactSendAnother">Send another message</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div class="brand">
+      <svg class="brand-mark" width="32" height="32" viewBox="0 0 100 100">
+        <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
+        <path d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#gradMark2)" stroke-width="3"/>
+        <line x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <line x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
+        <line x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <defs>
+          <linearGradient id="gradMark2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">BRXDGE</span>
+    </div>
+    <div class="footer-links">
+      <a href="#home">Home</a><a href="#about">About Us</a><a href="#managers">Managers</a>
+      <a href="#roster">Talent Roster</a><a href="#contact">Contact Us</a>
+    </div>
+  </div>
+  <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities.</p>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal">
+    <button class="modal-close" id="loginClose">&times;</button>
+    <h3> Login</h3>
+    <p class="sub">Enter the manager passcode to add, edit, or remove talent from the roster.</p>
+    <form id="loginForm">
+      <div class="field"><label for="usernameInput">Username</label><input type="text" id="usernameInput" autocomplete="username" required></div>
+      <div class="field"><label for="passcodeInput">Password</label><input type="password" id="passcodeInput" autocomplete="current-password" required></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONTACT POPUP MODAL (opened from "Get in Touch" on a talent profile) -->
+<div class="modal-overlay" id="contactOverlay">
+  <div class="modal">
+    <button class="modal-close" id="contactClose">&times;</button>
+    <h3 id="contactModalTitle">Get In Touch</h3>
+    <p class="sub" id="contactModalSub">Send us a message and a real human on the team will get back to you.</p>
+    <form id="contactPopupForm">
+      <input type="hidden" id="contactPopupTalent" value="">
+      <div class="field"><label for="contactPopupName">Name</label><input type="text" id="contactPopupName" required></div>
+      <div class="field"><label for="contactPopupEmail">Email</label><input type="email" id="contactPopupEmail" required></div>
+      <div class="field"><label for="contactPopupMessage">Message</label><textarea id="contactPopupMessage" required placeholder="Tell us about your brand or your content..."></textarea></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD/EDIT TALENT MODAL -->
+<div class="modal-overlay" id="talentOverlay">
+  <div class="modal">
+    <button class="modal-close" id="talentClose">&times;</button>
+    <h3 id="talentModalTitle">Add Talent</h3>
+    <p class="sub">This talent will appear on the public roster for everyone visiting the site.</p>
+    <form id="talentForm">
+      <input type="hidden" id="talentId">
+      
+      <!-- Hidden input to store the final image URL after upload -->
+      <input type="hidden" id="tPhoto">
+      <input type="hidden" id="tCoverPhoto">
+
+      <div class="field"><label for="tName">Name</label><input type="text" id="tName" required></div>
+      <div class="field"><label for="tNiche">Niche</label>
+        <select id="tNiche" required>
+          <option>Lifestyle</option><option>Gaming</option><option>Comedy</option>
+          <option>Food</option><option>Music</option><option>Fashion</option><option>Fitness</option>
+        </select>
+      </div>
+      <div class="field"><label for="tGender">Gender</label>
+        <select id="tGender">
+          <option value="">— Not set —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Used by the "View All Talent" filter on the public roster.</p>
+      </div>
+
+      <!-- New Image Upload Field -->
+      <div class="field">
+        <label for="tImageUpload">Profile Picture</label>
+        <input type="file" id="tImageUpload" accept="image/*">
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Upload a new photo to replace the current one.</p>
+      </div>
+
+      <!-- Media kit cover photo — separate from the profile picture -->
+      <div class="field">
+        <label for="tCoverImageUpload">Cover Photo (media kit header)</label>
+        <input type="file" id="tCoverImageUpload" accept="image/*">
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Optional — shown at the top of this talent's media kit. Falls back to the profile picture if left blank.</p>
+      </div>
+
+      <!-- Gallery: multiple pictures for the talent's public profile -->
+      <div class="field">
+        <label for="tGalleryUpload">Upload Pictures (Gallery)</label>
+        <input type="file" id="tGalleryUpload" accept="image/*" multiple>
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Add multiple photos — these appear on the talent's public profile.</p>
+        <div class="gallery-preview" id="galleryPreview"></div>
+      </div>
+
+      <div class="field"><label for="tBio">Short Bio</label><textarea id="tBio" required></textarea></div>
+
+      <div class="field">
+        <label>Social Platforms</label>
+        <div class="social-rows" id="socialRows"></div>
+        <button type="button" class="add-row-btn" id="addSocialRow" style="margin-top:8px;">+ Add another platform</button>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save Talent</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TALENT FILTER POPUP (opened from "View All Talent" on the roster) -->
+<div class="modal-overlay" id="talentFilterOverlay">
+  <div class="modal talent-filter-modal">
+    <button class="modal-close" id="talentFilterClose">&times;</button>
+    <h3>View All Talent</h3>
+    <p class="sub">Choose who you'd like to see across the full roster.</p>
+    <div class="gender-options">
+      <button type="button" class="gender-option" data-gender="All">
+        <span class="go-label">All</span>
+        <span class="go-sub">Everyone on the roster</span>
+      </button>
+      <button type="button" class="gender-option" data-gender="Female">
+        <span class="go-label">Female</span>
+        <span class="go-sub">Female talent only</span>
+      </button>
+      <button type="button" class="gender-option" data-gender="Male">
+        <span class="go-label">Male</span>
+        <span class="go-sub">Male talent only</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TALENT ROSTER FULL VIEW (opened from the "View All Talent" filter popup) -->
+<div class="mediakit-overlay talent-roster-overlay" id="talentRosterOverlay">
+  <div class="roster-ambient" aria-hidden="true">
+    <span class="roster-orb roster-orb-1"></span>
+    <span class="roster-orb roster-orb-2"></span>
+  </div>
+  <div class="wrap">
+    <button class="mk-back" id="trBack">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Roster
+    </button>
+
+    <div class="tr-header tr-anim-item">
+      <span class="featured-italic">FULL</span>
+      <span class="profiles-bold">TALENT ROSTER</span>
+      <p class="tr-sub" id="trSub">Showing all talent</p>
+    </div>
+
+    <div class="filters tr-gender-filters tr-anim-item" id="trGenderFilters"></div>
+
+    <div class="talent-search-wrap tr-anim-item" id="talentSearchWrap">
+      <div class="talent-search">
+        <svg class="talent-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="talentSearchInput" class="talent-search-input" placeholder="Search talent by name…" autocomplete="off" aria-label="Search talent by name">
+        <button type="button" id="talentSearchClear" class="talent-search-clear" aria-label="Clear search" style="display:none;">&times;</button>
+      </div>
+    </div>
+
+    <div class="roster-grid roster-grid--all" id="talentRosterGrid"></div>
+  </div>
+</div>
+
+<!-- MEDIA KIT FULL VIEW -->
+<div class="mediakit-overlay" id="mediakitOverlay">
+  <button class="mk-back" id="mkBack">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to Roster
+  </button>
+
+  <!-- Splash intro — logo, then fades to reveal the media kit underneath -->
+  <div class="mk-splash" id="mkSplash">
+    <svg class="mk-splash-logo" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BRXDGE">
+      <defs>
+        <linearGradient id="splashChrome" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stop-color="#E0E0E0"/>
+          <stop offset="20%"  stop-color="#FFFFFF"/>
+          <stop offset="55%"  stop-color="#B8B8B8"/>
+          <stop offset="80%"  stop-color="#F0F0F0"/>
+          <stop offset="100%" stop-color="#787878"/>
+        </linearGradient>
+        <linearGradient id="splashCable" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#1A1A1A"/>
+          <stop offset="18%"  stop-color="#787878"/>
+          <stop offset="42%"  stop-color="#E8E8E8"/>
+          <stop offset="58%"  stop-color="#F8F8F8"/>
+          <stop offset="82%"  stop-color="#787878"/>
+          <stop offset="100%" stop-color="#1A1A1A"/>
+        </linearGradient>
+      </defs>
+      <text x="400" y="210" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="110" font-weight="800" letter-spacing="18" fill="url(#splashChrome)">BRXDGE</text>
+      <path d="M 80 300 Q 400 220 720 300" fill="none" stroke="url(#splashCable)" stroke-width="3.8"/>
+      <line x1="130" y1="293" x2="130" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="190" y1="278" x2="190" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="255" y1="260" x2="255" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="318" y1="245" x2="318" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="400" y1="220" x2="400" y2="300" stroke="#909090" stroke-width="1.6"/>
+      <line x1="482" y1="245" x2="482" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="545" y1="260" x2="545" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="610" y1="278" x2="610" y2="300" stroke="#808080" stroke-width="1.6"/>
+      <line x1="670" y1="293" x2="670" y2="300" stroke="#808080" stroke-width="1.6"/>
+    </svg>
+  </div>
+
+  <div id="mkContent"></div>
+</div>
+
+<!-- GALLERY LIGHTBOX — editorial-style enlarged photo viewer with thumbnail rail -->
+<div class="gallery-lightbox" id="galleryLightbox">
+  <div class="gl-topleft">
+    <button class="gl-back" id="glBack">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
+    <div class="gl-name" id="glName"></div>
+  </div>
+  <div class="gl-stage">
+    <button class="gl-nav gl-prev" id="glPrev" aria-label="Previous photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <img id="glMainImage" src="" alt="">
+    <button class="gl-nav gl-next" id="glNext" aria-label="Next photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="gl-side">
+    <div class="gl-counter" id="glCounter">1 / 1</div>
+    <div class="gl-thumbs" id="glThumbs"></div>
+  </div>
+</div>
+
+<!-- VIDEO MODAL — plays a post's actual video inline instead of just linking out -->
+<div class="video-modal" id="videoModal">
+  <button class="video-modal-close" id="videoModalClose" aria-label="Close video">&times;</button>
+  <div class="video-modal-frame" id="videoModalFrame"></div>
+</div>
+
+<!-- QR SHARE MODAL — lets someone scan/copy a direct link to this talent's media kit -->
+<div class="qr-modal" id="qrModal">
+  <div class="qr-modal-card">
+    <button class="qr-modal-close" id="qrModalClose" aria-label="Close">&times;</button>
+    <p class="qr-modal-name" id="qrModalName"></p>
+    <img class="qr-modal-img" id="qrModalImg" src="" alt="QR code linking to this profile">
+    <p class="qr-modal-url" id="qrModalUrl"></p>
+    <button class="btn btn-ghost qr-modal-copy" id="qrModalCopy">Copy Link</button>
+  </div>
+</div>
+
+<!-- STATISTICS MODAL — deeper per-platform performance numbers, opened from the
+     "View statistics" button on TikTok / YouTube platform cards -->
+<div class="stats-modal" id="statsModal">
+  <div class="stats-modal-card">
+    <button class="stats-modal-close" id="statsModalClose" aria-label="Close">&times;</button>
+    <div class="stats-modal-head">
+      <div class="stats-modal-icon" id="statsModalIcon"></div>
+      <div>
+        <p class="stats-modal-platform" id="statsModalPlatform"></p>
+        <p class="stats-modal-name" id="statsModalName"></p>
+      </div>
+    </div>
+    <div class="stats-modal-grid" id="statsModalGrid"></div>
+    <p class="stats-modal-note">Stats are entered and updated by the BRXDGE team rather than pulled live from the platform.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- jsPDF is no longer loaded here as a blocking script tag — it's only
+     needed for the on-demand "download gallery as PDF" feature, so
+     script.js now loads it lazily, on first use, instead of making every
+     visitor's page load wait on a third-party CDN before anything (the
+     loader, the entrance animations) can even start. See loadJsPdfLib()
+     in script.js. -->
+<script src="script.js?v=4"></script>
+</body>
+</html>
+
