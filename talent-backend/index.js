@@ -404,21 +404,25 @@ app.post('/api/contact', async (req, res) => {
     // 1. Save first — this is the source of truth, independent of email working
     insertMessage.run(name, email, message, talent || '', receivedAt);
 
-    // 2. Best-effort email notification — failure here does NOT fail the request
-    if (mailTransporter) {
-      try {
-        await mailTransporter.sendMail({
-          from: EMAIL_USER,
-          to: EMAIL_TO,
-          subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
-          text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
-        });
-      } catch (mailErr) {
-        console.error('Email notification failed (message was still saved):', mailErr);
-      }
-    }
-
+    // 2. Respond to the visitor right away. Don't make them sit on the
+    // "Sending…" button while we wait on Gmail's SMTP round-trip — that
+    // handshake alone can take several seconds, and Railway's outbound
+    // network to Gmail can add more on top. The message is already saved,
+    // so there's nothing left that the visitor's response should wait on.
     res.json({ ok: true });
+
+    // 3. Best-effort email notification, fired in the background — failure
+    // here can't fail the request since we've already responded.
+    if (mailTransporter) {
+      mailTransporter.sendMail({
+        from: EMAIL_USER,
+        to: EMAIL_TO,
+        subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+        text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
+      }).catch(mailErr => {
+        console.error('Email notification failed (message was still saved):', mailErr);
+      });
+    }
   } catch (err) {
     console.error('contact error:', err);
     res.status(500).json({ error: 'Failed to save message' });
