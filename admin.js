@@ -1,7 +1,7 @@
 /* ============================================================
    BRXDGE ADMIN DASHBOARD
    ============================================================ */
-const API = 'https://brxdge-backend.onrender.com';
+const API = 'https://brxdge-production.up.railway.app';
 const TOKEN_KEY = 'brxdge-admin-token';
 let token = null;
 let me = { username: '' };

@@ -11,7 +11,7 @@
    backend. Adjust the local port below if index.js isn't on 3000.
 ========================================================= */
 const IS_LOCAL = ['localhost', '127.0.0.1', ''].includes(location.hostname);
-const API = IS_LOCAL ? 'http://localhost:3000' : 'https://brxdge-backend.onrender.com';
+const API = IS_LOCAL ? 'http://localhost:3000' : 'https://brxdge-production.up.railway.app';
 
 /* =========================================================
    DARK MODE
