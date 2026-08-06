@@ -373,7 +373,16 @@ function openTalentModal(id){
           const originalLabel = btn.textContent;
           btn.disabled = true; btn.textContent = 'Fetching…';
           try {
-            posts = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
+            const fetched = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
+            posts = fetched.posts || [];
+            if (fetched.stats) {
+              const avgViewsEl = extra.querySelector('.stat-avgviews');
+              const avgLikesEl = extra.querySelector('.stat-avglikes');
+              const engagementEl = extra.querySelector('.stat-engagement');
+              if (avgViewsEl) avgViewsEl.value = fetched.stats.avgViews || '';
+              if (avgLikesEl) avgLikesEl.value = fetched.stats.avgLikes || '';
+              if (engagementEl) engagementEl.value = fetched.stats.engagementRate || '';
+            }
             renderPostThumbs();
             showToast('Latest videos fetched');
           } catch(err){
