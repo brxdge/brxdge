@@ -1180,29 +1180,11 @@
     Back to Roster
   </button>
 
-  <!-- Splash intro — the same twin-arch bridge mark from the hero (flat
-       SVG version — this is a short, frequently-repeated transition, so it
-       deliberately skips the hero's three.js scene rather than paying that
-       load cost on every single talent click), then fades to reveal the
-       media kit underneath. -->
+  <!-- Splash intro — your actual logo file (brxdge.png), which already
+       carries the wordmark + bridge cable together as one designed asset,
+       then fades to reveal the media kit underneath. -->
   <div class="mk-splash" id="mkSplash">
-    <div class="mk-splash-mark">
-      <span class="mk-splash-flank mk-splash-flank--left" aria-hidden="true">EST.</span>
-      <svg class="mk-splash-bridge" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#splashBridgeGrad)" stroke-width="6" stroke-linecap="round"/>
-        <circle cx="8" cy="67" r="5" fill="url(#splashBridgeGrad)"/>
-        <circle cx="92" cy="67" r="5" fill="url(#splashBridgeGrad)"/>
-        <defs>
-          <linearGradient id="splashBridgeGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F5F5F5"/>
-            <stop offset="50%" stop-color="#9A9A9A"/>
-            <stop offset="100%" stop-color="#F5F5F5"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="mk-splash-flank mk-splash-flank--right" aria-hidden="true">MMXXVI</span>
-    </div>
-    <div class="mk-splash-word" role="img" aria-label="BRXDGE">BRXDGE</div>
+    <img class="mk-splash-logo-img" src="brxdge.png" alt="BRXDGE">
   </div>
 
   <div id="mkContent"></div>
