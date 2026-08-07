@@ -2123,13 +2123,14 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
 
   .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
   section{ position:relative; padding:120px 0; }
-  .eyebrow{
-    display:inline-flex; align-items:center; gap:8px;
-    font-family:'Cormorant Garamond', serif; font-style:normal; font-weight:400;
-    font-size:26px; letter-spacing:0.24em;
-    text-transform:uppercase; color:var(--coral); margin-bottom:18px;
-  }
-  .eyebrow::before{ content:''; width:18px; height:2px; background:var(--coral); display:inline-block; }
+  /* .eyebrow itself is intentionally NOT redefined here — this whole block
+     is a duplicate of the base styles further up the file, and this exact
+     selector was previously repeated here with a stale font-size:26px that
+     silently overrode the real .eyebrow rule (font-size:16.5px, defined
+     earlier in this file) purely because it appeared later in the
+     cascade. Removed rather than fixed in place, since keeping two
+     .eyebrow{} rules around is exactly what caused this bug — one
+     definition, kept where it already was, is the correct long-term fix. */
 
   /* ---------- NAV ---------- */
 
