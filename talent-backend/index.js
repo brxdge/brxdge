@@ -169,6 +169,69 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
+// --- PER-TALENT SOCIAL PREVIEW (Open Graph / Twitter Card) ---
+// Link-preview crawlers (iMessage, Slack, Twitter/X, Facebook, Discord,
+// WhatsApp...) never run this site's JavaScript — they only read the
+// static <meta> tags already present in the HTML response. Since talent
+// profiles are rendered client-side (the name/photo only appear in the
+// page after JS runs), every shared talent link would otherwise preview
+// as the same generic "BRXDGE — Talent Management" card no matter which
+// talent's URL (?talent=slug) was actually shared. This intercepts just
+// that one case and serves index.html with those specific tags swapped
+// to the talent's own name/bio/photo before express.static ever sees the
+// request — the actual site and all its JS are completely untouched;
+// visitors' browsers load and run the exact same app either way, this
+// only changes what a crawler sees in the raw HTML.
+const INDEX_HTML_PATH = path.join(__dirname, '..', 'index.html');
+
+function slugifyServer(str) {
+  return (str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function escapeHtmlAttr(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+app.get('/', (req, res, next) => {
+  const slug = req.query.talent;
+  if (!slug) return next(); // no talent in the URL — plain static file
+
+  let talent;
+  try {
+    talent = getFullRoster().find((t) => slugifyServer(t.name) === slug);
+  } catch (err) {
+    return next(); // DB hiccup — fall back to the plain file rather than 500
+  }
+  if (!talent) return next(); // unknown slug — plain file; the SPA shows its own "not found" state
+
+  fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
+    if (err) return next();
+
+    const title = `${talent.name} — BRXDGE`;
+    const description = talent.bio || `${talent.name}'s media kit on BRXDGE.`;
+    const image = talent.photo || talent.coverPhoto || 'https://www.brxdge.com/assets/og-image.jpg';
+    const url = `${req.protocol}://${req.get('host')}/?talent=${encodeURIComponent(slug)}`;
+    const t = escapeHtmlAttr(title), d = escapeHtmlAttr(description), i = escapeHtmlAttr(image), u = escapeHtmlAttr(url);
+
+    const out = html
+      .replace(/<title>.*?<\/title>/, `<title>${t}</title>`)
+      .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${d}">`)
+      .replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${t}">`)
+      .replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${d}">`)
+      .replace(/<meta property="og:url" content=".*?">/, `<meta property="og:url" content="${u}">`)
+      .replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${i}">`)
+      // Talent photos aren't guaranteed to be 1200x630 like the default
+      // og-image.jpg — dropping these size hints rather than leaving wrong
+      // ones in; most platforms handle a missing width/height gracefully.
+      .replace(/\s*<meta property="og:image:width" content=".*?">\n?/, '\n')
+      .replace(/\s*<meta property="og:image:height" content=".*?">\n?/, '\n')
+      .replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${t}">`)
+      .replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${d}">`)
+      .replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${i}">`);
+
+    res.send(out);
+  });
+});
+
 // --- ROUTES ---
 // Serve the frontend (brxdge.html, style.css, script.js, and the assets/
 // folder with card images) from the project root, one level up from this
