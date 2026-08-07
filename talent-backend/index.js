@@ -38,6 +38,19 @@ const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 app.use(cors());
 app.use(express.json()); // Essential for receiving JSON from your frontend
 
+// A handful of standard security response headers. Deliberately not using
+// the `helmet` package here — these few lines cover the safe, no-risk wins
+// without adding a new dependency, and without a Content-Security-Policy
+// (which is easy to get subtly wrong and would need live testing against
+// every external image/embed source the site uses before it's safe to ship).
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff'); // stops browsers from "guessing" a file's type
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // stops the site being embedded in someone else's iframe
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); // don't leak full URLs to other sites you link to
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains'); // once loaded over https, always use https
+  next();
+});
+
 // --- FILE STORAGE SETUP ---
 // Persistent volume directory (see db.js for the full explanation — same
 // Railway volume, mounted once at talent-backend/data, covers both the
@@ -64,7 +77,19 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
-const upload = multer({ storage: storage });
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — plenty for a talent photo, stops accidental huge uploads
+  // Only real image files can be uploaded — this endpoint requires a signed-in
+  // admin already, but restricting the file type is a cheap extra layer: it
+  // stops even a compromised admin session from dropping an arbitrary file
+  // (e.g. an HTML file with embedded script) into the publicly-served /uploads folder.
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(null, true);
+    cb(new Error('Only JPG, PNG, WEBP, or GIF images are allowed'));
+  },
+});
 
 // --- MANAGER SESSIONS ---
 // Simple in-memory bearer tokens — plenty for a small internal admin tool.
@@ -86,7 +111,44 @@ function requireAuth(req, res, next) {
   next();
 }
 
-app.post('/api/login', (req, res) => {
+// --- LOGIN RATE LIMITING ---
+// A simple in-memory brute-force guard: after too many login attempts from
+// the same visitor in a short window, further attempts are rejected before
+// even checking the password. Hand-rolled (no new npm dependency) to match
+// the rest of this file. This is the one open door a compromised or guessed
+// password would otherwise walk right through, since a login endpoint with
+// no limit at all can be guessed against indefinitely.
+const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const loginAttempts = new Map(); // ip -> { count, windowStart }
+
+function loginRateLimit(req, res, next) {
+  const ip = req.ip || 'unknown';
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+  if (!entry || now - entry.windowStart > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, windowStart: now });
+    return next();
+  }
+  if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+    const retryAfterSec = Math.ceil((entry.windowStart + LOGIN_WINDOW_MS - now) / 1000);
+    res.setHeader('Retry-After', retryAfterSec);
+    return res.status(429).json({ error: 'Too many login attempts. Please try again in a few minutes.' });
+  }
+  entry.count++;
+  next();
+}
+
+// Periodic cleanup so this map doesn't grow forever — old entries are just a
+// few bytes each, but there's no reason to keep them once their window's up.
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of loginAttempts.entries()) {
+    if (now - entry.windowStart > LOGIN_WINDOW_MS) loginAttempts.delete(ip);
+  }
+}, LOGIN_WINDOW_MS).unref();
+
+app.post('/api/login', loginRateLimit, (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'username and password are required' });
@@ -120,10 +182,17 @@ app.use(express.static(path.join(__dirname, '..')));
 app.use('/uploads', express.static(uploadDir));
 
 // Image Upload Endpoint — requires a signed-in manager
-app.post('/upload', requireAuth, upload.single('talentImage'), (req, res) => {
-  if (!req.file) return res.status(400).send('No file uploaded.');
-  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  res.json({ url: imageUrl });
+app.post('/upload', requireAuth, (req, res) => {
+  // Calling multer this way (instead of chaining it as regular middleware)
+  // lets us catch a rejected file type/size and send back a clean JSON error
+  // instead of Express's default HTML error page, which the admin dashboard's
+  // fetch-based code can't parse.
+  upload.single('talentImage')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Upload failed' });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({ url: imageUrl });
+  });
 });
 
 // --- PUBLIC "MANAGERS" SECTION CONTENT (distinct from admin logins) ---
@@ -403,7 +472,7 @@ async function sendContactNotification({ name, email, talent, message }) {
     body: JSON.stringify({
       from: RESEND_FROM,
       to: EMAIL_TO,
-      subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
+      subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
       text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
     }),
   });
