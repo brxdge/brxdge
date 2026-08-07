@@ -1180,38 +1180,29 @@
     Back to Roster
   </button>
 
-  <!-- Splash intro — logo, then fades to reveal the media kit underneath -->
+  <!-- Splash intro — the same twin-arch bridge mark from the hero (flat
+       SVG version — this is a short, frequently-repeated transition, so it
+       deliberately skips the hero's three.js scene rather than paying that
+       load cost on every single talent click), then fades to reveal the
+       media kit underneath. -->
   <div class="mk-splash" id="mkSplash">
-    <svg class="mk-splash-logo" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BRXDGE">
-      <defs>
-        <linearGradient id="splashChrome" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stop-color="#E0E0E0"/>
-          <stop offset="20%"  stop-color="#FFFFFF"/>
-          <stop offset="55%"  stop-color="#B8B8B8"/>
-          <stop offset="80%"  stop-color="#F0F0F0"/>
-          <stop offset="100%" stop-color="#787878"/>
-        </linearGradient>
-        <linearGradient id="splashCable" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%"   stop-color="#1A1A1A"/>
-          <stop offset="18%"  stop-color="#787878"/>
-          <stop offset="42%"  stop-color="#E8E8E8"/>
-          <stop offset="58%"  stop-color="#F8F8F8"/>
-          <stop offset="82%"  stop-color="#787878"/>
-          <stop offset="100%" stop-color="#1A1A1A"/>
-        </linearGradient>
-      </defs>
-      <text x="400" y="210" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="110" font-weight="800" letter-spacing="18" fill="url(#splashChrome)">BRXDGE</text>
-      <path d="M 80 300 Q 400 220 720 300" fill="none" stroke="url(#splashCable)" stroke-width="3.8"/>
-      <line x1="130" y1="293" x2="130" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="190" y1="278" x2="190" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="255" y1="260" x2="255" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="318" y1="245" x2="318" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="400" y1="220" x2="400" y2="300" stroke="#909090" stroke-width="1.6"/>
-      <line x1="482" y1="245" x2="482" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="545" y1="260" x2="545" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="610" y1="278" x2="610" y2="300" stroke="#808080" stroke-width="1.6"/>
-      <line x1="670" y1="293" x2="670" y2="300" stroke="#808080" stroke-width="1.6"/>
-    </svg>
+    <div class="mk-splash-mark">
+      <span class="mk-splash-flank mk-splash-flank--left" aria-hidden="true">EST.</span>
+      <svg class="mk-splash-bridge" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#splashBridgeGrad)" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="8" cy="67" r="5" fill="url(#splashBridgeGrad)"/>
+        <circle cx="92" cy="67" r="5" fill="url(#splashBridgeGrad)"/>
+        <defs>
+          <linearGradient id="splashBridgeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F5F5F5"/>
+            <stop offset="50%" stop-color="#9A9A9A"/>
+            <stop offset="100%" stop-color="#F5F5F5"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="mk-splash-flank mk-splash-flank--right" aria-hidden="true">MMXXVI</span>
+    </div>
+    <div class="mk-splash-word" role="img" aria-label="BRXDGE">BRXDGE</div>
   </div>
 
   <div id="mkContent"></div>
