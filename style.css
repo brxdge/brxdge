@@ -3228,19 +3228,27 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
     .mk-splash-flank{ display: none; } /* same tight-viewport call as the hero mark */
   }
 
-  /* BRXDGE wordmark — the same chrome-sweep shimmer used on the hero's
-     emphasis text (--chrome custom property), so this splash reads as one
-     brand moment with the hero rather than its own separate flat logo. */
+  /* BRXDGE wordmark — a soft light-to-white sheen, NOT the hero's --chrome
+     gradient. --chrome was designed for thin italic script text and carries
+     several near-black stops for dramatic contrast; clipped to this bold,
+     wide-letter-spaced display font those dark stops land mid-letter as
+     ugly blotches (confirmed visually — cut straight through the "D" and
+     "G"). Every stop here stays light-gray-to-white, so no frame of the
+     animation can ever produce that. */
   .mk-splash-word{
     font-family: 'Bricolage Grotesque', sans-serif;
     font-weight: 800;
     font-size: clamp(30px, 6vw, 52px);
     letter-spacing: 0.1em;
-    background: var(--chrome);
-    background-size: 250% 100%;
+    background: linear-gradient(90deg, #C8C8C8 0%, #FFFFFF 25%, #E8E8E8 50%, #FFFFFF 75%, #C8C8C8 100%);
+    background-size: 200% 100%;
     -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: chrome-sweep 4s ease-in-out infinite alternate, mk-splash-word-in 0.7s ease 0.12s forwards;
+    animation: mk-word-shimmer 5s ease-in-out infinite alternate, mk-splash-word-in 0.7s ease 0.12s forwards;
     opacity: 0;
+  }
+  @keyframes mk-word-shimmer{
+    0%{ background-position: 0% 50%; }
+    100%{ background-position: 100% 50%; }
   }
 
   @keyframes mk-splash-mark-in{
