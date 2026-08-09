@@ -220,6 +220,27 @@ a{ color:inherit; }
   position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%;
   border:none; background:rgba(0,0,0,0.65); color:#fff; font-size:13px; line-height:1;
 }
+
+/* ---------- TAG EDITOR (Categories / Available For, talent modal) ---------- */
+.field-hint{ font-weight:400; color:var(--muted); text-transform:none; }
+.tag-pills{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:8px; }
+.tag-pills:empty{ margin-bottom:0; }
+.tag-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 6px 5px 12px; border-radius:100px; background:#EEF0F4; color:var(--text);
+  font-size:12.5px; font-weight:600;
+}
+.tag-pill-remove{
+  width:18px; height:18px; border-radius:50%; border:none; background:rgba(0,0,0,0.08);
+  color:var(--text); font-size:12px; line-height:1; flex-shrink:0;
+}
+.tag-pill-remove:hover{ background:rgba(0,0,0,0.16); }
+.tag-input{
+  width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px;
+  font-size:13.5px; outline:none;
+}
+.tag-input:focus{ border-color:var(--accent); }
+
 @media (max-width: 640px){
   .social-row{ grid-template-columns:1fr; }
 }
@@ -267,6 +288,10 @@ a{ color:inherit; }
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="4" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="13" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/></svg>
         Brand Marquee
       </button>
+      <button class="nav-item" data-page="blog">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h6M9 13.5h6M9 17h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Blog
+      </button>
       <button class="nav-item" data-page="messages">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Contact Responses
@@ -290,6 +315,7 @@ a{ color:inherit; }
     <div id="page-talent" class="page"></div>
     <div id="page-managers" class="page" style="display:none;"></div>
     <div id="page-brands" class="page" style="display:none;"></div>
+    <div id="page-blog" class="page" style="display:none;"></div>
     <div id="page-messages" class="page" style="display:none;"></div>
     <div id="page-profile" class="page" style="display:none;"></div>
   </main>
@@ -306,6 +332,9 @@ a{ color:inherit; }
 </div>
 <div class="modal-overlay" id="brandModalOverlay">
   <div class="modal" id="brandModal"></div>
+</div>
+<div class="modal-overlay" id="blogModalOverlay">
+  <div class="modal" id="blogModal" style="max-width:680px;"></div>
 </div>
 <div class="modal-overlay" id="messageModalOverlay">
   <div class="modal" id="messageModal"></div>
