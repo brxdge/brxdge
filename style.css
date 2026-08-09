@@ -6260,7 +6260,12 @@ html.dark-mode .mediakit-overlay::after{
 .cast-tray{
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  z-index: 120;
+  /* Must outrank the fullscreen overlays (.mediakit-overlay / the full
+     roster view / the blog post view all sit at z-index:250 with an
+     opaque background) so the tray still shows while one of those is
+     open — but stay below real modals (z-index:400, e.g. the campaign
+     brief form itself) so a modal correctly takes over the screen. */
+  z-index: 260;
   background: var(--panel);
   border-top: 1px solid var(--panel-line);
   box-shadow: 0 -8px 28px rgba(0,0,0,0.14);
