@@ -99,9 +99,28 @@ db.exec(`
     sortOrder INTEGER NOT NULL DEFAULT 0
   );
 
+  -- Blog posts, shown in the public "Blog" section and each at its own
+  -- shareable ?blog=slug URL. status is 'draft' (admin-only, never shown
+  -- publicly) or 'published'. publishedAt is set the moment a post first
+  -- becomes published, so re-editing a live post later doesn't bump it
+  -- back to the top of the feed.
+  CREATE TABLE IF NOT EXISTS blog_posts (
+    id          TEXT PRIMARY KEY,
+    title       TEXT NOT NULL,
+    slug        TEXT NOT NULL UNIQUE,
+    excerpt     TEXT,
+    body        TEXT,
+    coverImage  TEXT,
+    author      TEXT,
+    status      TEXT NOT NULL DEFAULT 'draft',
+    publishedAt TEXT,
+    sortOrder   INTEGER NOT NULL DEFAULT 0
+  );
+
   CREATE INDEX IF NOT EXISTS idx_gallery_talent ON gallery_images(talent_id);
   CREATE INDEX IF NOT EXISTS idx_socials_talent ON socials(talent_id);
   CREATE INDEX IF NOT EXISTS idx_posts_social ON posts(social_id);
+  CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
 `);
 
 // Lightweight "migration": if you already had a brxdge.db from before the
@@ -110,6 +129,26 @@ const managerColumns = db.prepare(`PRAGMA table_info(managers)`).all().map(c => 
 if (!managerColumns.includes('notes')) {
   db.exec(`ALTER TABLE managers ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
 }
+
+// Same lightweight migration pattern — adds the public media-kit fields
+// (multiple categories, audience demographics, "available for" tags) to any
+// talents table that predates them. categories/availableFor are stored as
+// JSON-array text (parsed back into real arrays in getFullRoster()), same
+// idea as how socials/gallery are reconstructed, just without a whole
+// separate child table since these are short, always-replaced-together tag
+// lists rather than genuinely relational data.
+const talentColumns = db.prepare(`PRAGMA table_info(talents)`).all().map(c => c.name);
+const talentColumnsToAdd = [
+  ['categories', "TEXT NOT NULL DEFAULT '[]'"],
+  ['audienceAge', "TEXT NOT NULL DEFAULT ''"],
+  ['audienceLocation', "TEXT NOT NULL DEFAULT ''"],
+  ['availableFor', "TEXT NOT NULL DEFAULT '[]'"],
+];
+talentColumnsToAdd.forEach(([col, def]) => {
+  if (!talentColumns.includes(col)) {
+    db.exec(`ALTER TABLE talents ADD COLUMN ${col} ${def}`);
+  }
+});
 
 // A small helper matching the shape better-sqlite3's db.transaction() gave
 // us, since node:sqlite's DatabaseSync doesn't have that convenience
