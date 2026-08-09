@@ -756,7 +756,7 @@
   html.dark-mode .theme-toggle{ border-color: rgba(255,255,255,0.35); }
 
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
   body{
     margin:0;
     background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 55%, #DDDDDD 100%);
@@ -2112,7 +2112,7 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   html.dark-mode .theme-toggle{ border-color: rgba(255,255,255,0.35); }
 
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth; overflow-x:hidden;}
   body{
     margin:0;
     background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 55%, #DDDDDD 100%);
@@ -6163,7 +6163,8 @@ html.dark-mode .mediakit-overlay::after{
   align-items: center;
   gap: 6px;
   margin-top: 4px;
-  padding: 0;
+  padding: 12px 2px;
+  margin-bottom: -8px;
   border: none;
   background: none;
   font-family: 'Space Mono', monospace;
