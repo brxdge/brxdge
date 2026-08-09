@@ -2747,6 +2747,17 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   .footer-grid{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
   .footer-links{ display:flex; gap:20px; color:var(--muted); font-size:14px; flex-wrap:wrap; }
   .fineprint{ color:var(--muted); font-size:12.5px; margin-top:26px; }
+  /* Deliberately understated — sits inline with the copyright line rather
+     than in the main .footer-links row, so it reads as small print for
+     the team rather than a real navigation destination for visitors. */
+  .footer-admin-link{
+    opacity: 0.7;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-left: 6px;
+    transition: opacity 0.2s ease;
+  }
+  .footer-admin-link:hover{ opacity: 1; }
 
   /* ---------- MODALS ---------- */
   .modal-overlay{
