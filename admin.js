@@ -11,6 +11,8 @@ let managersData = [];
 let messagesData = [];
 let adminsData = [];
 let brandsData = [];
+let blogData = [];
+let campaignsData = [];
 
 try { token = sessionStorage.getItem(TOKEN_KEY); } catch(e) {}
 
@@ -98,10 +100,12 @@ async function enterDashboard(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').classList.add('show');
   document.getElementById('whoamiName').textContent = me.username;
-  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages()]);
+  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadBlog(), loadCampaigns(), loadMessages()]);
   renderTalentPage();
   renderManagersPage();
   renderBrandsPage();
+  renderBlogPage();
+  renderCampaignsPage();
   renderMessagesPage();
   renderProfilePage();
 }
@@ -131,6 +135,25 @@ async function loadBrands(){
   } catch(err){
     console.error('Failed to load brands:', err);
     brandsData = [];
+  }
+}
+async function loadBlog(){
+  // Caught locally, same reasoning as loadBrands() above — a fresh route
+  // that might not be deployed yet shouldn't be able to take down the
+  // whole dashboard's Promise.all().
+  try {
+    blogData = await api('/api/blog/all');
+  } catch(err){
+    console.error('Failed to load blog posts:', err);
+    blogData = [];
+  }
+}
+async function loadCampaigns(){
+  try {
+    campaignsData = await api('/api/campaigns/all');
+  } catch(err){
+    console.error('Failed to load campaigns:', err);
+    campaignsData = [];
   }
 }
 async function loadMessages(){
@@ -809,6 +832,332 @@ function openBrandModal(index){
       overlay.classList.remove('show');
       showToast(existing ? 'Brand updated' : 'Brand added');
       renderBrandsPage();
+    } catch(err){
+      showToast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+/* ============================================================
+   PAGE: BLOG & CASE STUDIES
+   Dual-purpose: plain articles, or creator "Case Study" posts carrying
+   Before → After proof stats (followers, engagement, brand deals,
+   revenue) — the site's answer to "prove you're good, not just claim it."
+   ============================================================ */
+function renderBlogPage(){
+  document.getElementById('page-blog').innerHTML = `
+    <h1 class="page-title">Blog &amp; Case Studies</h1>
+    <p class="page-sub">Articles and creator case studies shown on the public site. Case studies carry Before → After proof stats. Drafts stay hidden until you publish.</p>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Posts</h2><p>${blogData.length} post${blogData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addBlogBtn" style="width:auto;">+ New Post</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th></th><th>Title</th><th>Type</th><th>Status</th><th>Published</th><th></th></tr></thead>
+        <tbody id="blogTbody"></tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('addBlogBtn').addEventListener('click', () => openBlogModal(null));
+
+  const tbody = document.getElementById('blogTbody');
+  if(!blogData.length){
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted); padding:16px 0;">No posts yet — write your first case study or article above.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = blogData.map(p => `
+    <tr>
+      <td><img class="table-logo" src="${p.coverImage || ''}" onerror="this.style.background='#eee'"></td>
+      <td><b>${escapeHtml(p.title)}</b></td>
+      <td><span class="type-badge">${p.postType === 'case_study' ? 'Case Study' : 'Article'}</span></td>
+      <td><span class="status-badge status-badge--${p.status}">${p.status}</span></td>
+      <td style="color:var(--muted); white-space:nowrap;">${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '—'}</td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-sm" data-edit="${p.id}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete="${p.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBlogModal(btn.dataset.edit)));
+  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteBlogPost(btn.dataset.delete)));
+}
+
+async function deleteBlogPost(id){
+  const p = blogData.find(x => x.id === id);
+  if(!confirm(`Delete "${p ? p.title : 'this post'}"? This can't be undone.`)) return;
+  blogData = blogData.filter(x => x.id !== id);
+  try {
+    const saved = await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
+    blogData = saved.posts || blogData;
+    showToast('Post deleted');
+    renderBlogPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+function openBlogModal(id){
+  const existing = id ? blogData.find(p => p.id === id) : null;
+  document.getElementById('blogModal').innerHTML = `
+    <button class="modal-close" data-close>&times;</button>
+    <h3>${existing ? 'Edit Post' : 'New Post'}</h3>
+    <p class="sub">${existing ? escapeHtml(existing.title) : 'Write a new article or creator case study.'}</p>
+    <form id="blogForm">
+      <div class="field-row">
+        <div class="field"><label>Title</label><input type="text" id="pTitle" value="${escapeHtml(existing?.title)}" required></div>
+        <div class="field"><label>Type</label>
+          <select id="pType">
+            <option value="article" ${existing?.postType!=='case_study'?'selected':''}>Article</option>
+            <option value="case_study" ${existing?.postType==='case_study'?'selected':''}>Case Study</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Cover Image</label>
+        ${existing?.coverImage ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.coverImage}">` : ''}
+        <input type="file" id="pCoverFile" accept="image/*">
+      </div>
+      <div class="field"><label>Excerpt <span class="field-hint">(shown on the post card)</span></label><textarea id="pExcerpt" rows="2">${escapeHtml(existing?.excerpt)}</textarea></div>
+      <div class="field"><label>Body</label><textarea id="pBody" rows="8" placeholder="Write the full post here. Blank line between paragraphs.">${escapeHtml(existing?.body)}</textarea></div>
+
+      <div class="field" id="pCaseStudyFields" style="display:none;">
+        <label>Case Study Details</label>
+        <div class="field"><label>Creator / Talent Name</label><input type="text" id="pTalentName" value="${escapeHtml(existing?.talentName)}" placeholder="e.g. Zora Bennett"></div>
+        <div class="field-row">
+          <div class="field"><label>Followers — Before</label><input type="text" id="pFollowersBefore" value="${escapeHtml(existing?.statFollowersBefore)}" placeholder="e.g. 12K"></div>
+          <div class="field"><label>Followers — After</label><input type="text" id="pFollowersAfter" value="${escapeHtml(existing?.statFollowersAfter)}" placeholder="e.g. 340K"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Engagement — Before</label><input type="text" id="pEngagementBefore" value="${escapeHtml(existing?.statEngagementBefore)}" placeholder="e.g. 2.1%"></div>
+          <div class="field"><label>Engagement — After</label><input type="text" id="pEngagementAfter" value="${escapeHtml(existing?.statEngagementAfter)}" placeholder="e.g. 7.4%"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Brand Deals</label><input type="text" id="pBrandDeals" value="${escapeHtml(existing?.statBrandDeals)}" placeholder="e.g. 5 new deals"></div>
+          <div class="field"><label>Revenue</label><input type="text" id="pRevenue" value="${escapeHtml(existing?.statRevenue)}" placeholder="e.g. $18K generated"></div>
+        </div>
+      </div>
+
+      <div class="field"><label>Status</label>
+        <select id="pStatus">
+          <option value="draft" ${existing?.status!=='published'?'selected':''}>Draft — hidden from the public site</option>
+          <option value="published" ${existing?.status==='published'?'selected':''}>Published — live on the public site</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  `;
+
+  const caseStudyFields = document.getElementById('pCaseStudyFields');
+  const typeSelect = document.getElementById('pType');
+  function syncCaseStudyVisibility(){
+    caseStudyFields.style.display = typeSelect.value === 'case_study' ? 'block' : 'none';
+  }
+  typeSelect.addEventListener('change', syncCaseStudyVisibility);
+  syncCaseStudyVisibility();
+
+  const overlay = document.getElementById('blogModalOverlay');
+  overlay.classList.add('show');
+  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
+
+  document.getElementById('blogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      let coverImage = existing?.coverImage || '';
+      const coverFile = document.getElementById('pCoverFile').files[0];
+      if(coverFile) coverImage = await uploadImage(coverFile);
+
+      // Spread existing first (carries id/slug/publishedAt/sortOrder
+      // forward untouched) then override with what this form manages —
+      // same reasoning as the talent modal's entry object.
+      const entry = {
+        ...(existing || {}),
+        title: document.getElementById('pTitle').value.trim(),
+        postType: document.getElementById('pType').value,
+        coverImage,
+        excerpt: document.getElementById('pExcerpt').value.trim(),
+        body: document.getElementById('pBody').value.trim(),
+        talentName: document.getElementById('pTalentName').value.trim(),
+        statFollowersBefore: document.getElementById('pFollowersBefore').value.trim(),
+        statFollowersAfter: document.getElementById('pFollowersAfter').value.trim(),
+        statEngagementBefore: document.getElementById('pEngagementBefore').value.trim(),
+        statEngagementAfter: document.getElementById('pEngagementAfter').value.trim(),
+        statBrandDeals: document.getElementById('pBrandDeals').value.trim(),
+        statRevenue: document.getElementById('pRevenue').value.trim(),
+        status: document.getElementById('pStatus').value,
+      };
+
+      if(existing){
+        blogData = blogData.map(p => p.id === existing.id ? entry : p);
+      } else {
+        blogData.push(entry);
+      }
+      // The server resolves/uniquifies slugs and stamps publishedAt — sync
+      // its response back so the next edit in this session has the real
+      // values instead of stale/missing ones.
+      const saved = await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
+      blogData = saved.posts || blogData;
+      overlay.classList.remove('show');
+      showToast(existing ? 'Post updated' : 'Post created');
+      renderBlogPage();
+    } catch(err){
+      showToast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+/* ============================================================
+   PAGE: CAMPAIGNS ("Brand x Creator" proof section)
+   ============================================================ */
+function renderCampaignsPage(){
+  document.getElementById('page-campaigns').innerHTML = `
+    <h1 class="page-title">Campaigns</h1>
+    <p class="page-sub">Real brand × creator campaign results, shown on the public site as proof of what BRXDGE delivers. Drafts stay hidden until you publish.</p>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Campaigns</h2><p>${campaignsData.length} campaign${campaignsData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addCampaignBtn" style="width:auto;">+ Add Campaign</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th></th><th>Brand</th><th>Creator</th><th>Status</th><th></th></tr></thead>
+        <tbody id="campaignsTbody"></tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('addCampaignBtn').addEventListener('click', () => openCampaignModal(null));
+
+  const tbody = document.getElementById('campaignsTbody');
+  if(!campaignsData.length){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:16px 0;">No campaigns yet — add your first real result above.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = campaignsData.map(c => `
+    <tr>
+      <td>${c.brandLogo
+        ? `<img class="table-logo" src="${c.brandLogo}" onerror="this.style.background='#eee'">`
+        : `<div class="brand-logo-fallback">${escapeHtml((c.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
+      <td><b>${escapeHtml(c.brandName)}</b></td>
+      <td>${escapeHtml(c.creatorName)}</td>
+      <td><span class="status-badge status-badge--${c.status}">${c.status}</span></td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-sm" data-edit="${c.id}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete="${c.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCampaignModal(btn.dataset.edit)));
+  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteCampaign(btn.dataset.delete)));
+}
+
+async function deleteCampaign(id){
+  const c = campaignsData.find(x => x.id === id);
+  if(!confirm(`Delete the "${c ? c.brandName : 'this'}" campaign? This can't be undone.`)) return;
+  campaignsData = campaignsData.filter(x => x.id !== id);
+  try {
+    const saved = await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
+    campaignsData = saved.campaigns || campaignsData;
+    showToast('Campaign deleted');
+    renderCampaignsPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+function openCampaignModal(id){
+  const existing = id ? campaignsData.find(c => c.id === id) : null;
+  document.getElementById('campaignModal').innerHTML = `
+    <button class="modal-close" data-close>&times;</button>
+    <h3>${existing ? 'Edit Campaign' : 'Add Campaign'}</h3>
+    <p class="sub">Shown in the Campaigns proof section on the public site once published.</p>
+    <form id="campaignForm">
+      <div class="field-row">
+        <div class="field"><label>Brand Name</label><input type="text" id="cBrandName" value="${escapeHtml(existing?.brandName)}" required></div>
+        <div class="field"><label>Creator Name</label><input type="text" id="cCreatorName" value="${escapeHtml(existing?.creatorName)}" placeholder="e.g. Zora Bennett"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Brand Logo</label>
+          ${existing?.brandLogo ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.brandLogo}">` : ''}
+          <input type="file" id="cLogoFile" accept="image/*">
+        </div>
+        <div class="field"><label>Cover Image <span class="field-hint">(optional)</span></label><input type="file" id="cCoverFile" accept="image/*"></div>
+      </div>
+      <div class="field"><label>Campaign Objective</label><textarea id="cObjective" rows="2">${escapeHtml(existing?.objective)}</textarea></div>
+      <div class="field">
+        <label>Deliverables</label>
+        <div id="cDeliverablesEditor"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Reach</label><input type="text" id="cReach" value="${escapeHtml(existing?.reach)}" placeholder="e.g. 2.4M impressions"></div>
+        <div class="field"><label>Engagement</label><input type="text" id="cEngagement" value="${escapeHtml(existing?.engagement)}" placeholder="e.g. 8.1% avg. rate"></div>
+      </div>
+      <div class="field"><label>Results</label><textarea id="cResults" rows="2" placeholder="e.g. Drove a 34% lift in brand site traffic during the campaign window.">${escapeHtml(existing?.results)}</textarea></div>
+      <div class="field"><label>Status</label>
+        <select id="cStatus">
+          <option value="draft" ${existing?.status!=='published'?'selected':''}>Draft — hidden from the public site</option>
+          <option value="published" ${existing?.status==='published'?'selected':''}>Published — live on the public site</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  `;
+
+  const deliverablesEditor = buildTagEditor('cDeliverablesEditor', existing?.deliverables, 'e.g. 3 Instagram Reels, press Enter…');
+
+  const overlay = document.getElementById('campaignModalOverlay');
+  overlay.classList.add('show');
+  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
+
+  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      let brandLogo = existing?.brandLogo || '';
+      const logoFile = document.getElementById('cLogoFile').files[0];
+      if(logoFile) brandLogo = await uploadImage(logoFile);
+
+      let coverImage = existing?.coverImage || '';
+      const coverFile = document.getElementById('cCoverFile').files[0];
+      if(coverFile) coverImage = await uploadImage(coverFile);
+
+      const entry = {
+        ...(existing || {}),
+        brandName: document.getElementById('cBrandName').value.trim(),
+        creatorName: document.getElementById('cCreatorName').value.trim(),
+        brandLogo,
+        coverImage,
+        objective: document.getElementById('cObjective').value.trim(),
+        deliverables: deliverablesEditor.getTags(),
+        reach: document.getElementById('cReach').value.trim(),
+        engagement: document.getElementById('cEngagement').value.trim(),
+        results: document.getElementById('cResults').value.trim(),
+        status: document.getElementById('cStatus').value,
+      };
+
+      if(existing){
+        campaignsData = campaignsData.map(c => c.id === existing.id ? entry : c);
+      } else {
+        campaignsData.push(entry);
+      }
+      const saved = await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
+      campaignsData = saved.campaigns || campaignsData;
+      overlay.classList.remove('show');
+      showToast(existing ? 'Campaign updated' : 'Campaign added');
+      renderCampaignsPage();
     } catch(err){
       showToast(err.message);
     } finally {
