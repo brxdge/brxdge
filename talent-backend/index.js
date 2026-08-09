@@ -36,7 +36,10 @@ const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
 // --- MIDDLEWARE ---
 app.use(cors());
-app.use(express.json()); // Essential for receiving JSON from your frontend
+// Raised from Express's 100kb default — blog posts save as one whole-array
+// POST just like roster/managers/brands below, and a handful of real
+// article bodies comfortably clears 100kb on their own.
+app.use(express.json({ limit: '2mb' }));
 
 // A handful of standard security response headers. Deliberately not using
 // the `helmet` package here — these few lines cover the safe, no-risk wins
@@ -192,24 +195,46 @@ function escapeHtmlAttr(str) {
 }
 
 app.get('/', (req, res, next) => {
-  const slug = req.query.talent;
-  if (!slug) return next(); // no talent in the URL — plain static file
+  const talentSlug = req.query.talent;
+  const blogSlug = req.query.blog;
+  if (!talentSlug && !blogSlug) return next(); // plain static file
 
-  let talent;
-  try {
-    talent = getFullRoster().find((t) => slugifyServer(t.name) === slug);
-  } catch (err) {
-    return next(); // DB hiccup — fall back to the plain file rather than 500
+  let title, description, image, urlSlugParam, urlSlugValue;
+
+  if (talentSlug) {
+    let talent;
+    try {
+      talent = getFullRoster().find((t) => slugifyServer(t.name) === talentSlug);
+    } catch (err) {
+      return next(); // DB hiccup — fall back to the plain file rather than 500
+    }
+    if (!talent) return next(); // unknown slug — plain file; the SPA shows its own "not found" state
+
+    title = `${talent.name} — BRXDGE`;
+    description = talent.bio || `${talent.name}'s media kit on BRXDGE.`;
+    image = talent.photo || talent.coverPhoto || 'https://www.brxdge.com/assets/og-image.jpg';
+    urlSlugParam = 'talent';
+    urlSlugValue = talentSlug;
+  } else {
+    let post;
+    try {
+      post = db.prepare(`SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'`).get(blogSlug);
+    } catch (err) {
+      return next();
+    }
+    if (!post) return next(); // unpublished/unknown slug — plain file
+
+    title = `${post.title} — BRXDGE Blog`;
+    description = post.excerpt || (post.body || '').slice(0, 160);
+    image = post.coverImage || 'https://www.brxdge.com/assets/og-image.jpg';
+    urlSlugParam = 'blog';
+    urlSlugValue = blogSlug;
   }
-  if (!talent) return next(); // unknown slug — plain file; the SPA shows its own "not found" state
 
   fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
     if (err) return next();
 
-    const title = `${talent.name} — BRXDGE`;
-    const description = talent.bio || `${talent.name}'s media kit on BRXDGE.`;
-    const image = talent.photo || talent.coverPhoto || 'https://www.brxdge.com/assets/og-image.jpg';
-    const url = `${req.protocol}://${req.get('host')}/?talent=${encodeURIComponent(slug)}`;
+    const url = `${req.protocol}://${req.get('host')}/?${urlSlugParam}=${encodeURIComponent(urlSlugValue)}`;
     const t = escapeHtmlAttr(title), d = escapeHtmlAttr(description), i = escapeHtmlAttr(image), u = escapeHtmlAttr(url);
 
     const out = html
@@ -219,9 +244,10 @@ app.get('/', (req, res, next) => {
       .replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${d}">`)
       .replace(/<meta property="og:url" content=".*?">/, `<meta property="og:url" content="${u}">`)
       .replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${i}">`)
-      // Talent photos aren't guaranteed to be 1200x630 like the default
-      // og-image.jpg — dropping these size hints rather than leaving wrong
-      // ones in; most platforms handle a missing width/height gracefully.
+      // Talent photos / blog cover images aren't guaranteed to be 1200x630
+      // like the default og-image.jpg — dropping these size hints rather
+      // than leaving wrong ones in; most platforms handle a missing
+      // width/height gracefully.
       .replace(/\s*<meta property="og:image:width" content=".*?">\n?/, '\n')
       .replace(/\s*<meta property="og:image:height" content=".*?">\n?/, '\n')
       .replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${t}">`)
@@ -325,6 +351,178 @@ app.post('/api/brands', requireAuth, (req, res) => {
   } catch (err) {
     console.error('brands save error:', err);
     res.status(500).json({ error: 'Failed to save brands' });
+  }
+});
+
+// --- BLOG ---
+// Same "whole array, replace on save" convention as /api/managers and
+// /api/brands above — the admin dashboard always keeps the full post list
+// in memory and re-sends it on every save, so replacing everything inside
+// one transaction matches how the rest of this file's content sections work.
+
+function slugifyBlog(str) {
+  return slugifyServer(str);
+}
+
+// GET /api/blog — public, published posts only, newest first. Anyone
+// visiting the site's Blog section is meant to see this.
+app.get('/api/blog', (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, title, slug, excerpt, coverImage, author, publishedAt, postType, talentName,
+           statFollowersBefore, statFollowersAfter, statEngagementBefore, statEngagementAfter,
+           statBrandDeals, statRevenue
+    FROM blog_posts WHERE status = 'published'
+    ORDER BY publishedAt DESC, sortOrder ASC
+  `).all();
+  res.json(rows);
+});
+
+// GET /api/blog/all — requires a signed-in manager; includes drafts, for
+// the admin dashboard's own post list.
+app.get('/api/blog/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`SELECT * FROM blog_posts ORDER BY sortOrder ASC`).all();
+  res.json(rows);
+});
+
+// GET /api/blog/:slug — a single published post's full content, for the
+// public post-detail view. Requires a signed-in manager to preview drafts.
+app.get('/api/blog/post/:slug', (req, res) => {
+  const post = db.prepare(`SELECT * FROM blog_posts WHERE slug = ?`).get(req.params.slug);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  if (post.status !== 'published') {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const session = token ? sessions.get(token) : null;
+    if (!session || session.expiresAt < Date.now()) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+  }
+  res.json(post);
+});
+
+app.post('/api/blog', requireAuth, (req, res) => {
+  const posts = req.body;
+  if (!Array.isArray(posts)) {
+    return res.status(400).json({ error: 'Expected an array of blog posts' });
+  }
+  try {
+    const now = new Date().toISOString();
+    const usedSlugs = new Set();
+
+    // Resolve slugs up front (unique within this save) and stamp
+    // publishedAt the moment a post first goes live, before any of it
+    // touches the database.
+    const prepared = posts.map((p) => {
+      let slug = slugifyBlog(p.slug || p.title || '');
+      if (!slug) slug = 'post-' + Date.now();
+      let candidate = slug, n = 2;
+      while (usedSlugs.has(candidate)) { candidate = `${slug}-${n++}`; }
+      usedSlugs.add(candidate);
+
+      const status = p.status === 'published' ? 'published' : 'draft';
+      const publishedAt = status === 'published' ? (p.publishedAt || now) : (p.publishedAt || null);
+
+      return {
+        id: p.id || ('b' + Date.now() + Math.random().toString(36).slice(2, 7)),
+        title: p.title || '',
+        slug: candidate,
+        excerpt: p.excerpt || '',
+        body: p.body || '',
+        coverImage: p.coverImage || '',
+        author: p.author || '',
+        status,
+        publishedAt,
+        postType: p.postType === 'case_study' ? 'case_study' : 'article',
+        talentName: p.talentName || '',
+        statFollowersBefore: p.statFollowersBefore || '',
+        statFollowersAfter: p.statFollowersAfter || '',
+        statEngagementBefore: p.statEngagementBefore || '',
+        statEngagementAfter: p.statEngagementAfter || '',
+        statBrandDeals: p.statBrandDeals || '',
+        statRevenue: p.statRevenue || '',
+      };
+    });
+
+    const deleteAll = db.prepare(`DELETE FROM blog_posts`);
+    const insert = db.prepare(`
+      INSERT INTO blog_posts (
+        id, title, slug, excerpt, body, coverImage, author, status, publishedAt, sortOrder,
+        postType, talentName, statFollowersBefore, statFollowersAfter,
+        statEngagementBefore, statEngagementAfter, statBrandDeals, statRevenue
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const runAll = db.transaction((rows) => {
+      deleteAll.run();
+      rows.forEach((p, i) => insert.run(
+        p.id, p.title, p.slug, p.excerpt, p.body, p.coverImage, p.author, p.status, p.publishedAt, i,
+        p.postType, p.talentName, p.statFollowersBefore, p.statFollowersAfter,
+        p.statEngagementBefore, p.statEngagementAfter, p.statBrandDeals, p.statRevenue
+      ));
+    });
+    runAll(prepared);
+    res.json({ ok: true, posts: prepared });
+  } catch (err) {
+    console.error('blog save error:', err);
+    res.status(500).json({ error: 'Failed to save blog posts' });
+  }
+});
+
+// --- CAMPAIGNS ("Brand x Creator" proof section) ---
+// Same whole-array-replace convention as /api/managers and /api/brands —
+// simpler than blog's slug-based system since campaigns don't need their
+// own individual shareable page, just a public results grid.
+
+app.get('/api/campaigns', (req, res) => {
+  const rows = db.prepare(`
+    SELECT * FROM campaigns WHERE status = 'published' ORDER BY sortOrder ASC
+  `).all().map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
+  res.json(rows);
+});
+
+app.get('/api/campaigns/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`SELECT * FROM campaigns ORDER BY sortOrder ASC`).all()
+    .map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
+  res.json(rows);
+});
+
+app.post('/api/campaigns', requireAuth, (req, res) => {
+  const campaigns = req.body;
+  if (!Array.isArray(campaigns)) {
+    return res.status(400).json({ error: 'Expected an array of campaigns' });
+  }
+  try {
+    const prepared = campaigns.map((c) => ({
+      id: c.id || ('camp' + Date.now() + Math.random().toString(36).slice(2, 7)),
+      brandName: c.brandName || '',
+      brandLogo: c.brandLogo || '',
+      creatorName: c.creatorName || '',
+      coverImage: c.coverImage || '',
+      objective: c.objective || '',
+      deliverables: JSON.stringify(Array.isArray(c.deliverables) ? c.deliverables : []),
+      reach: c.reach || '',
+      engagement: c.engagement || '',
+      results: c.results || '',
+      status: c.status === 'published' ? 'published' : 'draft',
+    }));
+
+    const deleteAll = db.prepare(`DELETE FROM campaigns`);
+    const insert = db.prepare(`
+      INSERT INTO campaigns (id, brandName, brandLogo, creatorName, coverImage, objective, deliverables, reach, engagement, results, status, sortOrder)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const runAll = db.transaction((rows) => {
+      deleteAll.run();
+      rows.forEach((c, i) => insert.run(
+        c.id, c.brandName, c.brandLogo, c.creatorName, c.coverImage, c.objective,
+        c.deliverables, c.reach, c.engagement, c.results, c.status, i
+      ));
+    });
+    runAll(prepared);
+    res.json({ ok: true, campaigns: prepared.map((c) => ({ ...c, deliverables: JSON.parse(c.deliverables) })) });
+  } catch (err) {
+    console.error('campaigns save error:', err);
+    res.status(500).json({ error: 'Failed to save campaigns' });
   }
 });
 
@@ -458,13 +656,30 @@ function getFullRoster() {
     return {
       id: t.id, name: t.name, niche: t.niche, gender: t.gender,
       photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio, socials,
+      categories: safeParseJsonArray(t.categories),
+      audienceAge: t.audienceAge || '',
+      audienceLocation: t.audienceLocation || '',
+      availableFor: safeParseJsonArray(t.availableFor),
     };
   });
 }
 
+// categories/availableFor are stored as JSON-array text — parse defensively
+// so one malformed row (or an empty '' from a very old pre-migration read)
+// can't take the whole roster endpoint down with it.
+function safeParseJsonArray(str) {
+  if (!str) return [];
+  try {
+    const parsed = JSON.parse(str);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
+}
+
 const insertTalent = db.prepare(`
-  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, sortOrder)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, sortOrder, categories, audienceAge, audienceLocation, availableFor)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, sortOrder) VALUES (?, ?, ?)`);
 const insertSocial = db.prepare(`
@@ -482,7 +697,10 @@ const replaceRoster = db.transaction((roster) => {
   roster.forEach((t, ti) => {
     insertTalent.run(
       t.id, t.name || '', t.niche || '', t.gender || '',
-      t.photo || '', t.coverPhoto || '', t.bio || '', ti
+      t.photo || '', t.coverPhoto || '', t.bio || '', ti,
+      JSON.stringify(Array.isArray(t.categories) ? t.categories : []),
+      t.audienceAge || '', t.audienceLocation || '',
+      JSON.stringify(Array.isArray(t.availableFor) ? t.availableFor : [])
     );
     (t.gallery || []).forEach((url, gi) => insertGalleryImg.run(t.id, url, gi));
     (t.socials || []).forEach((s, si) => {
