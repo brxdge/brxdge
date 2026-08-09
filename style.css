@@ -5954,3 +5954,100 @@ html.dark-mode .mediakit-overlay::after{
   .blog-grid{ grid-template-columns: 1fr; gap: 20px; }
   .blog-post{ padding: 24px 0 70px; }
 }
+
+/* =========================================================
+   TALENT CARD — media-kit teaser footer (categories / audience /
+   available-for / "View Media Kit" CTA), plus the media-kit header's
+   multi-category tag row. Purely additive: new selectors only, sitting
+   below the existing photo/hover/tilt system rather than touching it.
+========================================================= */
+.talent-card-foot{
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tcf-tags{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tcf-tag{
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid var(--panel-line);
+  border-radius: 100px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--coral);
+  background: var(--panel);
+}
+.tcf-line{
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.tcf-label{
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.tcf-viewmk{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+}
+.tcf-viewmk svg{ transition: transform 0.25s ease; }
+.tcf-viewmk:hover svg{ transform: translateX(4px); }
+
+/* Media-kit header — multiple category pills (replaces the old single
+   .niche-tag span; .niche-tag's own styling is untouched and just gets
+   reused once per pill inside this new wrapper). */
+.mk-title .niche-tags{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.mk-title .niche-tags .niche-tag{ margin-top: 0; }
+.mk-title .niche-tags:empty{ display: none; }
+
+.mk-main .mk-meta-line{
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  margin: 0 auto 10px;
+  max-width: 640px;
+}
+.mk-main .mk-meta-label{
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 3px;
+}
+
+@media (max-width: 640px){
+  .tcf-tag{ font-size: 10px; }
+}
