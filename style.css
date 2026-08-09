@@ -5924,6 +5924,25 @@ html.dark-mode .mediakit-overlay::after{
 .blog-card:hover .blog-card-readmore svg{ transform: translateX(4px); }
 .blog-empty{ color: var(--muted); font-size: 14.5px; text-align: center; padding: 40px 0; grid-column: 1 / -1; }
 
+/* Case-study proof chips shown on the card itself, e.g. "Followers: 12K → 340K" */
+.blog-card-stats{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.blog-stat-chip{
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--avatar-bg);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
 /* Post detail — rendered inside #blogOverlay (.mediakit-overlay) */
 .blog-post{ max-width: 760px; margin: 0 auto; padding: 40px 0 110px; }
 .blog-post-cover{
@@ -5957,9 +5976,134 @@ html.dark-mode .mediakit-overlay::after{
   white-space: pre-wrap;
 }
 
+/* Before → After proof panel shown at the top of a case-study post */
+.blog-stat-panel{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg, 24px);
+  padding: 22px 26px;
+  margin-bottom: 32px;
+}
+.blog-stat-panel-item{ display: flex; flex-direction: column; gap: 4px; }
+.blog-stat-panel-label{
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.blog-stat-panel-value{ font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+
 @media (max-width: 640px){
   .blog-grid{ grid-template-columns: 1fr; gap: 20px; }
   .blog-post{ padding: 24px 0 70px; }
+  .blog-stat-panel{ grid-template-columns: repeat(2, 1fr); padding: 18px 20px; }
+}
+
+/* =========================================================
+   CAMPAIGNS — "Brand × Creator" proof grid (in-page section).
+   Same card-grid shape as .blog-grid, styled distinctly so it reads as
+   its own section rather than a repeat of the case studies above.
+========================================================= */
+.campaigns-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+  margin-top: 12px;
+}
+.campaign-card{
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg, 28px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+.campaign-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.12);
+}
+.campaign-card-cover{
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  background: var(--avatar-bg);
+}
+.campaign-card-body{
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.campaign-card-head{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.campaign-card-logo{
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--avatar-bg);
+  flex-shrink: 0;
+}
+.campaign-card-brand{
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.campaign-card-objective{
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.campaign-card-deliverables{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.campaign-deliverable-tag{
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: var(--avatar-bg);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.campaign-card-stats{
+  display: flex;
+  gap: 18px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panel-line);
+}
+.campaign-stat-chip{
+  font-size: 13px;
+  color: var(--muted);
+}
+.campaign-stat-chip b{
+  display: block;
+  font-size: 17px;
+  color: var(--text);
+  font-weight: 700;
+}
+.campaign-card-results{
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.campaigns-empty{ color: var(--muted); font-size: 14.5px; text-align: center; padding: 40px 0; grid-column: 1 / -1; }
+
+@media (max-width: 640px){
+  .campaigns-grid{ grid-template-columns: 1fr; gap: 20px; }
 }
 
 /* =========================================================
