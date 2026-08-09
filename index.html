@@ -1081,6 +1081,47 @@
   </div>
 </div>
 
+<!-- CAMPAIGN BRIEF MODAL (opened from the cast tray's "Send Campaign Brief") -->
+<div class="modal-overlay" id="campaignBriefOverlay">
+  <div class="modal" style="max-width:540px;">
+    <button class="modal-close" id="campaignBriefClose">&times;</button>
+    <h3>Send Campaign Brief</h3>
+    <p class="sub">Tell us about your campaign and we'll get back to you about this cast within 1 business day.</p>
+    <div class="cast-brief-list" id="castBriefList"></div>
+    <form id="campaignBriefForm">
+      <div class="field"><label for="briefBrandName">Brand / Company Name</label><input type="text" id="briefBrandName" required></div>
+      <div class="field"><label for="briefContactName">Your Name</label><input type="text" id="briefContactName" required></div>
+      <div class="field"><label for="briefEmail">Email</label><input type="email" id="briefEmail" required></div>
+      <div class="field"><label for="briefMessage">Campaign Details</label><textarea id="briefMessage" required placeholder="What's the campaign? Budget, timeline, and deliverables you have in mind..."></textarea></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Send Campaign Brief</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CAST TRAY — persistent bottom bar showing talent added "to campaign" via
+     the + Add to Campaign button on each talent card. Hidden until the cast
+     has at least one talent (see renderCastTray() in script.js). -->
+<div class="cast-tray" id="castTray">
+  <div class="wrap cast-tray-inner">
+    <div class="cast-tray-info">
+      <div class="cast-tray-avatars" id="castTrayAvatars"></div>
+      <div class="cast-tray-text">
+        <span class="cast-tray-label">Your Cast</span>
+        <span class="cast-tray-count" id="castTrayCount">0 Talent</span>
+      </div>
+    </div>
+    <div class="cast-tray-actions">
+      <button type="button" class="cast-tray-clear" id="castTrayClear">Clear</button>
+      <button type="button" class="btn btn-primary cast-tray-send" id="castTraySend">
+        Send Campaign Brief
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD/EDIT TALENT MODAL -->
 <div class="modal-overlay" id="talentOverlay">
   <div class="modal">
