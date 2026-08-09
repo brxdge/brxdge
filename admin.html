@@ -158,6 +158,12 @@ a{ color:inherit; }
 .talent-card-actions .btn{ flex:1; }
 
 /* ---------- DATA TABLES ---------- */
+/* Wraps every .data-table (Managers, Brands, Contact Responses, Admin
+   Accounts) so on a narrow screen the table scrolls horizontally at a
+   legible column width instead of every column getting crushed down to
+   the point emails/messages wrap into an unreadable smush — see the
+   mobile override below. */
+.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .data-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
 .data-table th{
   text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
@@ -278,6 +284,17 @@ a{ color:inherit; }
   .sidebar-foot .nav-item{ white-space:nowrap; }
   #dashboard.show{ flex-direction:column; }
   .main{ margin-left:0; padding:24px 18px 60px; }
+
+  /* Every .data-table (Managers, Brands, Contact Responses, Admin Accounts)
+     was rendering at width:100% with no minimum — on a phone that crushes
+     a 6-column table down to ~60px per column, wrapping emails and message
+     previews into an unreadable smush instead of just letting you scroll to
+     see the rest. Give it a real minimum width and let .table-scroll (the
+     wrapper added around every <table class="data-table"> in admin.js)
+     handle the horizontal scroll instead. */
+  .data-table{ min-width:640px; }
+  .data-table td, .data-table th{ padding:10px 10px; }
+  .truncate{ max-width:160px; }
 }
 </style>
 </head>
