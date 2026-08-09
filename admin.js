@@ -1,7 +1,13 @@
 /* ============================================================
    BRXDGE ADMIN DASHBOARD
    ============================================================ */
-const API = 'https://brxdge-backend.onrender.com';
+// Was pointed at 'https://brxdge-backend.onrender.com' — an old Render
+// deployment left over from before the move to Railway. The public site
+// (script.js) has pointed at the real Railway backend the whole time, so
+// this dashboard was silently reading/writing a stale, disconnected copy
+// of the data (different roster, different messages, different admin
+// accounts) instead of what visitors actually see on brxdge.com.
+const API = 'https://brxdge-production.up.railway.app';
 const TOKEN_KEY = 'brxdge-admin-token';
 let token = null;
 let me = { username: '' };
@@ -148,6 +154,18 @@ function updateMessagesBadge(){
 }
 
 /* ---------------- SHARED HELPERS ---------------- */
+// Matches the public site's talentPhotoUrl() fallback (script.js) — a
+// talent/manager without an uploaded photo yet used to render as a bare
+// `src=""`, which the browser resolves to the current page URL and shows
+// as a broken-image icon. Falling back to the same generated placeholder
+// the public site already uses keeps the admin preview honest (what you
+// see here is what a visitor actually sees) instead of just looking broken.
+function photoOrFallback(entry){
+  const p = entry && entry.photo ? String(entry.photo).trim() : '';
+  if(p) return p;
+  const seed = (entry && (entry.seed || entry.name)) || 'X';
+  return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=c8302c,f0c239,fff8e9`;
+}
 function formatFollowers(n){ return n || '0'; }
 function escapeHtml(str){
   return (str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -233,7 +251,7 @@ function renderTalentPage(){
   }
   grid.innerHTML = rosterData.map(t => `
     <div class="talent-card">
-      <img src="${t.photo || ''}" alt="${escapeHtml(t.name)}" onerror="this.style.background='#eee'">
+      <img src="${photoOrFallback(t)}" alt="${escapeHtml(t.name)}" onerror="this.style.background='#eee'">
       <div class="talent-card-body">
         <div class="talent-card-name">${escapeHtml(t.name)}</div>
         <div class="talent-card-niche">${escapeHtml(t.niche || '')}</div>
@@ -554,7 +572,7 @@ function renderManagersPage(){
   }
   tbody.innerHTML = managersData.map((m, i) => `
     <tr>
-      <td><img class="table-avatar" src="${m.photo || ''}" onerror="this.style.background='#eee'"></td>
+      <td><img class="table-avatar" src="${photoOrFallback(m)}" onerror="this.style.background='#eee'"></td>
       <td><b>${escapeHtml(m.name)}</b></td>
       <td>${escapeHtml(m.role)}</td>
       <td class="truncate">${escapeHtml(m.bio)}</td>
