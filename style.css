@@ -5935,12 +5935,16 @@ html.dark-mode .mediakit-overlay::after{
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 100px;
+  border-radius: 12px;
   background: var(--avatar-bg);
   font-size: 11.5px;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  line-height: 1.4;
 }
 
 /* Post detail — rendered inside #blogOverlay (.mediakit-overlay) */
@@ -6072,12 +6076,16 @@ html.dark-mode .mediakit-overlay::after{
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 100px;
+  border-radius: 12px;
   background: var(--avatar-bg);
   font-size: 11.5px;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  line-height: 1.4;
 }
 .campaign-card-stats{
   display: flex;
