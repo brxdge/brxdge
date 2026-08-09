@@ -117,10 +117,30 @@ db.exec(`
     sortOrder   INTEGER NOT NULL DEFAULT 0
   );
 
+  -- Brand campaigns — the "Brand × Creator" proof section. deliverables is
+  -- stored as JSON-array text, same convention as talents.categories.
+  -- status works the same way as blog_posts: 'draft' stays admin-only until
+  -- there's a real result to show, 'published' is public.
+  CREATE TABLE IF NOT EXISTS campaigns (
+    id            TEXT PRIMARY KEY,
+    brandName     TEXT NOT NULL,
+    brandLogo     TEXT,
+    creatorName   TEXT,
+    coverImage    TEXT,
+    objective     TEXT,
+    deliverables  TEXT NOT NULL DEFAULT '[]',
+    reach         TEXT,
+    engagement    TEXT,
+    results       TEXT,
+    status        TEXT NOT NULL DEFAULT 'draft',
+    sortOrder     INTEGER NOT NULL DEFAULT 0
+  );
+
   CREATE INDEX IF NOT EXISTS idx_gallery_talent ON gallery_images(talent_id);
   CREATE INDEX IF NOT EXISTS idx_socials_talent ON socials(talent_id);
   CREATE INDEX IF NOT EXISTS idx_posts_social ON posts(social_id);
   CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
+  CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 `);
 
 // Lightweight "migration": if you already had a brxdge.db from before the
@@ -147,6 +167,29 @@ const talentColumnsToAdd = [
 talentColumnsToAdd.forEach(([col, def]) => {
   if (!talentColumns.includes(col)) {
     db.exec(`ALTER TABLE talents ADD COLUMN ${col} ${def}`);
+  }
+});
+
+// Same pattern again — turns blog_posts into a dual-purpose table for both
+// regular articles and "Case Study" posts (postType distinguishes the two).
+// Case studies carry their own Before → After proof stats; these stay
+// empty strings for ordinary articles and just don't render on the public
+// side. All free-text (not numeric) since real stats come in mixed formats
+// like "12K" or "+340%" or "$18K" — same reasoning as talents.audienceAge.
+const blogColumns = db.prepare(`PRAGMA table_info(blog_posts)`).all().map(c => c.name);
+const blogColumnsToAdd = [
+  ['postType', "TEXT NOT NULL DEFAULT 'article'"],
+  ['talentName', "TEXT NOT NULL DEFAULT ''"],
+  ['statFollowersBefore', "TEXT NOT NULL DEFAULT ''"],
+  ['statFollowersAfter', "TEXT NOT NULL DEFAULT ''"],
+  ['statEngagementBefore', "TEXT NOT NULL DEFAULT ''"],
+  ['statEngagementAfter', "TEXT NOT NULL DEFAULT ''"],
+  ['statBrandDeals', "TEXT NOT NULL DEFAULT ''"],
+  ['statRevenue', "TEXT NOT NULL DEFAULT ''"],
+];
+blogColumnsToAdd.forEach(([col, def]) => {
+  if (!blogColumns.includes(col)) {
+    db.exec(`ALTER TABLE blog_posts ADD COLUMN ${col} ${def}`);
   }
 });
 
