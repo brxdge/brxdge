@@ -156,6 +156,51 @@ function slugify(str){
   return (str||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
 
+// Reusable removable-pill tag editor — used for both Categories and
+// Available For on the talent modal. Renders into the container with the
+// given id, seeded from `initialTags`, and hands back { getTags() } to
+// read the current list out on save. Enter or comma commits the current
+// input as a new pill; clicking a pill's × removes it.
+function buildTagEditor(containerId, initialTags, placeholder){
+  let tags = Array.isArray(initialTags) ? initialTags.slice() : [];
+  const container = document.getElementById(containerId);
+
+  function render(){
+    container.innerHTML = `
+      <div class="tag-pills">
+        ${tags.map((tag, i) => `<span class="tag-pill">${escapeHtml(tag)}<button type="button" class="tag-pill-remove" data-i="${i}" aria-label="Remove">&times;</button></span>`).join('')}
+      </div>
+      <input type="text" class="tag-input" placeholder="${escapeHtml(placeholder || 'Type and press Enter…')}">
+    `;
+    container.querySelectorAll('.tag-pill-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tags.splice(Number(btn.dataset.i), 1);
+        render();
+      });
+    });
+    const input = container.querySelector('.tag-input');
+    function commit(){
+      const val = input.value.trim().replace(/,$/, '').trim();
+      if(val && !tags.includes(val)){
+        tags.push(val);
+        render();
+      } else {
+        input.value = '';
+      }
+    }
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ','){
+        e.preventDefault();
+        commit();
+      }
+    });
+    input.addEventListener('blur', () => { if(input.value.trim()) commit(); });
+  }
+  render();
+
+  return { getTags: () => tags.slice() };
+}
+
 // Full-color platform icon, matching the public site's look.
 function platformIconColor(p){
   const uid = Math.random().toString(36).slice(2,9);
@@ -292,6 +337,20 @@ function openTalentModal(id){
       </div>
       <div class="field"><label>Cover Photo (media kit header)</label><input type="file" id="tCoverFile" accept="image/*"></div>
       <div class="field"><label>Bio</label><textarea id="tBio" rows="2">${escapeHtml(existing?.bio)}</textarea></div>
+
+      <div class="field">
+        <label>Categories <span class="field-hint">(shown as tags on the public media kit — add as many as apply)</span></label>
+        <div id="tCategoriesEditor"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Audience Age Range</label><input type="text" id="tAudienceAge" value="${escapeHtml(existing?.audienceAge)}" placeholder="e.g. 18–34"></div>
+        <div class="field"><label>Audience Location</label><input type="text" id="tAudienceLocation" value="${escapeHtml(existing?.audienceLocation)}" placeholder="e.g. Philippines"></div>
+      </div>
+      <div class="field">
+        <label>Available For <span class="field-hint">(e.g. Brand Partnerships, UGC, Campaigns, Events)</span></label>
+        <div id="tAvailableForEditor"></div>
+      </div>
+
       <div class="field"><label>Gallery Photos</label>
         <div class="gallery-thumbs" id="galleryThumbs"></div>
         <input type="file" id="tGalleryFiles" accept="image/*" multiple>
@@ -309,6 +368,11 @@ function openTalentModal(id){
       </div>
     </form>
   `;
+
+  // Categories / Available For — both use the same removable-pill tag
+  // editor, just backed by different arrays and read back out on save.
+  const categoriesEditor = buildTagEditor('tCategoriesEditor', existing?.categories, 'Type a category, press Enter…');
+  const availableForEditor = buildTagEditor('tAvailableForEditor', existing?.availableFor, 'e.g. Brand Partnerships, press Enter…');
 
   const socialsList = document.getElementById('socialsList');
   const PLATFORMS = ['Instagram','TikTok','YouTube','Twitter / X','Facebook','Snapchat','Twitch','LinkedIn','Pinterest','Threads','Other'];
@@ -498,6 +562,10 @@ function openTalentModal(id){
       const socialsOut = Array.from(socialsList.querySelectorAll('.social-entry')).map(wrap => wrap.getData());
 
       const entry = {
+        // Spread existing first so any field this form doesn't manage
+        // (there isn't one today, but this is what keeps the next new
+        // field from silently getting wiped on every save) survives.
+        ...(existing || {}),
         id: existing ? existing.id : ('t' + Date.now()),
         name: document.getElementById('tName').value.trim(),
         niche: document.getElementById('tNiche').value.trim(),
@@ -505,6 +573,10 @@ function openTalentModal(id){
         photo: photoUrl,
         coverPhoto: coverUrl,
         bio: document.getElementById('tBio').value.trim(),
+        categories: categoriesEditor.getTags(),
+        audienceAge: document.getElementById('tAudienceAge').value.trim(),
+        audienceLocation: document.getElementById('tAudienceLocation').value.trim(),
+        availableFor: availableForEditor.getTags(),
         gallery: galleryUrls,
         socials: socialsOut,
       };
