@@ -798,6 +798,41 @@
   </div>
 </section>
 
+<!-- CASE STUDIES & BLOG — the site's "proof" section: real creator growth
+     stories (followers/engagement/brand-deals/revenue, before vs. after)
+     alongside general BRXDGE writing, in one feed. Case-study cards get a
+     Before → After stat strip; regular posts read like a normal article
+     card. This whole section hides itself (see loadBlog() in script.js)
+     when there's no published content yet, rather than showing an empty
+     "proof" section with nothing in it — that would undercut the point. -->
+<section id="blog" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center;">
+      <div style="text-align:center; width:100%;">
+        <span class="featured-italic">CASE STUDIES</span>
+        <span class="profiles-bold">&amp; INSIGHTS</span>
+        <p class="category-sub">Real creator growth stories from the BRXDGE roster — followers, engagement, and revenue, before and after.</p>
+      </div>
+    </div>
+    <div class="blog-grid" id="blogGrid"></div>
+  </div>
+</section>
+
+<!-- CAMPAIGNS — Brand x Creator results grid. Same "hides itself if empty"
+     rule as Case Studies above. -->
+<section id="campaigns" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center;">
+      <div style="text-align:center; width:100%;">
+        <span class="featured-italic">CAMPAIGN</span>
+        <span class="profiles-bold">RESULTS</span>
+        <p class="category-sub">A look at real brand × creator campaigns BRXDGE has run — the objective, the deliverables, and what they drove.</p>
+      </div>
+    </div>
+    <div class="campaigns-grid" id="campaignsGrid"></div>
+  </div>
+</section>
+
 <!-- BRANDS MARQUEE -->
 <section id="brands" class="reveal" data-reveal="fade">
   <div class="wrap brands-head">
@@ -1185,6 +1220,19 @@
   </div>
 
   <div id="mkContent"></div>
+</div>
+
+<!-- CASE STUDY / BLOG POST DETAIL VIEW — reuses the same fullscreen-panel
+     mechanic as the talent media kit above (.mediakit-overlay/.mk-back)
+     instead of introducing a second overlay system. -->
+<div class="mediakit-overlay" id="blogOverlay">
+  <button class="mk-back" id="blogBack">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back
+  </button>
+  <div class="wrap">
+    <div id="blogPostContent"></div>
+  </div>
 </div>
 
 <!-- GALLERY LIGHTBOX — editorial-style enlarged photo viewer with thumbnail rail -->
