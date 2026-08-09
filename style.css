@@ -6210,3 +6210,173 @@ html.dark-mode .mediakit-overlay::after{
 @media (max-width: 640px){
   .tcf-tag{ font-size: 10px; }
 }
+
+/* =========================================================
+   CAST / CAMPAIGN BRIEF — "+ Add to Campaign" toggle on each talent
+   card, the persistent bottom "cast tray" it feeds, and the campaign
+   brief modal it opens. This is the talent-discovery flow: a brand
+   shortlists talent across the roster, then sends one combined inquiry
+   instead of contacting each talent individually.
+========================================================= */
+.tcf-actions{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+.tcf-actions .tcf-viewmk{ margin-top: 0; }
+
+.tcf-addcast{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--panel-line);
+  border-radius: 100px;
+  background: var(--panel);
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.tcf-addcast:hover{ border-color: var(--coral); color: var(--coral); }
+.tcf-addcast .cast-icon-check{ display: none; }
+.tcf-addcast.added{ background: var(--coral); border-color: var(--coral); color: #fff; }
+.tcf-addcast.added:hover{ color: #fff; opacity: 0.9; }
+.tcf-addcast.added .cast-icon-plus{ display: none; }
+.tcf-addcast.added .cast-icon-check{ display: inline-flex; }
+
+/* Persistent bottom bar — sits above the mobile tab bar (which is
+   height ~64px incl. safe area), full-width above nothing on desktop
+   since there's no tab bar there. Hidden by default; .show slides it
+   into view so it never visually "pops" for a visitor with an empty cast. */
+.cast-tray{
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 120;
+  background: var(--panel);
+  border-top: 1px solid var(--panel-line);
+  box-shadow: 0 -8px 28px rgba(0,0,0,0.14);
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+}
+.cast-tray.show{ transform: translateY(0); opacity: 1; }
+.cast-tray-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cast-tray-info{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cast-tray-avatars{
+  display: flex;
+  align-items: center;
+}
+.cast-tray-avatar{
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--avatar-bg);
+  border: 2px solid var(--panel);
+  margin-left: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cast-tray-avatar:first-child{ margin-left: 0; }
+.cast-tray-avatar-more{
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--avatar-bg);
+}
+.cast-tray-text{ display: flex; flex-direction: column; }
+.cast-tray-label{
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+}
+.cast-tray-count{ font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
+.cast-tray-actions{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cast-tray-clear{
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+.cast-tray-clear:hover{ color: var(--text); }
+.cast-tray-send{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px;
+  font-size: 13.5px;
+}
+
+@media (max-width: 860px){
+  .cast-tray{ bottom: 64px; } /* clears the fixed mobile tab bar */
+}
+@media (max-width: 560px){
+  .cast-tray-inner{ justify-content: center; text-align: center; }
+  .cast-tray-actions{ width: 100%; justify-content: space-between; }
+}
+
+/* Removable talent chips inside the Campaign Brief modal */
+.cast-brief-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+.cast-brief-list:empty{ display: none; }
+.cast-brief-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 100px;
+  background: var(--avatar-bg);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cast-brief-remove{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(128,128,128,0.18);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cast-brief-remove:hover{ background: var(--coral); color: #fff; }
