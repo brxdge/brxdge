@@ -633,12 +633,24 @@ function talentCoverUrl(t){
   return t.coverPhoto && t.coverPhoto.trim() ? t.coverPhoto.trim() : talentPhotoUrl(t);
 }
 
+// Categories shown on the card footer / media kit — prefers the new
+// multi-category field; falls back to the single legacy `niche` value so
+// talent that haven't been re-saved with the new field yet still show
+// something instead of a blank row.
+function talentCategories(t){
+  if(Array.isArray(t.categories) && t.categories.length) return t.categories;
+  return t.niche ? [t.niche] : [];
+}
+
 // Builds one talent photo-card as a DOM node (used by both the featured
 // homepage grid and the full "View All Talent" grid). `index` positions the
 // editorial numeral badge and staggers this card's entrance animation.
 function buildTalentCard(t, index){
   const reachNum = totalReach(t.socials);
   const reach = formatFollowers(reachNum);
+  const cats = talentCategories(t);
+  const availableFor = t.availableFor || [];
+  const audience = [t.audienceAge, t.audienceLocation].filter(Boolean).join(' • ');
   const card = document.createElement('div');
   card.className = 'talent-card reveal-card';
   card.style.setProperty('--card-i', index || 0);
@@ -663,9 +675,22 @@ function buildTalentCard(t, index){
         ${(t.socials||[]).map(s => `<div class="prow"><span>${s.platform}</span><span>${s.followers || '—'}</span></div>`).join('')}
       </div>
     </div>
+    <div class="talent-card-foot">
+      ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${c}</span>`).join('')}</div>` : ''}
+      ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${audience}</p>` : ''}
+      ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${availableFor.join(' • ')}</p>` : ''}
+      <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
+        View Media Kit
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
   `;
   card.querySelector('.talent-photo').addEventListener('click', (e) => {
     if(e.target.closest('.admin-controls')) return;
+    openMediakit(t.id);
+  });
+  card.querySelector('.tcf-viewmk').addEventListener('click', (e) => {
+    e.stopPropagation();
     openMediakit(t.id);
   });
   attachTiltInteraction(card);
@@ -1482,7 +1507,7 @@ function openMediakit(id, opts){
     <div class="mk-title-wrapper" id="mkTitleWrapper">
       <div class="mk-title">
         <h2>${t.name}</h2>
-        <span class="niche-tag">${t.niche}</span>
+        <div class="niche-tags">${talentCategories(t).map(c => `<span class="niche-tag">${c}</span>`).join('')}</div>
         ${t.bio ? `<p class="mk-title-tagline">${t.bio.split('.')[0]}.</p>` : ''}
       </div>
       <div class="mk-share">
@@ -1504,6 +1529,8 @@ function openMediakit(id, opts){
     </div>
     <div class="mk-main">
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
+      ${(t.audienceAge || t.audienceLocation) ? `<p class="mk-meta-line"><span class="mk-meta-label">Audience</span>${[t.audienceAge, t.audienceLocation].filter(Boolean).join(' • ')}</p>` : ''}
+      ${(t.availableFor && t.availableFor.length) ? `<p class="mk-meta-line"><span class="mk-meta-label">Available for</span>${t.availableFor.join(' • ')}</p>` : ''}
       <p class="mk-bio">${t.bio}</p>
 
       <div class="mk-section-title">Platforms</div>
@@ -2163,7 +2190,13 @@ talentForm.addEventListener('submit', async (e) => {
   // 2. Identify if we are updating or adding
   const id = document.getElementById('talentId').value;
   
+  // Spread the existing record first — this modal doesn't have fields for
+  // everything a talent can carry (e.g. the media-kit categories/audience/
+  // availability set from the admin dashboard), so without this, saving a
+  // talent from here would silently wipe any of those fields back to blank.
+  const existingForSave = id ? rosterData.find(t => t.id === id) : null;
   const entry = {
+    ...(existingForSave || {}),
     id: id || ('t' + Date.now()),
     name: document.getElementById('tName').value.trim(),
     niche: document.getElementById('tNiche').value,
@@ -2394,7 +2427,14 @@ document.querySelectorAll('.reveal').forEach((section) => {
 (function initTypewriterHeadline(){
   const line1 = document.getElementById('servicesEyebrow');
   const line2 = document.getElementById('servicesHeading');
-  const section = document.getElementById('services');
+  // "what-we-do", not "services" — the id="services" section is a
+  // *different* section (the relocated "BRXDGE TO POSSIBILITIES" headline
+  // + CTAs, which is the bridge's click-to-cross landing target). The two
+  // used to share id="services", which meant this lookup silently grabbed
+  // the wrong section and could fire the typewriter while that first
+  // section was on screen instead of this one. See index.html for the
+  // full explanation.
+  const section = document.getElementById('what-we-do');
   if(!line1 || !line2 || !section) return;
 
   function prepareLine(el){
@@ -2453,12 +2493,45 @@ document.querySelectorAll('.reveal').forEach((section) => {
     lines[1].cursor.classList.add('tw-cursor-blink-end');
   }
 
+  // Only play once the section is in view AND the visitor has actually
+  // scrolled there themselves. Without this, clicking the 3D bridge mark
+  // above (which smooth-scrolls the page to this section programmatically)
+  // would land the section in view immediately and fire the typewriter
+  // mid-transition, fighting with the bridge's own falling-apart animation
+  // and the section's "reveal" entrance animation for attention. Real
+  // wheel/touch/keyboard input from the visitor is the only thing that
+  // counts as "scrolled" — a script-driven scrollIntoView() never fires
+  // these events, so the auto-scroll from the bridge click can't trigger it.
+  let sectionIntersecting = false;
+  let userHasScrolled = false;
+  let sequenceStarted = false;
+
+  function maybePlaySequence(){
+    if(sequenceStarted || !sectionIntersecting || !userHasScrolled) return;
+    sequenceStarted = true;
+    playSequence();
+    twObserver.unobserve(section);
+  }
+
+  function onScrollInput(e){
+    if(e.type === 'keydown'){
+      const scrollKeys = ['ArrowDown','ArrowUp','PageDown','PageUp',' ','Spacebar','Home','End'];
+      if(!scrollKeys.includes(e.key)) return;
+    }
+    userHasScrolled = true;
+    window.removeEventListener('wheel', onScrollInput);
+    window.removeEventListener('touchmove', onScrollInput);
+    window.removeEventListener('keydown', onScrollInput);
+    maybePlaySequence();
+  }
+  window.addEventListener('wheel', onScrollInput, { passive: true });
+  window.addEventListener('touchmove', onScrollInput, { passive: true });
+  window.addEventListener('keydown', onScrollInput);
+
   const twObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if(entry.isIntersecting){
-        playSequence();
-        twObserver.unobserve(entry.target);
-      }
+      sectionIntersecting = entry.isIntersecting;
+      if(entry.isIntersecting) maybePlaySequence();
     });
   }, { threshold: 0.35 });
   twObserver.observe(section);
