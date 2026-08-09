@@ -574,6 +574,11 @@ async function loadRoster(){
     rosterData = defaultRoster; // Fallback to defaults
   }
   renderRoster();
+  // Cast is stored as talent ids in localStorage and rendered against
+  // rosterData, so it can't build its avatar list until the roster itself
+  // has loaded — this is the earliest point that's true, including on a
+  // returning visit where localStorage already has a saved shortlist.
+  renderCastTray();
 
   // Deep link: if the URL already points at a specific talent (e.g. a
   // shared link like ?talent=mark-ramirez), open their media kit right away.
@@ -683,10 +688,16 @@ function buildTalentCard(t, index){
       ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${c}</span>`).join('')}</div>` : ''}
       ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${audience}</p>` : ''}
       ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${availableFor.join(' • ')}</p>` : ''}
-      <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
-        View Media Kit
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <div class="tcf-actions">
+        <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
+          View Media Kit
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="tcf-addcast${castIds.includes(t.id) ? ' added' : ''}" data-cast-toggle="${t.id}" aria-pressed="${castIds.includes(t.id)}">
+          ${castCheckSvg}${castPlusSvg}
+          <span>${castIds.includes(t.id) ? 'Added' : 'Add to Campaign'}</span>
+        </button>
+      </div>
     </div>
   `;
   card.querySelector('.talent-photo').addEventListener('click', (e) => {
@@ -696,6 +707,10 @@ function buildTalentCard(t, index){
   card.querySelector('.tcf-viewmk').addEventListener('click', (e) => {
     e.stopPropagation();
     openMediakit(t.id);
+  });
+  card.querySelector('.tcf-addcast').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCast(t.id);
   });
   attachTiltInteraction(card);
   return card;
@@ -1578,6 +1593,176 @@ function renderCampaignsGrid(){
   grid.innerHTML = '';
   campaignsData.forEach(c => grid.appendChild(buildCampaignCard(c)));
   revealTalentCards(grid);
+}
+
+/* ---------------- CAST / CAMPAIGN BRIEF ----------------
+   Lets a brand tap "+ Add to Campaign" on any talent card to build up a
+   shortlist ("cast"), then send one combined inquiry for the whole group
+   instead of contacting each talent one at a time. Persisted to
+   localStorage (not sessionStorage) so a brand's shortlist survives a
+   page reload or a return visit — this is a real production site, not a
+   sandboxed Claude artifact, so localStorage is the right tool here.
+   Reuses the existing /api/contact endpoint (no backend changes): the
+   selected talent names are joined into the `talent` field and folded
+   into the message body, so these submissions show up in the admin's
+   existing Contact Responses inbox alongside regular inquiries. */
+const CAST_KEY = 'brxdge:cast';
+const CAST_MAX = 10; // soft cap so the tray/avatar stack never gets unwieldy
+let castIds = [];
+try {
+  const stored = JSON.parse(localStorage.getItem(CAST_KEY) || '[]');
+  if(Array.isArray(stored)) castIds = stored;
+} catch(err) { castIds = []; }
+
+const castPlusSvg = `<svg class="cast-icon cast-icon-plus" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+const castCheckSvg = `<svg class="cast-icon cast-icon-check" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function saveCast(){
+  try { localStorage.setItem(CAST_KEY, JSON.stringify(castIds)); } catch(err) { /* private mode etc — cast just won't persist */ }
+}
+
+// Keeps every "+ Add to Campaign" button on screen (featured grid + full
+// roster overlay, if both happen to have rendered cards) in sync with
+// castIds, without re-rendering the whole grid — re-rendering would kill
+// scroll position and re-trigger card entrance animations.
+function refreshCastButtons(){
+  document.querySelectorAll('[data-cast-toggle]').forEach(btn => {
+    const inCast = castIds.includes(btn.dataset.castToggle);
+    btn.classList.toggle('added', inCast);
+    btn.setAttribute('aria-pressed', inCast);
+    const label = btn.querySelector('span');
+    if(label) label.textContent = inCast ? 'Added' : 'Add to Campaign';
+  });
+}
+
+function toggleCast(id){
+  const i = castIds.indexOf(id);
+  if(i > -1){
+    castIds.splice(i, 1);
+  } else {
+    if(castIds.length >= CAST_MAX){
+      showToast(`You can add up to ${CAST_MAX} talent to a campaign brief`);
+      return;
+    }
+    castIds.push(id);
+  }
+  saveCast();
+  refreshCastButtons();
+  renderCastTray();
+  renderCastBriefList();
+  // Sending the last talent to zero while the brief modal is open would
+  // leave it showing an empty list — close it rather than let that happen.
+  if(!castIds.length){
+    const overlay = document.getElementById('campaignBriefOverlay');
+    if(overlay && overlay.classList.contains('show')) overlay.classList.remove('show');
+  }
+}
+
+function castTalents(){
+  return castIds.map(id => rosterData.find(t => t.id === id)).filter(Boolean);
+}
+
+const castTray = document.getElementById('castTray');
+
+function renderCastTray(){
+  if(!castTray) return;
+  const talents = castTalents();
+  if(!talents.length){
+    castTray.classList.remove('show');
+    return;
+  }
+  castTray.classList.add('show');
+
+  const countEl = document.getElementById('castTrayCount');
+  if(countEl) countEl.textContent = `${talents.length} Talent${talents.length === 1 ? '' : 's'}`;
+
+  const avatarsEl = document.getElementById('castTrayAvatars');
+  if(avatarsEl){
+    const VISIBLE = 5;
+    const shown = talents.slice(0, VISIBLE);
+    const overflow = talents.length - shown.length;
+    avatarsEl.innerHTML = shown.map(t => `<img class="cast-tray-avatar" src="${talentPhotoUrl(t)}" alt="${t.name}" title="${t.name}">`).join('')
+      + (overflow > 0 ? `<span class="cast-tray-avatar cast-tray-avatar-more">+${overflow}</span>` : '');
+  }
+}
+
+const campaignBriefOverlay = document.getElementById('campaignBriefOverlay');
+const campaignBriefCloseBtn = document.getElementById('campaignBriefClose');
+if(campaignBriefCloseBtn) campaignBriefCloseBtn.addEventListener('click', () => campaignBriefOverlay.classList.remove('show'));
+
+function renderCastBriefList(){
+  const list = document.getElementById('castBriefList');
+  if(!list) return;
+  const talents = castTalents();
+  list.innerHTML = talents.map(t => `
+    <span class="cast-brief-chip">
+      ${t.name}
+      <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${t.name} from cast">&times;</button>
+    </span>
+  `).join('');
+  list.querySelectorAll('[data-remove-cast]').forEach(btn => {
+    btn.addEventListener('click', () => toggleCast(btn.dataset.removeCast));
+  });
+}
+
+function openCampaignBriefModal(){
+  if(!castIds.length) return;
+  renderCastBriefList();
+  if(campaignBriefOverlay) campaignBriefOverlay.classList.add('show');
+}
+
+const castTrayClearBtn = document.getElementById('castTrayClear');
+if(castTrayClearBtn){
+  castTrayClearBtn.addEventListener('click', () => {
+    castIds = [];
+    saveCast();
+    refreshCastButtons();
+    renderCastTray();
+  });
+}
+
+const castTraySendBtn = document.getElementById('castTraySend');
+if(castTraySendBtn) castTraySendBtn.addEventListener('click', openCampaignBriefModal);
+
+const campaignBriefForm = document.getElementById('campaignBriefForm');
+if(campaignBriefForm){
+  campaignBriefForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const talents = castTalents();
+    if(!talents.length){ showToast('Add at least one talent to your cast first'); return; }
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalLabel = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const talentNames = talents.map(t => t.name);
+      const brandName = document.getElementById('briefBrandName').value.trim();
+      const details = document.getElementById('briefMessage').value.trim();
+      const res = await fetch(API + '/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('briefContactName').value.trim(),
+          email: document.getElementById('briefEmail').value.trim(),
+          talent: talentNames.join(', '),
+          message: `Campaign Brief — Cast: ${talentNames.join(', ')}\nBrand: ${brandName}\n\n${details}`,
+        }),
+      });
+      if(!res.ok) throw new Error('Request failed');
+      campaignBriefOverlay.classList.remove('show');
+      showToast("Campaign brief sent — we'll be in touch soon");
+      e.target.reset();
+      castIds = [];
+      saveCast();
+      refreshCastButtons();
+      renderCastTray();
+    } catch(err){
+      console.error(err);
+      showToast("Couldn't send right now — please try again in a moment");
+    } finally {
+      btn.disabled = false; btn.textContent = originalLabel;
+    }
+  });
 }
 
 // Converts a normal YouTube or TikTok video link into an embeddable
