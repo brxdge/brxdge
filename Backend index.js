@@ -368,7 +368,9 @@ function slugifyBlog(str) {
 // visiting the site's Blog section is meant to see this.
 app.get('/api/blog', (req, res) => {
   const rows = db.prepare(`
-    SELECT id, title, slug, excerpt, coverImage, author, publishedAt
+    SELECT id, title, slug, excerpt, coverImage, author, publishedAt, postType, talentName,
+           statFollowersBefore, statFollowersAfter, statEngagementBefore, statEngagementAfter,
+           statBrandDeals, statRevenue
     FROM blog_posts WHERE status = 'published'
     ORDER BY publishedAt DESC, sortOrder ASC
   `).all();
@@ -430,18 +432,32 @@ app.post('/api/blog', requireAuth, (req, res) => {
         author: p.author || '',
         status,
         publishedAt,
+        postType: p.postType === 'case_study' ? 'case_study' : 'article',
+        talentName: p.talentName || '',
+        statFollowersBefore: p.statFollowersBefore || '',
+        statFollowersAfter: p.statFollowersAfter || '',
+        statEngagementBefore: p.statEngagementBefore || '',
+        statEngagementAfter: p.statEngagementAfter || '',
+        statBrandDeals: p.statBrandDeals || '',
+        statRevenue: p.statRevenue || '',
       };
     });
 
     const deleteAll = db.prepare(`DELETE FROM blog_posts`);
     const insert = db.prepare(`
-      INSERT INTO blog_posts (id, title, slug, excerpt, body, coverImage, author, status, publishedAt, sortOrder)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO blog_posts (
+        id, title, slug, excerpt, body, coverImage, author, status, publishedAt, sortOrder,
+        postType, talentName, statFollowersBefore, statFollowersAfter,
+        statEngagementBefore, statEngagementAfter, statBrandDeals, statRevenue
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const runAll = db.transaction((rows) => {
       deleteAll.run();
       rows.forEach((p, i) => insert.run(
-        p.id, p.title, p.slug, p.excerpt, p.body, p.coverImage, p.author, p.status, p.publishedAt, i
+        p.id, p.title, p.slug, p.excerpt, p.body, p.coverImage, p.author, p.status, p.publishedAt, i,
+        p.postType, p.talentName, p.statFollowersBefore, p.statFollowersAfter,
+        p.statEngagementBefore, p.statEngagementAfter, p.statBrandDeals, p.statRevenue
       ));
     });
     runAll(prepared);
@@ -449,6 +465,64 @@ app.post('/api/blog', requireAuth, (req, res) => {
   } catch (err) {
     console.error('blog save error:', err);
     res.status(500).json({ error: 'Failed to save blog posts' });
+  }
+});
+
+// --- CAMPAIGNS ("Brand x Creator" proof section) ---
+// Same whole-array-replace convention as /api/managers and /api/brands —
+// simpler than blog's slug-based system since campaigns don't need their
+// own individual shareable page, just a public results grid.
+
+app.get('/api/campaigns', (req, res) => {
+  const rows = db.prepare(`
+    SELECT * FROM campaigns WHERE status = 'published' ORDER BY sortOrder ASC
+  `).all().map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
+  res.json(rows);
+});
+
+app.get('/api/campaigns/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`SELECT * FROM campaigns ORDER BY sortOrder ASC`).all()
+    .map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
+  res.json(rows);
+});
+
+app.post('/api/campaigns', requireAuth, (req, res) => {
+  const campaigns = req.body;
+  if (!Array.isArray(campaigns)) {
+    return res.status(400).json({ error: 'Expected an array of campaigns' });
+  }
+  try {
+    const prepared = campaigns.map((c) => ({
+      id: c.id || ('camp' + Date.now() + Math.random().toString(36).slice(2, 7)),
+      brandName: c.brandName || '',
+      brandLogo: c.brandLogo || '',
+      creatorName: c.creatorName || '',
+      coverImage: c.coverImage || '',
+      objective: c.objective || '',
+      deliverables: JSON.stringify(Array.isArray(c.deliverables) ? c.deliverables : []),
+      reach: c.reach || '',
+      engagement: c.engagement || '',
+      results: c.results || '',
+      status: c.status === 'published' ? 'published' : 'draft',
+    }));
+
+    const deleteAll = db.prepare(`DELETE FROM campaigns`);
+    const insert = db.prepare(`
+      INSERT INTO campaigns (id, brandName, brandLogo, creatorName, coverImage, objective, deliverables, reach, engagement, results, status, sortOrder)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const runAll = db.transaction((rows) => {
+      deleteAll.run();
+      rows.forEach((c, i) => insert.run(
+        c.id, c.brandName, c.brandLogo, c.creatorName, c.coverImage, c.objective,
+        c.deliverables, c.reach, c.engagement, c.results, c.status, i
+      ));
+    });
+    runAll(prepared);
+    res.json({ ok: true, campaigns: prepared.map((c) => ({ ...c, deliverables: JSON.parse(c.deliverables) })) });
+  } catch (err) {
+    console.error('campaigns save error:', err);
+    res.status(500).json({ error: 'Failed to save campaigns' });
   }
 });
 
