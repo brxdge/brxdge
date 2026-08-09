@@ -176,6 +176,18 @@ a{ color:inherit; }
 .clickable-row{ cursor:pointer; }
 .clickable-row:hover td{ background:#FAFBFC; }
 
+/* ---------- STATUS / TYPE BADGES (Blog & Case Studies, Campaigns) ---------- */
+.status-badge{
+  display:inline-flex; align-items:center; padding:3px 10px; border-radius:100px;
+  font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+}
+.status-badge--draft{ background:#F1F2F5; color:var(--muted); }
+.status-badge--published{ background:#DCFCE7; color:#166534; }
+.type-badge{
+  display:inline-flex; align-items:center; padding:3px 10px; border-radius:100px;
+  font-size:11.5px; font-weight:700; background:#EEF2FF; color:var(--accent);
+}
+
 /* ---------- SOCIAL PLATFORM ROWS (talent modal) ---------- */
 .social-row{ display:grid; grid-template-columns:140px 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center; }
 .social-row select, .social-row input{
@@ -290,7 +302,11 @@ a{ color:inherit; }
       </button>
       <button class="nav-item" data-page="blog">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h6M9 13.5h6M9 17h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        Blog
+        Blog &amp; Case Studies
+      </button>
+      <button class="nav-item" data-page="campaigns">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 13l6-6 4 4 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 5h5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Campaigns
       </button>
       <button class="nav-item" data-page="messages">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -316,6 +332,7 @@ a{ color:inherit; }
     <div id="page-managers" class="page" style="display:none;"></div>
     <div id="page-brands" class="page" style="display:none;"></div>
     <div id="page-blog" class="page" style="display:none;"></div>
+    <div id="page-campaigns" class="page" style="display:none;"></div>
     <div id="page-messages" class="page" style="display:none;"></div>
     <div id="page-profile" class="page" style="display:none;"></div>
   </main>
@@ -335,6 +352,9 @@ a{ color:inherit; }
 </div>
 <div class="modal-overlay" id="blogModalOverlay">
   <div class="modal" id="blogModal" style="max-width:680px;"></div>
+</div>
+<div class="modal-overlay" id="campaignModalOverlay">
+  <div class="modal" id="campaignModal" style="max-width:640px;"></div>
 </div>
 <div class="modal-overlay" id="messageModalOverlay">
   <div class="modal" id="messageModal"></div>
