@@ -753,7 +753,7 @@ async function sendContactNotification({ name, email, talent, message }) {
     body: JSON.stringify({
       from: RESEND_FROM,
       to: EMAIL_TO,
-      subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+      subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
       text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
     }),
   });
