@@ -194,12 +194,21 @@ function escapeHtmlAttr(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Safely serializes a JSON-LD object into an inline <script> block. The
+// object can ultimately contain admin-entered text (a talent bio, a blog
+// title/body) — escaping "<" stops something like a bio containing
+// "</script>" from breaking out of the tag and injecting markup.
+function jsonLdScript(obj) {
+  return `<script type="application/ld+json">\n${JSON.stringify(obj, null, 2).replace(/</g, '\\u003c')}\n</script>`;
+}
+
 app.get('/', (req, res, next) => {
   const talentSlug = req.query.talent;
   const blogSlug = req.query.blog;
-  if (!talentSlug && !blogSlug) return next(); // plain static file
+  if (!talentSlug && !blogSlug) return next(); // plain static file — keeps its own Organization JSON-LD as-is
 
-  let title, description, image, urlSlugParam, urlSlugValue;
+  let title, description, image, urlSlugParam, urlSlugValue, structuredData;
+  const siteUrl = `${req.protocol}://${req.get('host')}`;
 
   if (talentSlug) {
     let talent;
@@ -215,6 +224,22 @@ app.get('/', (req, res, next) => {
     image = talent.photo || talent.coverPhoto || 'https://www.brxdge.com/assets/og-image.jpg';
     urlSlugParam = 'talent';
     urlSlugValue = talentSlug;
+
+    // Person schema, tied back to BRXDGE as the talent's agency (worksFor)
+    // and linked out to their real social profiles (sameAs) — both help
+    // Google connect this page to the creator as a real, searchable entity
+    // rather than just a generic profile page.
+    structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: talent.name,
+      description: talent.bio || undefined,
+      image: talent.photo || talent.coverPhoto || undefined,
+      url: `${siteUrl}/?talent=${encodeURIComponent(talentSlug)}`,
+      jobTitle: 'Content Creator',
+      worksFor: { '@type': 'Organization', name: 'BRXDGE', url: `${siteUrl}/` },
+      sameAs: (talent.socials || []).map((s) => s.url).filter(Boolean),
+    };
   } else {
     let post;
     try {
@@ -229,33 +254,117 @@ app.get('/', (req, res, next) => {
     image = post.coverImage || 'https://www.brxdge.com/assets/og-image.jpg';
     urlSlugParam = 'blog';
     urlSlugValue = blogSlug;
+
+    // BlogPosting is the schema.org type Google's rich-result docs expect
+    // for both regular articles and case studies — there's no separate
+    // "CaseStudy" type, so postType only affects the site's own UI, not
+    // which schema gets used here.
+    structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: post.title,
+      description: post.excerpt || undefined,
+      image: post.coverImage || undefined,
+      datePublished: post.publishedAt || undefined,
+      author: { '@type': 'Organization', name: post.author || 'BRXDGE' },
+      publisher: {
+        '@type': 'Organization',
+        name: 'BRXDGE',
+        logo: { '@type': 'ImageObject', url: `${siteUrl}/brxdge.png` },
+      },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `${siteUrl}/?blog=${encodeURIComponent(blogSlug)}` },
+    };
   }
 
   fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
     if (err) return next();
 
-    const url = `${req.protocol}://${req.get('host')}/?${urlSlugParam}=${encodeURIComponent(urlSlugValue)}`;
+    const url = `${siteUrl}/?${urlSlugParam}=${encodeURIComponent(urlSlugValue)}`;
     const t = escapeHtmlAttr(title), d = escapeHtmlAttr(description), i = escapeHtmlAttr(image), u = escapeHtmlAttr(url);
+    const ld = jsonLdScript(structuredData);
 
+    // Every replacement below uses a function, not a plain string. Passing
+    // a string to String.replace() gives "$&", "$1", "$$" etc. special
+    // meaning — and title/description/bio here can contain admin-entered
+    // free text (a talent bio, a blog excerpt) that might itself contain a
+    // "$" followed by a digit (e.g. a bio mentioning "$1M in brand deals"),
+    // which would otherwise silently corrupt the output. A function return
+    // value is always inserted literally, so that risk goes away entirely.
     const out = html
-      .replace(/<title>.*?<\/title>/, `<title>${t}</title>`)
-      .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${d}">`)
-      .replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${t}">`)
-      .replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${d}">`)
-      .replace(/<meta property="og:url" content=".*?">/, `<meta property="og:url" content="${u}">`)
-      .replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${i}">`)
+      .replace(/<title>.*?<\/title>/, () => `<title>${t}</title>`)
+      .replace(/<meta name="description" content=".*?">/, () => `<meta name="description" content="${d}">`)
+      // The canonical tag previously stayed hardcoded to the homepage on
+      // every talent/blog page, which tells Google "this is a duplicate of
+      // the homepage" and suppresses it from being indexed as its own
+      // result — defeating the point of building these pages out at all.
+      .replace(/<link rel="canonical" href=".*?">/, () => `<link rel="canonical" href="${u}">`)
+      .replace(/<meta property="og:title" content=".*?">/, () => `<meta property="og:title" content="${t}">`)
+      .replace(/<meta property="og:description" content=".*?">/, () => `<meta property="og:description" content="${d}">`)
+      .replace(/<meta property="og:url" content=".*?">/, () => `<meta property="og:url" content="${u}">`)
+      .replace(/<meta property="og:image" content=".*?">/, () => `<meta property="og:image" content="${i}">`)
       // Talent photos / blog cover images aren't guaranteed to be 1200x630
       // like the default og-image.jpg — dropping these size hints rather
       // than leaving wrong ones in; most platforms handle a missing
       // width/height gracefully.
-      .replace(/\s*<meta property="og:image:width" content=".*?">\n?/, '\n')
-      .replace(/\s*<meta property="og:image:height" content=".*?">\n?/, '\n')
-      .replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${t}">`)
-      .replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${d}">`)
-      .replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${i}">`);
+      .replace(/\s*<meta property="og:image:width" content=".*?">\n?/, () => '\n')
+      .replace(/\s*<meta property="og:image:height" content=".*?">\n?/, () => '\n')
+      .replace(/<meta name="twitter:title" content=".*?">/, () => `<meta name="twitter:title" content="${t}">`)
+      .replace(/<meta name="twitter:description" content=".*?">/, () => `<meta name="twitter:description" content="${d}">`)
+      .replace(/<meta name="twitter:image" content=".*?">/, () => `<meta name="twitter:image" content="${i}">`)
+      // Swap the homepage's generic Organization block for a Person (talent)
+      // or BlogPosting (case study/article) block — the specific schema
+      // each page is actually about, which is what makes it eligible for
+      // richer search results instead of just inheriting the site-wide one.
+      .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => ld);
 
     res.send(out);
   });
+});
+
+// GET /sitemap.xml — lists the homepage plus every published talent media
+// kit and blog/case-study post, so Google can discover those ?talent=/
+// ?blog= pages by crawling this file instead of relying purely on internal
+// links. Registered ahead of the static-file middleware below so it always
+// wins over any stray sitemap.xml that might otherwise sit in the frontend
+// folder. Built dynamically (not a static file) so a newly published
+// talent or post shows up here on the very next crawl, no redeploy needed.
+app.get('/sitemap.xml', (req, res) => {
+  try {
+    const siteUrl = `${req.protocol}://${req.get('host')}`;
+    const urls = [{ loc: `${siteUrl}/`, changefreq: 'weekly', priority: '1.0' }];
+
+    getFullRoster().forEach((t) => {
+      urls.push({
+        loc: `${siteUrl}/?talent=${encodeURIComponent(slugifyServer(t.name))}`,
+        changefreq: 'monthly',
+        priority: '0.8',
+      });
+    });
+
+    db.prepare(`SELECT slug, publishedAt FROM blog_posts WHERE status = 'published'`)
+      .all()
+      .forEach((p) => {
+        urls.push({
+          loc: `${siteUrl}/?blog=${encodeURIComponent(p.slug)}`,
+          lastmod: p.publishedAt ? p.publishedAt.slice(0, 10) : undefined,
+          changefreq: 'monthly',
+          priority: '0.7',
+        });
+      });
+
+    const body = urls
+      .map((u) => {
+        const lastmod = u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : '';
+        return `  <url>\n    <loc>${escapeHtmlAttr(u.loc)}</loc>${lastmod}\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`;
+      })
+      .join('\n');
+
+    res.set('Content-Type', 'application/xml');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>`);
+  } catch (err) {
+    console.error('sitemap error:', err);
+    res.status(500).send('');
+  }
 });
 
 // --- ROUTES ---
