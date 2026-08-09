@@ -543,6 +543,30 @@ function slugify(str){
     .replace(/^-+|-+$/g, '');
 }
 
+// Escapes text before it's dropped into innerHTML. Almost everything
+// rendered on the public site — talent names/bios, campaign objectives,
+// blog titles, manager bios — is free text an admin typed into the
+// dashboard, not something this site wrote itself. Without this, a
+// compromised or malicious manager account could type a <script> or
+// onerror= payload into any of those fields and have it run in every
+// visitor's browser. Safe for both text content and inside a quoted HTML
+// attribute (escapes & < > " ').
+function escapeHtml(str){
+  return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Social profile links and post links are also admin-entered free text, and
+// they end up inside an href rather than as page text — escapeHtml alone
+// stops someone breaking out of the attribute, but it wouldn't stop the
+// whole value being something like "javascript:alert(1)", which runs the
+// moment a visitor clicks it. Only allowing values that actually start
+// with http:// or https:// closes that off; anything else (including a
+// blank field) is treated as "no link".
+function safeUrl(str){
+  const s = String(str || '').trim();
+  return /^https?:\/\//i.test(s) ? s : '';
+}
+
 // "Featured" homepage view shows a capped grid with the BRXDGE brand tile
 // dropped into the middle slot. "View All Talent" opens a full-page
 // overlay (like the media kit) with the complete, gender-filterable,
@@ -665,7 +689,7 @@ function buildTalentCard(t, index){
   card.style.setProperty('--card-i', index || 0);
   card.innerHTML = `
     <div class="talent-card-head">
-      <span class="name">${t.name}</span>
+      <span class="name">${escapeHtml(t.name)}</span>
       <span class="reach"><span class="lbl">Social Reach</span><span class="num" data-count-to="${reachNum}">0</span></span>
     </div>
     <div class="talent-photo">
@@ -674,20 +698,20 @@ function buildTalentCard(t, index){
         <button class="icon-btn" data-edit="${t.id}" aria-label="Edit">✎</button>
         <button class="icon-btn" data-delete="${t.id}" aria-label="Delete">🗑</button>
       </div>` : ''}
-      <img class="cover" src="${talentPhotoUrl(t)}" alt="${t.name}" loading="lazy">
+      <img class="cover" src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}" loading="lazy">
       <div class="card-spotlight" aria-hidden="true"></div>
       <div class="card-frame" aria-hidden="true">
         <span class="cf-corner cf-tl"></span><span class="cf-corner cf-tr"></span>
         <span class="cf-corner cf-bl"></span><span class="cf-corner cf-br"></span>
       </div>
       <div class="platform-list">
-        ${(t.socials||[]).map(s => `<div class="prow"><span>${s.platform}</span><span>${s.followers || '—'}</span></div>`).join('')}
+        ${(t.socials||[]).map(s => `<div class="prow"><span>${escapeHtml(s.platform)}</span><span>${escapeHtml(s.followers || '—')}</span></div>`).join('')}
       </div>
     </div>
     <div class="talent-card-foot">
-      ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${c}</span>`).join('')}</div>` : ''}
-      ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${audience}</p>` : ''}
-      ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${availableFor.join(' • ')}</p>` : ''}
+      ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+      ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${escapeHtml(audience)}</p>` : ''}
+      ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${escapeHtml(availableFor.join(' • '))}</p>` : ''}
       <div class="tcf-actions">
         <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
           View Media Kit
@@ -1051,7 +1075,7 @@ async function loadBrandsIntoMarquees(){
   const wordGroup = document.querySelector('#brandsMarqueeTrack .brands-marquee-group');
   if(wordGroup){
     wordGroup.innerHTML = brands.map((b) => `
-      <span class="brand-word">${b.name || ''}</span>
+      <span class="brand-word">${escapeHtml(b.name || '')}</span>
       <span class="brand-dot" aria-hidden="true">&#9670;</span>
     `).join('');
   }
@@ -1059,10 +1083,10 @@ async function loadBrandsIntoMarquees(){
   const logoGroup = document.querySelector('#logoMarqueeTrack .logo-marquee-group');
   if(logoGroup){
     logoGroup.innerHTML = brands.map((b) => `
-      <div class="logo-tile" title="${b.name || ''}">
+      <div class="logo-tile" title="${escapeHtml(b.name || '')}">
         ${b.logo
-          ? `<img src="${b.logo}" alt="${b.name || ''}" loading="lazy">`
-          : `<span class="tile-initial">${(b.name || '?').charAt(0).toUpperCase()}</span>`}
+          ? `<img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name || '')}" loading="lazy">`
+          : `<span class="tile-initial">${escapeHtml((b.name || '?').charAt(0).toUpperCase())}</span>`}
       </div>
     `).join('');
   }
@@ -1401,12 +1425,12 @@ function blogPostDate(p){
 function buildBlogCardStats(p){
   const chips = [];
   if(p.statFollowersBefore || p.statFollowersAfter){
-    chips.push(`Followers: ${p.statFollowersBefore || '—'} → ${p.statFollowersAfter || '—'}`);
+    chips.push(`Followers: ${escapeHtml(p.statFollowersBefore || '—')} → ${escapeHtml(p.statFollowersAfter || '—')}`);
   }
   if(p.statEngagementBefore || p.statEngagementAfter){
-    chips.push(`Engagement: ${p.statEngagementBefore || '—'} → ${p.statEngagementAfter || '—'}`);
+    chips.push(`Engagement: ${escapeHtml(p.statEngagementBefore || '—')} → ${escapeHtml(p.statEngagementAfter || '—')}`);
   }
-  if(p.statRevenue) chips.push(`Revenue: ${p.statRevenue}`);
+  if(p.statRevenue) chips.push(`Revenue: ${escapeHtml(p.statRevenue)}`);
   if(!chips.length) return '';
   return `<div class="blog-card-stats">${chips.map(c => `<span class="blog-stat-chip">${c}</span>`).join('')}</div>`;
 }
@@ -1419,11 +1443,11 @@ function buildBlogCard(p){
   const cover = p.coverImage && p.coverImage.trim() ? p.coverImage.trim()
     : `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(p.slug || p.title)}&backgroundColor=c8302c,f0c239,fff8e9`;
   card.innerHTML = `
-    <img class="blog-card-cover" src="${cover}" alt="${p.title}" loading="lazy">
+    <img class="blog-card-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(p.title)}" loading="lazy">
     <div class="blog-card-body">
-      <span class="blog-card-date">${isCaseStudy ? 'Case Study' : 'Article'}${p.talentName ? ' • ' + p.talentName : ''}${blogPostDate(p) ? ' • ' + blogPostDate(p) : ''}</span>
-      <span class="blog-card-title">${p.title}</span>
-      ${p.excerpt ? `<span class="blog-card-excerpt">${p.excerpt}</span>` : ''}
+      <span class="blog-card-date">${isCaseStudy ? 'Case Study' : 'Article'}${p.talentName ? ' • ' + escapeHtml(p.talentName) : ''}${blogPostDate(p) ? ' • ' + blogPostDate(p) : ''}</span>
+      <span class="blog-card-title">${escapeHtml(p.title)}</span>
+      ${p.excerpt ? `<span class="blog-card-excerpt">${escapeHtml(p.excerpt)}</span>` : ''}
       ${isCaseStudy ? buildBlogCardStats(p) : ''}
       <span class="blog-card-readmore">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </div>
@@ -1492,19 +1516,19 @@ function renderBlogPostContent(post){
       ${statRows.map(([label, before, after]) => `
         <div class="blog-stat-panel-item">
           <span class="blog-stat-panel-label">${label}</span>
-          <span class="blog-stat-panel-value">${before || '—'} → ${after || '—'}</span>
+          <span class="blog-stat-panel-value">${escapeHtml(before || '—')} → ${escapeHtml(after || '—')}</span>
         </div>
       `).join('')}
       ${post.statBrandDeals ? `
         <div class="blog-stat-panel-item">
           <span class="blog-stat-panel-label">Brand Deals</span>
-          <span class="blog-stat-panel-value">${post.statBrandDeals}</span>
+          <span class="blog-stat-panel-value">${escapeHtml(post.statBrandDeals)}</span>
         </div>
       ` : ''}
       ${post.statRevenue ? `
         <div class="blog-stat-panel-item">
           <span class="blog-stat-panel-label">Revenue</span>
-          <span class="blog-stat-panel-value">${post.statRevenue}</span>
+          <span class="blog-stat-panel-value">${escapeHtml(post.statRevenue)}</span>
         </div>
       ` : ''}
     </div>
@@ -1512,12 +1536,12 @@ function renderBlogPostContent(post){
 
   container.innerHTML = `
     <article class="blog-post">
-      ${cover ? `<img class="blog-post-cover" src="${cover}" alt="${post.title}">` : ''}
-      <span class="blog-post-date">${isCaseStudy ? 'Case Study' : 'Article'}${post.talentName ? ' • ' + post.talentName : ''}${blogPostDate(post) ? ' • ' + blogPostDate(post) : ''}</span>
-      <h1>${post.title}</h1>
-      ${post.author ? `<p class="blog-post-meta">By ${post.author}</p>` : ''}
+      ${cover ? `<img class="blog-post-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}">` : ''}
+      <span class="blog-post-date">${isCaseStudy ? 'Case Study' : 'Article'}${post.talentName ? ' • ' + escapeHtml(post.talentName) : ''}${blogPostDate(post) ? ' • ' + blogPostDate(post) : ''}</span>
+      <h1>${escapeHtml(post.title)}</h1>
+      ${post.author ? `<p class="blog-post-meta">By ${escapeHtml(post.author)}</p>` : ''}
       ${statPanel}
-      <div class="blog-post-body">${(post.body || post.excerpt || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+      <div class="blog-post-body">${escapeHtml(post.body || post.excerpt || '')}</div>
     </article>
   `;
 }
@@ -1562,16 +1586,16 @@ function buildCampaignCard(c){
   ].filter(([, v]) => v);
 
   card.innerHTML = `
-    <img class="campaign-card-cover" src="${cover}" alt="${c.brandName}" loading="lazy">
+    <img class="campaign-card-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(c.brandName)}" loading="lazy">
     <div class="campaign-card-body">
       <div class="campaign-card-head">
-        ${c.brandLogo ? `<img class="campaign-card-logo" src="${c.brandLogo}" alt="${c.brandName} logo">` : ''}
-        <span class="campaign-card-brand">${c.brandName}${c.creatorName ? ` × ${c.creatorName}` : ''}</span>
+        ${c.brandLogo ? `<img class="campaign-card-logo" src="${escapeHtml(c.brandLogo)}" alt="${escapeHtml(c.brandName)} logo">` : ''}
+        <span class="campaign-card-brand">${escapeHtml(c.brandName)}${c.creatorName ? ` × ${escapeHtml(c.creatorName)}` : ''}</span>
       </div>
-      ${c.objective ? `<p class="campaign-card-objective">${c.objective}</p>` : ''}
-      ${deliverables.length ? `<div class="campaign-card-deliverables">${deliverables.map(d => `<span class="campaign-deliverable-tag">${d}</span>`).join('')}</div>` : ''}
-      ${stats.length ? `<div class="campaign-card-stats">${stats.map(([label, v]) => `<span class="campaign-stat-chip"><b>${v}</b> ${label}</span>`).join('')}</div>` : ''}
-      ${c.results ? `<p class="campaign-card-results">${c.results}</p>` : ''}
+      ${c.objective ? `<p class="campaign-card-objective">${escapeHtml(c.objective)}</p>` : ''}
+      ${deliverables.length ? `<div class="campaign-card-deliverables">${deliverables.map(d => `<span class="campaign-deliverable-tag">${escapeHtml(d)}</span>`).join('')}</div>` : ''}
+      ${stats.length ? `<div class="campaign-card-stats">${stats.map(([label, v]) => `<span class="campaign-stat-chip"><b>${escapeHtml(v)}</b> ${label}</span>`).join('')}</div>` : ''}
+      ${c.results ? `<p class="campaign-card-results">${escapeHtml(c.results)}</p>` : ''}
     </div>
   `;
   return card;
@@ -1681,7 +1705,7 @@ function renderCastTray(){
     const VISIBLE = 5;
     const shown = talents.slice(0, VISIBLE);
     const overflow = talents.length - shown.length;
-    avatarsEl.innerHTML = shown.map(t => `<img class="cast-tray-avatar" src="${talentPhotoUrl(t)}" alt="${t.name}" title="${t.name}">`).join('')
+    avatarsEl.innerHTML = shown.map(t => `<img class="cast-tray-avatar" src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}" title="${escapeHtml(t.name)}">`).join('')
       + (overflow > 0 ? `<span class="cast-tray-avatar cast-tray-avatar-more">+${overflow}</span>` : '');
   }
 }
@@ -1696,8 +1720,8 @@ function renderCastBriefList(){
   const talents = castTalents();
   list.innerHTML = talents.map(t => `
     <span class="cast-brief-chip">
-      ${t.name}
-      <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${t.name} from cast">&times;</button>
+      ${escapeHtml(t.name)}
+      <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${escapeHtml(t.name)} from cast">&times;</button>
     </span>
   `).join('');
   list.querySelectorAll('[data-remove-cast]').forEach(btn => {
@@ -1811,14 +1835,15 @@ function renderPostsSection(platformName, socials){
     <div class="mk-posts-grid">
       ${posts.map(p => {
         const embedUrl = getVideoEmbedUrl(p.link);
+        const href = safeUrl(p.link);
         return `
-        <a class="mk-post-card" href="${p.link}" target="_blank" rel="noopener" ${embedUrl ? `data-embed-url="${embedUrl}"` : ''}>
+        <a class="mk-post-card" href="${escapeHtml(href || '#')}" target="_blank" rel="noopener" ${embedUrl ? `data-embed-url="${escapeHtml(embedUrl)}"` : ''}>
           <div class="mk-post-thumb">
-            <img src="${p.thumbnail}" alt="${(p.title||'').replace(/"/g,'&quot;')}" loading="lazy">
+            <img src="${escapeHtml(p.thumbnail)}" alt="${escapeHtml(p.title || '')}" loading="lazy">
             <span class="mk-post-badge">${platformIcon(platformName)}</span>
             ${embedUrl ? `<span class="mk-post-play" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>` : ''}
           </div>
-          ${p.title ? `<div class="mk-post-title">${p.title}</div>` : ''}
+          ${p.title ? `<div class="mk-post-title">${escapeHtml(p.title)}</div>` : ''}
         </a>
       `;
       }).join('')}
@@ -1896,7 +1921,7 @@ function openMediakit(id, opts){
 
   const reach = formatFollowers(totalReach(t.socials));
   const content = document.getElementById('mkContent');
-  const nameUpper = t.name.toUpperCase();
+  const nameUpper = escapeHtml(t.name.toUpperCase());
   const heroSep = `<span class="mk-hero-marquee-sep">•</span>`;
   const heroMarqueeGroup = `
       <span>${nameUpper}</span>${heroSep}<span>${nameUpper}</span>${heroSep}<span>${nameUpper}</span>${heroSep}
@@ -1919,23 +1944,23 @@ function openMediakit(id, opts){
           <span>Download Gallery</span>
         </a>
         ` : ''}
-        <img class="mk-hero-photo" id="mkHeroPhoto" src="${talentCoverUrl(t)}" alt="${t.name}">
+        <img class="mk-hero-photo" id="mkHeroPhoto" src="${escapeHtml(talentCoverUrl(t))}" alt="${escapeHtml(t.name)}">
         <div class="mk-hero-scrollcue" id="mkHeroScrollcue" aria-hidden="true">
           <span class="mk-hero-scrollcue-label">Scroll</span>
           <svg class="mk-hero-scrollcue-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </section>
       <div class="mk-hero-avatar" id="mkHeroAvatar" aria-hidden="true">
-        <img src="${talentPhotoUrl(t)}" alt="${t.name}">
+        <img src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}">
       </div>
     </div>
 
     <div class="wrap">
     <div class="mk-title-wrapper" id="mkTitleWrapper">
       <div class="mk-title">
-        <h2>${t.name}</h2>
-        <div class="niche-tags">${talentCategories(t).map(c => `<span class="niche-tag">${c}</span>`).join('')}</div>
-        ${t.bio ? `<p class="mk-title-tagline">${t.bio.split('.')[0]}.</p>` : ''}
+        <h2>${escapeHtml(t.name)}</h2>
+        <div class="niche-tags">${talentCategories(t).map(c => `<span class="niche-tag">${escapeHtml(c)}</span>`).join('')}</div>
+        ${t.bio ? `<p class="mk-title-tagline">${escapeHtml(t.bio.split('.')[0])}.</p>` : ''}
       </div>
       <div class="mk-share">
         <button class="mk-share-btn theme-toggle" data-mk-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode" type="button">
@@ -1956,9 +1981,9 @@ function openMediakit(id, opts){
     </div>
     <div class="mk-main">
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
-      ${(t.audienceAge || t.audienceLocation) ? `<p class="mk-meta-line"><span class="mk-meta-label">Audience</span>${[t.audienceAge, t.audienceLocation].filter(Boolean).join(' • ')}</p>` : ''}
-      ${(t.availableFor && t.availableFor.length) ? `<p class="mk-meta-line"><span class="mk-meta-label">Available for</span>${t.availableFor.join(' • ')}</p>` : ''}
-      <p class="mk-bio">${t.bio}</p>
+      ${(t.audienceAge || t.audienceLocation) ? `<p class="mk-meta-line"><span class="mk-meta-label">Audience</span>${escapeHtml([t.audienceAge, t.audienceLocation].filter(Boolean).join(' • '))}</p>` : ''}
+      ${(t.availableFor && t.availableFor.length) ? `<p class="mk-meta-line"><span class="mk-meta-label">Available for</span>${escapeHtml(t.availableFor.join(' • '))}</p>` : ''}
+      <p class="mk-bio">${escapeHtml(t.bio)}</p>
 
       <div class="mk-section-title">Platforms</div>
       <div class="mk-platforms">
@@ -1966,13 +1991,13 @@ function openMediakit(id, opts){
           <div class="mk-platform-card" style="--p-accent:${platformBrandColor(s.platform)}">
             <div class="row1">
               <div class="p-icon">${platformIconColor(s.platform)}</div>
-              <div class="p-name">${s.platform}</div>
+              <div class="p-name">${escapeHtml(s.platform)}</div>
             </div>
             <div class="mk-metrics">
-              <div class="m"><span class="v">${s.followers || '—'}</span><span class="k"> Followers</span></div>
+              <div class="m"><span class="v">${escapeHtml(s.followers || '—')}</span><span class="k"> Followers</span></div>
             </div>
             <div class="mk-platform-actions">
-              ${s.url ? `<a class="visit" href="${s.url}" target="_blank" rel="noopener">Visit profile <span class="arrow">→</span></a>` : ''}
+              ${safeUrl(s.url) ? `<a class="visit" href="${escapeHtml(safeUrl(s.url))}" target="_blank" rel="noopener">Visit profile <span class="arrow">→</span></a>` : ''}
               ${(s.platform === 'YouTube' || s.platform === 'TikTok') ? `<button type="button" class="view-stats" data-social-index="${i}">View statistics</button>` : ''}
             </div>
           </div>
@@ -1982,7 +2007,7 @@ function openMediakit(id, opts){
       ${(t.gallery && t.gallery.length) ? `
       <div class="mk-section-title">Gallery</div>
       <div class="mk-gallery">
-        ${t.gallery.map((url, i) => `<img src="${url}" alt="${t.name} photo" loading="lazy" data-gallery-index="${i}">`).join('')}
+        ${t.gallery.map((url, i) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(t.name)} photo" loading="lazy" data-gallery-index="${i}">`).join('')}
       </div>
       ` : ''}
 
@@ -2430,10 +2455,10 @@ function addSocialRow(data){
     return `
       <p class="extra-hint" style="margin-top:14px;">Stats shown on the "View statistics" button (optional):</p>
       <div class="stats-fields">
-        <input type="text" class="stat-avgviews" placeholder="Avg. views per video e.g. 850K" value="${existingStats.avgViews || ''}">
-        <input type="text" class="stat-avglikes" placeholder="Avg. likes per video e.g. 62K" value="${existingStats.avgLikes || ''}">
-        <input type="text" class="stat-engagement" placeholder="Engagement rate e.g. 7.2%" value="${existingStats.engagementRate || ''}">
-        <input type="text" class="stat-growth" placeholder="Growth, last 30 days e.g. +4.1%" value="${existingStats.growth || ''}">
+        <input type="text" class="stat-avgviews" placeholder="Avg. views per video e.g. 850K" value="${escapeHtml(existingStats.avgViews || '')}">
+        <input type="text" class="stat-avglikes" placeholder="Avg. likes per video e.g. 62K" value="${escapeHtml(existingStats.avgLikes || '')}">
+        <input type="text" class="stat-engagement" placeholder="Engagement rate e.g. 7.2%" value="${escapeHtml(existingStats.engagementRate || '')}">
+        <input type="text" class="stat-growth" placeholder="Growth, last 30 days e.g. +4.1%" value="${escapeHtml(existingStats.growth || '')}">
       </div>
     `;
   }
@@ -2443,7 +2468,7 @@ function addSocialRow(data){
     if(!thumbsEl) return;
     const posts = JSON.parse(wrap.dataset.posts || '[]');
     thumbsEl.innerHTML = posts.map(p =>
-      `<a class="post-thumb" href="${p.link}" target="_blank" rel="noopener" title="${(p.title || '').replace(/"/g,'&quot;')}"><img src="${p.thumbnail}" alt=""></a>`
+      `<a class="post-thumb" href="${escapeHtml(safeUrl(p.link) || '#')}" target="_blank" rel="noopener" title="${escapeHtml(p.title || '')}"><img src="${escapeHtml(p.thumbnail)}" alt=""></a>`
     ).join('');
   }
 
@@ -2985,15 +3010,15 @@ document.querySelectorAll('.reveal').forEach((section) => {
 
   grid.innerHTML = managers.map((m, i) => `
     <div class="manager-card stagger-item" data-bg-index="${i}">
-      <img src="${m.photo || ''}" alt="${(m.name||'').replace(/"/g,'&quot;')}">
-      <h3>${m.name || ''}</h3>
-      <span class="role">${m.role || ''}</span>
-      <p class="bio">${m.bio || ''}</p>
+      <img src="${escapeHtml(m.photo || '')}" alt="${escapeHtml(m.name || '')}">
+      <h3>${escapeHtml(m.name || '')}</h3>
+      <span class="role">${escapeHtml(m.role || '')}</span>
+      <p class="bio">${escapeHtml(m.bio || '')}</p>
     </div>
   `).join('');
 
   bg.innerHTML = managers.map((m, i) =>
-    `<div class="bg-layer${i === 0 ? ' active' : ''}" style="--bg: url('${m.photo || ''}')"></div>`
+    `<div class="bg-layer${i === 0 ? ' active' : ''}" style="--bg: url('${escapeHtml(m.photo || '')}')"></div>`
   ).join('');
 
   const layers = Array.from(bg.querySelectorAll('.bg-layer'));
