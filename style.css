@@ -4840,6 +4840,13 @@ html.dark-mode .mediakit-overlay::after{
 #brands{ padding-top: 20px; padding-bottom: 16px; }
 .brands-head{ text-align: center; margin-bottom: 34px; }
 .brands-head .profiles-bold{ font-size: clamp(28px, 5vw, 46px); }
+.brands-sub{
+  margin: 14px auto 0;
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
 
 /* Draggable, hover-pausing logo ticker. Motion is driven entirely in JS
    (see initBrandsMarquee in script.js) rather than a CSS @keyframes loop,
