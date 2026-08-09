@@ -532,6 +532,10 @@ const ROSTER_KEY = 'roster:list';
 let rosterData = [];
 let activeFilter = 'All';
 
+/* ---------------- BLOG / CASE STUDIES + CAMPAIGNS (proof sections) ---------------- */
+let blogData = [];
+let campaignsData = [];
+
 // Turns a talent's name into a URL-safe slug, e.g. "Mark Ramirez" -> "mark-ramirez"
 function slugify(str){
   return (str||'').toLowerCase().trim()
@@ -1061,9 +1065,13 @@ async function loadBrandsIntoMarquees(){
    four children). Also fires the reach count-up once per card. `immediate`
    skips the IntersectionObserver and reveals right away, staggered by
    index — used inside overlays that are already on-screen when populated. */
+// Despite the name, this works for any grid of `.reveal-card` elements —
+// originally built for talent cards, now reused as-is for the blog/
+// case-study and campaign card grids (see buildBlogCard/buildCampaignCard),
+// since the stagger/fade-in mechanic here isn't talent-specific.
 function revealTalentCards(container, opts){
   const immediate = opts && opts.immediate;
-  const cards = Array.from(container.querySelectorAll('.talent-card.reveal-card'));
+  const cards = Array.from(container.querySelectorAll('.reveal-card'));
   if(!cards.length) return;
 
   const STEP = 0.07, MAX_DELAY = 0.63; // seconds; caps the tail-end wait on long grids
@@ -1330,13 +1338,247 @@ function closeMediakit(opts){
 // media kit instead of just changing the URL underneath the page.
 window.addEventListener('popstate', () => {
   const slug = new URLSearchParams(location.search).get('talent');
+  const blogSlug = new URLSearchParams(location.search).get('blog');
   if(slug){
     const match = rosterData.find(t => slugify(t.name) === slug);
     if(match) openMediakit(match.id, { updateUrl: false });
+  } else if(blogSlug){
+    const match = blogData.find(p => p.slug === blogSlug);
+    if(match) openBlogPost(match, { updateUrl: false });
   } else {
     closeMediakit({ updateUrl: false });
+    closeBlogPost({ updateUrl: false });
   }
 });
+
+/* ---------------- CASE STUDIES / BLOG (public "proof" section) ----------------
+   Same shape as the media-kit deep-link pattern above: the list endpoint
+   only returns summary fields (title/excerpt/stats), so opening a post
+   fetches the full body from /api/blog/post/:slug. The section hides
+   itself entirely when there's no published content, rather than showing
+   placeholder posts — see the no-fake-data note further down. */
+async function loadBlog(){
+  try {
+    const response = await fetch(API + '/api/blog');
+    blogData = await response.json();
+  } catch(err) {
+    blogData = [];
+  }
+  renderBlogGrid();
+
+  const requestedSlug = new URLSearchParams(location.search).get('blog');
+  if(requestedSlug){
+    const match = blogData.find(p => p.slug === requestedSlug);
+    if(match) openBlogPost(match, { updateUrl: false });
+  }
+}
+
+function blogPostDate(p){
+  if(!p.publishedAt) return '';
+  try {
+    return new Date(p.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch(err) { return ''; }
+}
+
+// Small stat chips shown on a case-study card — only the ones that
+// actually have a value are shown, so an article (or a partially filled
+// case study) never renders empty "→" chips.
+function buildBlogCardStats(p){
+  const chips = [];
+  if(p.statFollowersBefore || p.statFollowersAfter){
+    chips.push(`Followers: ${p.statFollowersBefore || '—'} → ${p.statFollowersAfter || '—'}`);
+  }
+  if(p.statEngagementBefore || p.statEngagementAfter){
+    chips.push(`Engagement: ${p.statEngagementBefore || '—'} → ${p.statEngagementAfter || '—'}`);
+  }
+  if(p.statRevenue) chips.push(`Revenue: ${p.statRevenue}`);
+  if(!chips.length) return '';
+  return `<div class="blog-card-stats">${chips.map(c => `<span class="blog-stat-chip">${c}</span>`).join('')}</div>`;
+}
+
+function buildBlogCard(p){
+  const card = document.createElement('a');
+  card.href = 'javascript:void(0)';
+  card.className = 'blog-card reveal-card';
+  const isCaseStudy = p.postType === 'case-study';
+  const cover = p.coverImage && p.coverImage.trim() ? p.coverImage.trim()
+    : `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(p.slug || p.title)}&backgroundColor=c8302c,f0c239,fff8e9`;
+  card.innerHTML = `
+    <img class="blog-card-cover" src="${cover}" alt="${p.title}" loading="lazy">
+    <div class="blog-card-body">
+      <span class="blog-card-date">${isCaseStudy ? 'Case Study' : 'Article'}${p.talentName ? ' • ' + p.talentName : ''}${blogPostDate(p) ? ' • ' + blogPostDate(p) : ''}</span>
+      <span class="blog-card-title">${p.title}</span>
+      ${p.excerpt ? `<span class="blog-card-excerpt">${p.excerpt}</span>` : ''}
+      ${isCaseStudy ? buildBlogCardStats(p) : ''}
+      <span class="blog-card-readmore">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </div>
+  `;
+  card.addEventListener('click', () => openBlogPost(p));
+  return card;
+}
+
+function renderBlogGrid(){
+  const section = document.getElementById('blog');
+  const grid = document.getElementById('blogGrid');
+  if(!section || !grid) return;
+
+  // No published posts yet — hide the whole section rather than show a
+  // placeholder/fake case study. Real content only, added via the admin
+  // dashboard.
+  if(!blogData.length){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  grid.innerHTML = '';
+  blogData.forEach(p => grid.appendChild(buildBlogCard(p)));
+  revealTalentCards(grid);
+}
+
+async function openBlogPost(postSummary, opts){
+  if(!opts || opts.updateUrl !== false){
+    history.pushState({ blogSlug: postSummary.slug }, '', '?blog=' + postSummary.slug);
+  }
+  document.title = `${postSummary.title} — BRXDGE`;
+
+  // The list endpoint only carries summary fields — fetch the full post
+  // (body included) before rendering, but fall back to the summary object
+  // if that fetch fails so the overlay still opens with what we have.
+  let post = postSummary;
+  try {
+    const res = await fetch(API + '/api/blog/post/' + encodeURIComponent(postSummary.slug));
+    if(res.ok) post = await res.json();
+  } catch(err) { /* fall back to summary */ }
+
+  renderBlogPostContent(post);
+
+  const overlay = document.getElementById('blogOverlay');
+  if(overlay){
+    overlay.classList.add('show');
+    overlay.scrollTop = 0;
+  }
+  document.body.style.overflow = 'hidden';
+}
+
+function renderBlogPostContent(post){
+  const container = document.getElementById('blogPostContent');
+  if(!container) return;
+  const isCaseStudy = post.postType === 'case-study';
+  const cover = post.coverImage && post.coverImage.trim() ? post.coverImage.trim() : '';
+
+  const statRows = [
+    ['Followers', post.statFollowersBefore, post.statFollowersAfter],
+    ['Engagement', post.statEngagementBefore, post.statEngagementAfter],
+  ].filter(([, before, after]) => before || after);
+
+  const statPanel = isCaseStudy && (statRows.length || post.statBrandDeals || post.statRevenue) ? `
+    <div class="blog-stat-panel">
+      ${statRows.map(([label, before, after]) => `
+        <div class="blog-stat-panel-item">
+          <span class="blog-stat-panel-label">${label}</span>
+          <span class="blog-stat-panel-value">${before || '—'} → ${after || '—'}</span>
+        </div>
+      `).join('')}
+      ${post.statBrandDeals ? `
+        <div class="blog-stat-panel-item">
+          <span class="blog-stat-panel-label">Brand Deals</span>
+          <span class="blog-stat-panel-value">${post.statBrandDeals}</span>
+        </div>
+      ` : ''}
+      ${post.statRevenue ? `
+        <div class="blog-stat-panel-item">
+          <span class="blog-stat-panel-label">Revenue</span>
+          <span class="blog-stat-panel-value">${post.statRevenue}</span>
+        </div>
+      ` : ''}
+    </div>
+  ` : '';
+
+  container.innerHTML = `
+    <article class="blog-post">
+      ${cover ? `<img class="blog-post-cover" src="${cover}" alt="${post.title}">` : ''}
+      <span class="blog-post-date">${isCaseStudy ? 'Case Study' : 'Article'}${post.talentName ? ' • ' + post.talentName : ''}${blogPostDate(post) ? ' • ' + blogPostDate(post) : ''}</span>
+      <h1>${post.title}</h1>
+      ${post.author ? `<p class="blog-post-meta">By ${post.author}</p>` : ''}
+      ${statPanel}
+      <div class="blog-post-body">${(post.body || post.excerpt || '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>
+    </article>
+  `;
+}
+
+function closeBlogPost(opts){
+  const overlay = document.getElementById('blogOverlay');
+  if(overlay) overlay.classList.remove('show');
+  document.body.style.overflow = (mediakitOverlay && mediakitOverlay.classList.contains('show')) || (talentRosterOverlay && talentRosterOverlay.classList.contains('show')) ? 'hidden' : '';
+  if(!opts || opts.updateUrl !== false){
+    history.pushState({}, '', location.pathname);
+  }
+  document.title = 'BRXDGE — Talent Management for Creators';
+}
+
+const blogBackBtn = document.getElementById('blogBack');
+if(blogBackBtn) blogBackBtn.addEventListener('click', () => closeBlogPost());
+document.addEventListener('keydown', (e) => {
+  const overlay = document.getElementById('blogOverlay');
+  if(e.key === 'Escape' && overlay && overlay.classList.contains('show')) closeBlogPost();
+});
+
+/* ---------------- CAMPAIGNS (Brand × Creator proof section) ---------------- */
+async function loadCampaigns(){
+  try {
+    const response = await fetch(API + '/api/campaigns');
+    campaignsData = await response.json();
+  } catch(err) {
+    campaignsData = [];
+  }
+  renderCampaignsGrid();
+}
+
+function buildCampaignCard(c){
+  const card = document.createElement('div');
+  card.className = 'campaign-card reveal-card';
+  const cover = c.coverImage && c.coverImage.trim() ? c.coverImage.trim()
+    : `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(c.id || c.brandName)}&backgroundColor=c8302c,f0c239,fff8e9`;
+  const deliverables = Array.isArray(c.deliverables) ? c.deliverables : [];
+  const stats = [
+    ['Reach', c.reach],
+    ['Engagement', c.engagement],
+  ].filter(([, v]) => v);
+
+  card.innerHTML = `
+    <img class="campaign-card-cover" src="${cover}" alt="${c.brandName}" loading="lazy">
+    <div class="campaign-card-body">
+      <div class="campaign-card-head">
+        ${c.brandLogo ? `<img class="campaign-card-logo" src="${c.brandLogo}" alt="${c.brandName} logo">` : ''}
+        <span class="campaign-card-brand">${c.brandName}${c.creatorName ? ` × ${c.creatorName}` : ''}</span>
+      </div>
+      ${c.objective ? `<p class="campaign-card-objective">${c.objective}</p>` : ''}
+      ${deliverables.length ? `<div class="campaign-card-deliverables">${deliverables.map(d => `<span class="campaign-deliverable-tag">${d}</span>`).join('')}</div>` : ''}
+      ${stats.length ? `<div class="campaign-card-stats">${stats.map(([label, v]) => `<span class="campaign-stat-chip"><b>${v}</b> ${label}</span>`).join('')}</div>` : ''}
+      ${c.results ? `<p class="campaign-card-results">${c.results}</p>` : ''}
+    </div>
+  `;
+  return card;
+}
+
+function renderCampaignsGrid(){
+  const section = document.getElementById('campaigns');
+  const grid = document.getElementById('campaignsGrid');
+  if(!section || !grid) return;
+
+  // Same rule as the case-studies section: no real campaigns yet means no
+  // section shown at all, never placeholder brand results.
+  if(!campaignsData.length){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  grid.innerHTML = '';
+  campaignsData.forEach(c => grid.appendChild(buildCampaignCard(c)));
+  revealTalentCards(grid);
+}
 
 // Converts a normal YouTube or TikTok video link into an embeddable
 // player URL. Returns null if the link doesn't match a known pattern
@@ -2397,6 +2639,8 @@ function scrollToSection(id){
 
 /* ---------------- INIT ---------------- */
 loadRoster();
+loadBlog();
+loadCampaigns();
 
 /* ---------------- SECTION SCROLL-TRANSITIONS ---------------- */
 // IntersectionObserver plays each .reveal section's transition the moment
