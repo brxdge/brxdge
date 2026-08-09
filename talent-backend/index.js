@@ -76,11 +76,26 @@ if (fs.existsSync(SEED_UPLOAD_DIR)) {
   }
 }
 
+// Maps each allowed MIME type to a fixed, known-safe extension. The saved
+// filename's extension is taken from THIS map (keyed off the server-checked
+// mimetype below), never from the original filename — path.extname() on an
+// attacker-supplied name is not trustworthy: a request could claim
+// mimetype "image/jpeg" (passing fileFilter) while naming the file
+// "payload.svg" or "payload.html", and the old code would have saved it
+// with THAT extension anyway, landing an executable-in-the-browser file
+// in the publicly-served /uploads folder. Deriving the extension from the
+// verified type instead closes that off.
+const MIME_EXTENSIONS = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+const ALLOWED_IMAGE_TYPES = new Set(Object.keys(MIME_EXTENSIONS));
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
+  filename: (req, file, cb) => cb(null, Date.now() + (MIME_EXTENSIONS[file.mimetype] || '')),
 });
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — plenty for a talent photo, stops accidental huge uploads
@@ -114,42 +129,58 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// --- LOGIN RATE LIMITING ---
-// A simple in-memory brute-force guard: after too many login attempts from
-// the same visitor in a short window, further attempts are rejected before
-// even checking the password. Hand-rolled (no new npm dependency) to match
-// the rest of this file. This is the one open door a compromised or guessed
-// password would otherwise walk right through, since a login endpoint with
-// no limit at all can be guessed against indefinitely.
-const LOGIN_MAX_ATTEMPTS = 10;
-const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const loginAttempts = new Map(); // ip -> { count, windowStart }
+// --- RATE LIMITING ---
+// A simple in-memory per-IP throttle, hand-rolled (no new npm dependency)
+// rather than a single-purpose one-off — used both for login (a brute-force
+// guard: an unlimited login endpoint can be guessed against indefinitely)
+// and for the public contact/campaign-brief form (which had no limit at
+// all before this — anyone could script a flood of fake submissions,
+// which would also spam your inbox and burn through the Resend email quota).
+function makeRateLimiter({ max, windowMs, message }) {
+  const attempts = new Map(); // ip -> { count, windowStart }
 
-function loginRateLimit(req, res, next) {
-  const ip = req.ip || 'unknown';
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
-  if (!entry || now - entry.windowStart > LOGIN_WINDOW_MS) {
-    loginAttempts.set(ip, { count: 1, windowStart: now });
-    return next();
-  }
-  if (entry.count >= LOGIN_MAX_ATTEMPTS) {
-    const retryAfterSec = Math.ceil((entry.windowStart + LOGIN_WINDOW_MS - now) / 1000);
-    res.setHeader('Retry-After', retryAfterSec);
-    return res.status(429).json({ error: 'Too many login attempts. Please try again in a few minutes.' });
-  }
-  entry.count++;
-  next();
+  // Periodic cleanup so this map doesn't grow forever — old entries are
+  // just a few bytes each, but there's no reason to keep them once their
+  // window's up.
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, entry] of attempts.entries()) {
+      if (now - entry.windowStart > windowMs) attempts.delete(ip);
+    }
+  }, windowMs).unref();
+
+  return function rateLimit(req, res, next) {
+    const ip = req.ip || 'unknown';
+    const now = Date.now();
+    const entry = attempts.get(ip);
+    if (!entry || now - entry.windowStart > windowMs) {
+      attempts.set(ip, { count: 1, windowStart: now });
+      return next();
+    }
+    if (entry.count >= max) {
+      const retryAfterSec = Math.ceil((entry.windowStart + windowMs - now) / 1000);
+      res.setHeader('Retry-After', retryAfterSec);
+      return res.status(429).json({ error: message });
+    }
+    entry.count++;
+    next();
+  };
 }
 
-// Periodic cleanup so this map doesn't grow forever — old entries are just a
-// few bytes each, but there's no reason to keep them once their window's up.
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, entry] of loginAttempts.entries()) {
-    if (now - entry.windowStart > LOGIN_WINDOW_MS) loginAttempts.delete(ip);
-  }
-}, LOGIN_WINDOW_MS).unref();
+const loginRateLimit = makeRateLimiter({
+  max: 10,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  message: 'Too many login attempts. Please try again in a few minutes.',
+});
+
+// Generous enough that a real brand submitting a couple of inquiries (or a
+// campaign brief right after browsing) never gets blocked, but still shuts
+// down a scripted flood.
+const contactRateLimit = makeRateLimiter({
+  max: 8,
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  message: 'Too many messages sent. Please try again in a few minutes.',
+});
 
 app.post('/api/login', loginRateLimit, (req, res) => {
   const { username, password } = req.body || {};
@@ -877,7 +908,7 @@ const insertMessage = db.prepare(`
 `);
 
 // POST /api/contact  { name, email, message, talent? } — public, anyone can submit
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', contactRateLimit, async (req, res) => {
   try {
     const { name, email, message, talent } = req.body;
     if (!name || !email || !message) {
