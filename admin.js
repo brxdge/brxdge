@@ -1,7 +1,7 @@
 /* ============================================================
    BRXDGE ADMIN DASHBOARD
    ============================================================ */
-const API = 'https://brxdge-production.up.railway.app';
+const API = 'https://brxdge-backend.onrender.com';
 const TOKEN_KEY = 'brxdge-admin-token';
 let token = null;
 let me = { username: '' };
@@ -11,8 +11,6 @@ let managersData = [];
 let messagesData = [];
 let adminsData = [];
 let brandsData = [];
-let blogData = [];
-let campaignsData = [];
 
 try { token = sessionStorage.getItem(TOKEN_KEY); } catch(e) {}
 
@@ -100,12 +98,10 @@ async function enterDashboard(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').classList.add('show');
   document.getElementById('whoamiName').textContent = me.username;
-  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadBlog(), loadCampaigns(), loadMessages()]);
+  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages()]);
   renderTalentPage();
   renderManagersPage();
   renderBrandsPage();
-  renderBlogPage();
-  renderCampaignsPage();
   renderMessagesPage();
   renderProfilePage();
 }
@@ -137,25 +133,6 @@ async function loadBrands(){
     brandsData = [];
   }
 }
-async function loadBlog(){
-  // Caught locally, same reasoning as loadBrands() above — a fresh route
-  // that might not be deployed yet shouldn't be able to take down the
-  // whole dashboard's Promise.all().
-  try {
-    blogData = await api('/api/blog/all');
-  } catch(err){
-    console.error('Failed to load blog posts:', err);
-    blogData = [];
-  }
-}
-async function loadCampaigns(){
-  try {
-    campaignsData = await api('/api/campaigns/all');
-  } catch(err){
-    console.error('Failed to load campaigns:', err);
-    campaignsData = [];
-  }
-}
 async function loadMessages(){
   messagesData = await api('/api/contact-messages');
   updateMessagesBadge();
@@ -177,51 +154,6 @@ function escapeHtml(str){
 }
 function slugify(str){
   return (str||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-}
-
-// Reusable removable-pill tag editor — used for both Categories and
-// Available For on the talent modal. Renders into the container with the
-// given id, seeded from `initialTags`, and hands back { getTags() } to
-// read the current list out on save. Enter or comma commits the current
-// input as a new pill; clicking a pill's × removes it.
-function buildTagEditor(containerId, initialTags, placeholder){
-  let tags = Array.isArray(initialTags) ? initialTags.slice() : [];
-  const container = document.getElementById(containerId);
-
-  function render(){
-    container.innerHTML = `
-      <div class="tag-pills">
-        ${tags.map((tag, i) => `<span class="tag-pill">${escapeHtml(tag)}<button type="button" class="tag-pill-remove" data-i="${i}" aria-label="Remove">&times;</button></span>`).join('')}
-      </div>
-      <input type="text" class="tag-input" placeholder="${escapeHtml(placeholder || 'Type and press Enter…')}">
-    `;
-    container.querySelectorAll('.tag-pill-remove').forEach(btn => {
-      btn.addEventListener('click', () => {
-        tags.splice(Number(btn.dataset.i), 1);
-        render();
-      });
-    });
-    const input = container.querySelector('.tag-input');
-    function commit(){
-      const val = input.value.trim().replace(/,$/, '').trim();
-      if(val && !tags.includes(val)){
-        tags.push(val);
-        render();
-      } else {
-        input.value = '';
-      }
-    }
-    input.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ','){
-        e.preventDefault();
-        commit();
-      }
-    });
-    input.addEventListener('blur', () => { if(input.value.trim()) commit(); });
-  }
-  render();
-
-  return { getTags: () => tags.slice() };
 }
 
 // Full-color platform icon, matching the public site's look.
@@ -360,20 +292,6 @@ function openTalentModal(id){
       </div>
       <div class="field"><label>Cover Photo (media kit header)</label><input type="file" id="tCoverFile" accept="image/*"></div>
       <div class="field"><label>Bio</label><textarea id="tBio" rows="2">${escapeHtml(existing?.bio)}</textarea></div>
-
-      <div class="field">
-        <label>Categories <span class="field-hint">(shown as tags on the public media kit — add as many as apply)</span></label>
-        <div id="tCategoriesEditor"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Audience Age Range</label><input type="text" id="tAudienceAge" value="${escapeHtml(existing?.audienceAge)}" placeholder="e.g. 18–34"></div>
-        <div class="field"><label>Audience Location</label><input type="text" id="tAudienceLocation" value="${escapeHtml(existing?.audienceLocation)}" placeholder="e.g. Philippines"></div>
-      </div>
-      <div class="field">
-        <label>Available For <span class="field-hint">(e.g. Brand Partnerships, UGC, Campaigns, Events)</span></label>
-        <div id="tAvailableForEditor"></div>
-      </div>
-
       <div class="field"><label>Gallery Photos</label>
         <div class="gallery-thumbs" id="galleryThumbs"></div>
         <input type="file" id="tGalleryFiles" accept="image/*" multiple>
@@ -391,11 +309,6 @@ function openTalentModal(id){
       </div>
     </form>
   `;
-
-  // Categories / Available For — both use the same removable-pill tag
-  // editor, just backed by different arrays and read back out on save.
-  const categoriesEditor = buildTagEditor('tCategoriesEditor', existing?.categories, 'Type a category, press Enter…');
-  const availableForEditor = buildTagEditor('tAvailableForEditor', existing?.availableFor, 'e.g. Brand Partnerships, press Enter…');
 
   const socialsList = document.getElementById('socialsList');
   const PLATFORMS = ['Instagram','TikTok','YouTube','Twitter / X','Facebook','Snapchat','Twitch','LinkedIn','Pinterest','Threads','Other'];
@@ -460,16 +373,7 @@ function openTalentModal(id){
           const originalLabel = btn.textContent;
           btn.disabled = true; btn.textContent = 'Fetching…';
           try {
-            const fetched = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
-            posts = fetched.posts || [];
-            if (fetched.stats) {
-              const avgViewsEl = extra.querySelector('.stat-avgviews');
-              const avgLikesEl = extra.querySelector('.stat-avglikes');
-              const engagementEl = extra.querySelector('.stat-engagement');
-              if (avgViewsEl) avgViewsEl.value = fetched.stats.avgViews || '';
-              if (avgLikesEl) avgLikesEl.value = fetched.stats.avgLikes || '';
-              if (engagementEl) engagementEl.value = fetched.stats.engagementRate || '';
-            }
+            posts = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
             renderPostThumbs();
             showToast('Latest videos fetched');
           } catch(err){
@@ -585,10 +489,6 @@ function openTalentModal(id){
       const socialsOut = Array.from(socialsList.querySelectorAll('.social-entry')).map(wrap => wrap.getData());
 
       const entry = {
-        // Spread existing first so any field this form doesn't manage
-        // (there isn't one today, but this is what keeps the next new
-        // field from silently getting wiped on every save) survives.
-        ...(existing || {}),
         id: existing ? existing.id : ('t' + Date.now()),
         name: document.getElementById('tName').value.trim(),
         niche: document.getElementById('tNiche').value.trim(),
@@ -596,10 +496,6 @@ function openTalentModal(id){
         photo: photoUrl,
         coverPhoto: coverUrl,
         bio: document.getElementById('tBio').value.trim(),
-        categories: categoriesEditor.getTags(),
-        audienceAge: document.getElementById('tAudienceAge').value.trim(),
-        audienceLocation: document.getElementById('tAudienceLocation').value.trim(),
-        availableFor: availableForEditor.getTags(),
         gallery: galleryUrls,
         socials: socialsOut,
       };
@@ -641,10 +537,12 @@ function renderManagersPage(){
         <div><h2>Team</h2><p>${managersData.length} manager${managersData.length===1?'':'s'}</p></div>
         <button class="btn btn-primary" id="addManagerBtn" style="width:auto;">+ Add Manager</button>
       </div>
+      <div class="table-scroll">
       <table class="data-table">
         <thead><tr><th></th><th>Name</th><th>Role</th><th>Bio</th><th></th></tr></thead>
         <tbody id="managersTbody"></tbody>
       </table>
+      </div>
     </div>
   `;
   document.getElementById('addManagerBtn').addEventListener('click', () => openManagerModal(null));
@@ -747,10 +645,12 @@ function renderBrandsPage(){
         <div><h2>Brands</h2><p>${brandsData.length} brand${brandsData.length===1?'':'s'}</p></div>
         <button class="btn btn-primary" id="addBrandBtn" style="width:auto;">+ Add Brand</button>
       </div>
+      <div class="table-scroll">
       <table class="data-table">
         <thead><tr><th></th><th>Name</th><th>Logo</th><th></th></tr></thead>
         <tbody id="brandsTbody"></tbody>
       </table>
+      </div>
     </div>
   `;
   document.getElementById('addBrandBtn').addEventListener('click', () => openBrandModal(null));
@@ -841,332 +741,6 @@ function openBrandModal(index){
 }
 
 /* ============================================================
-   PAGE: BLOG & CASE STUDIES
-   Dual-purpose: plain articles, or creator "Case Study" posts carrying
-   Before → After proof stats (followers, engagement, brand deals,
-   revenue) — the site's answer to "prove you're good, not just claim it."
-   ============================================================ */
-function renderBlogPage(){
-  document.getElementById('page-blog').innerHTML = `
-    <h1 class="page-title">Blog &amp; Case Studies</h1>
-    <p class="page-sub">Articles and creator case studies shown on the public site. Case studies carry Before → After proof stats. Drafts stay hidden until you publish.</p>
-
-    <div class="panel">
-      <div class="panel-head">
-        <div><h2>Posts</h2><p>${blogData.length} post${blogData.length===1?'':'s'}</p></div>
-        <button class="btn btn-primary" id="addBlogBtn" style="width:auto;">+ New Post</button>
-      </div>
-      <table class="data-table">
-        <thead><tr><th></th><th>Title</th><th>Type</th><th>Status</th><th>Published</th><th></th></tr></thead>
-        <tbody id="blogTbody"></tbody>
-      </table>
-    </div>
-  `;
-  document.getElementById('addBlogBtn').addEventListener('click', () => openBlogModal(null));
-
-  const tbody = document.getElementById('blogTbody');
-  if(!blogData.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted); padding:16px 0;">No posts yet — write your first case study or article above.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = blogData.map(p => `
-    <tr>
-      <td><img class="table-logo" src="${p.coverImage || ''}" onerror="this.style.background='#eee'"></td>
-      <td><b>${escapeHtml(p.title)}</b></td>
-      <td><span class="type-badge">${p.postType === 'case_study' ? 'Case Study' : 'Article'}</span></td>
-      <td><span class="status-badge status-badge--${p.status}">${p.status}</span></td>
-      <td style="color:var(--muted); white-space:nowrap;">${p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '—'}</td>
-      <td class="table-actions">
-        <button class="btn btn-ghost btn-sm" data-edit="${p.id}">Edit</button>
-        <button class="btn btn-danger btn-sm" data-delete="${p.id}">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBlogModal(btn.dataset.edit)));
-  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteBlogPost(btn.dataset.delete)));
-}
-
-async function deleteBlogPost(id){
-  const p = blogData.find(x => x.id === id);
-  if(!confirm(`Delete "${p ? p.title : 'this post'}"? This can't be undone.`)) return;
-  blogData = blogData.filter(x => x.id !== id);
-  try {
-    const saved = await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
-    blogData = saved.posts || blogData;
-    showToast('Post deleted');
-    renderBlogPage();
-  } catch(err){
-    showToast(err.message);
-  }
-}
-
-function openBlogModal(id){
-  const existing = id ? blogData.find(p => p.id === id) : null;
-  document.getElementById('blogModal').innerHTML = `
-    <button class="modal-close" data-close>&times;</button>
-    <h3>${existing ? 'Edit Post' : 'New Post'}</h3>
-    <p class="sub">${existing ? escapeHtml(existing.title) : 'Write a new article or creator case study.'}</p>
-    <form id="blogForm">
-      <div class="field-row">
-        <div class="field"><label>Title</label><input type="text" id="pTitle" value="${escapeHtml(existing?.title)}" required></div>
-        <div class="field"><label>Type</label>
-          <select id="pType">
-            <option value="article" ${existing?.postType!=='case_study'?'selected':''}>Article</option>
-            <option value="case_study" ${existing?.postType==='case_study'?'selected':''}>Case Study</option>
-          </select>
-        </div>
-      </div>
-      <div class="field"><label>Cover Image</label>
-        ${existing?.coverImage ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.coverImage}">` : ''}
-        <input type="file" id="pCoverFile" accept="image/*">
-      </div>
-      <div class="field"><label>Excerpt <span class="field-hint">(shown on the post card)</span></label><textarea id="pExcerpt" rows="2">${escapeHtml(existing?.excerpt)}</textarea></div>
-      <div class="field"><label>Body</label><textarea id="pBody" rows="8" placeholder="Write the full post here. Blank line between paragraphs.">${escapeHtml(existing?.body)}</textarea></div>
-
-      <div class="field" id="pCaseStudyFields" style="display:none;">
-        <label>Case Study Details</label>
-        <div class="field"><label>Creator / Talent Name</label><input type="text" id="pTalentName" value="${escapeHtml(existing?.talentName)}" placeholder="e.g. Zora Bennett"></div>
-        <div class="field-row">
-          <div class="field"><label>Followers — Before</label><input type="text" id="pFollowersBefore" value="${escapeHtml(existing?.statFollowersBefore)}" placeholder="e.g. 12K"></div>
-          <div class="field"><label>Followers — After</label><input type="text" id="pFollowersAfter" value="${escapeHtml(existing?.statFollowersAfter)}" placeholder="e.g. 340K"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Engagement — Before</label><input type="text" id="pEngagementBefore" value="${escapeHtml(existing?.statEngagementBefore)}" placeholder="e.g. 2.1%"></div>
-          <div class="field"><label>Engagement — After</label><input type="text" id="pEngagementAfter" value="${escapeHtml(existing?.statEngagementAfter)}" placeholder="e.g. 7.4%"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Brand Deals</label><input type="text" id="pBrandDeals" value="${escapeHtml(existing?.statBrandDeals)}" placeholder="e.g. 5 new deals"></div>
-          <div class="field"><label>Revenue</label><input type="text" id="pRevenue" value="${escapeHtml(existing?.statRevenue)}" placeholder="e.g. $18K generated"></div>
-        </div>
-      </div>
-
-      <div class="field"><label>Status</label>
-        <select id="pStatus">
-          <option value="draft" ${existing?.status!=='published'?'selected':''}>Draft — hidden from the public site</option>
-          <option value="published" ${existing?.status==='published'?'selected':''}>Published — live on the public site</option>
-        </select>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
-        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
-      </div>
-    </form>
-  `;
-
-  const caseStudyFields = document.getElementById('pCaseStudyFields');
-  const typeSelect = document.getElementById('pType');
-  function syncCaseStudyVisibility(){
-    caseStudyFields.style.display = typeSelect.value === 'case_study' ? 'block' : 'none';
-  }
-  typeSelect.addEventListener('change', syncCaseStudyVisibility);
-  syncCaseStudyVisibility();
-
-  const overlay = document.getElementById('blogModalOverlay');
-  overlay.classList.add('show');
-  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
-
-  document.getElementById('blogForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      let coverImage = existing?.coverImage || '';
-      const coverFile = document.getElementById('pCoverFile').files[0];
-      if(coverFile) coverImage = await uploadImage(coverFile);
-
-      // Spread existing first (carries id/slug/publishedAt/sortOrder
-      // forward untouched) then override with what this form manages —
-      // same reasoning as the talent modal's entry object.
-      const entry = {
-        ...(existing || {}),
-        title: document.getElementById('pTitle').value.trim(),
-        postType: document.getElementById('pType').value,
-        coverImage,
-        excerpt: document.getElementById('pExcerpt').value.trim(),
-        body: document.getElementById('pBody').value.trim(),
-        talentName: document.getElementById('pTalentName').value.trim(),
-        statFollowersBefore: document.getElementById('pFollowersBefore').value.trim(),
-        statFollowersAfter: document.getElementById('pFollowersAfter').value.trim(),
-        statEngagementBefore: document.getElementById('pEngagementBefore').value.trim(),
-        statEngagementAfter: document.getElementById('pEngagementAfter').value.trim(),
-        statBrandDeals: document.getElementById('pBrandDeals').value.trim(),
-        statRevenue: document.getElementById('pRevenue').value.trim(),
-        status: document.getElementById('pStatus').value,
-      };
-
-      if(existing){
-        blogData = blogData.map(p => p.id === existing.id ? entry : p);
-      } else {
-        blogData.push(entry);
-      }
-      // The server resolves/uniquifies slugs and stamps publishedAt — sync
-      // its response back so the next edit in this session has the real
-      // values instead of stale/missing ones.
-      const saved = await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
-      blogData = saved.posts || blogData;
-      overlay.classList.remove('show');
-      showToast(existing ? 'Post updated' : 'Post created');
-      renderBlogPage();
-    } catch(err){
-      showToast(err.message);
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-}
-
-/* ============================================================
-   PAGE: CAMPAIGNS ("Brand x Creator" proof section)
-   ============================================================ */
-function renderCampaignsPage(){
-  document.getElementById('page-campaigns').innerHTML = `
-    <h1 class="page-title">Campaigns</h1>
-    <p class="page-sub">Real brand × creator campaign results, shown on the public site as proof of what BRXDGE delivers. Drafts stay hidden until you publish.</p>
-
-    <div class="panel">
-      <div class="panel-head">
-        <div><h2>Campaigns</h2><p>${campaignsData.length} campaign${campaignsData.length===1?'':'s'}</p></div>
-        <button class="btn btn-primary" id="addCampaignBtn" style="width:auto;">+ Add Campaign</button>
-      </div>
-      <table class="data-table">
-        <thead><tr><th></th><th>Brand</th><th>Creator</th><th>Status</th><th></th></tr></thead>
-        <tbody id="campaignsTbody"></tbody>
-      </table>
-    </div>
-  `;
-  document.getElementById('addCampaignBtn').addEventListener('click', () => openCampaignModal(null));
-
-  const tbody = document.getElementById('campaignsTbody');
-  if(!campaignsData.length){
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:16px 0;">No campaigns yet — add your first real result above.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = campaignsData.map(c => `
-    <tr>
-      <td>${c.brandLogo
-        ? `<img class="table-logo" src="${c.brandLogo}" onerror="this.style.background='#eee'">`
-        : `<div class="brand-logo-fallback">${escapeHtml((c.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
-      <td><b>${escapeHtml(c.brandName)}</b></td>
-      <td>${escapeHtml(c.creatorName)}</td>
-      <td><span class="status-badge status-badge--${c.status}">${c.status}</span></td>
-      <td class="table-actions">
-        <button class="btn btn-ghost btn-sm" data-edit="${c.id}">Edit</button>
-        <button class="btn btn-danger btn-sm" data-delete="${c.id}">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCampaignModal(btn.dataset.edit)));
-  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteCampaign(btn.dataset.delete)));
-}
-
-async function deleteCampaign(id){
-  const c = campaignsData.find(x => x.id === id);
-  if(!confirm(`Delete the "${c ? c.brandName : 'this'}" campaign? This can't be undone.`)) return;
-  campaignsData = campaignsData.filter(x => x.id !== id);
-  try {
-    const saved = await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
-    campaignsData = saved.campaigns || campaignsData;
-    showToast('Campaign deleted');
-    renderCampaignsPage();
-  } catch(err){
-    showToast(err.message);
-  }
-}
-
-function openCampaignModal(id){
-  const existing = id ? campaignsData.find(c => c.id === id) : null;
-  document.getElementById('campaignModal').innerHTML = `
-    <button class="modal-close" data-close>&times;</button>
-    <h3>${existing ? 'Edit Campaign' : 'Add Campaign'}</h3>
-    <p class="sub">Shown in the Campaigns proof section on the public site once published.</p>
-    <form id="campaignForm">
-      <div class="field-row">
-        <div class="field"><label>Brand Name</label><input type="text" id="cBrandName" value="${escapeHtml(existing?.brandName)}" required></div>
-        <div class="field"><label>Creator Name</label><input type="text" id="cCreatorName" value="${escapeHtml(existing?.creatorName)}" placeholder="e.g. Zora Bennett"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Brand Logo</label>
-          ${existing?.brandLogo ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.brandLogo}">` : ''}
-          <input type="file" id="cLogoFile" accept="image/*">
-        </div>
-        <div class="field"><label>Cover Image <span class="field-hint">(optional)</span></label><input type="file" id="cCoverFile" accept="image/*"></div>
-      </div>
-      <div class="field"><label>Campaign Objective</label><textarea id="cObjective" rows="2">${escapeHtml(existing?.objective)}</textarea></div>
-      <div class="field">
-        <label>Deliverables</label>
-        <div id="cDeliverablesEditor"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Reach</label><input type="text" id="cReach" value="${escapeHtml(existing?.reach)}" placeholder="e.g. 2.4M impressions"></div>
-        <div class="field"><label>Engagement</label><input type="text" id="cEngagement" value="${escapeHtml(existing?.engagement)}" placeholder="e.g. 8.1% avg. rate"></div>
-      </div>
-      <div class="field"><label>Results</label><textarea id="cResults" rows="2" placeholder="e.g. Drove a 34% lift in brand site traffic during the campaign window.">${escapeHtml(existing?.results)}</textarea></div>
-      <div class="field"><label>Status</label>
-        <select id="cStatus">
-          <option value="draft" ${existing?.status!=='published'?'selected':''}>Draft — hidden from the public site</option>
-          <option value="published" ${existing?.status==='published'?'selected':''}>Published — live on the public site</option>
-        </select>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
-        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
-      </div>
-    </form>
-  `;
-
-  const deliverablesEditor = buildTagEditor('cDeliverablesEditor', existing?.deliverables, 'e.g. 3 Instagram Reels, press Enter…');
-
-  const overlay = document.getElementById('campaignModalOverlay');
-  overlay.classList.add('show');
-  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
-
-  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      let brandLogo = existing?.brandLogo || '';
-      const logoFile = document.getElementById('cLogoFile').files[0];
-      if(logoFile) brandLogo = await uploadImage(logoFile);
-
-      let coverImage = existing?.coverImage || '';
-      const coverFile = document.getElementById('cCoverFile').files[0];
-      if(coverFile) coverImage = await uploadImage(coverFile);
-
-      const entry = {
-        ...(existing || {}),
-        brandName: document.getElementById('cBrandName').value.trim(),
-        creatorName: document.getElementById('cCreatorName').value.trim(),
-        brandLogo,
-        coverImage,
-        objective: document.getElementById('cObjective').value.trim(),
-        deliverables: deliverablesEditor.getTags(),
-        reach: document.getElementById('cReach').value.trim(),
-        engagement: document.getElementById('cEngagement').value.trim(),
-        results: document.getElementById('cResults').value.trim(),
-        status: document.getElementById('cStatus').value,
-      };
-
-      if(existing){
-        campaignsData = campaignsData.map(c => c.id === existing.id ? entry : c);
-      } else {
-        campaignsData.push(entry);
-      }
-      const saved = await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
-      campaignsData = saved.campaigns || campaignsData;
-      overlay.classList.remove('show');
-      showToast(existing ? 'Campaign updated' : 'Campaign added');
-      renderCampaignsPage();
-    } catch(err){
-      showToast(err.message);
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-}
-
-/* ============================================================
    PAGE: CONTACT RESPONSES
    ============================================================ */
 function renderMessagesPage(){
@@ -1176,10 +750,12 @@ function renderMessagesPage(){
 
     <div class="panel">
       <div class="panel-head"><div><h2>Messages</h2><p>${messagesData.length} total</p></div></div>
+      <div class="table-scroll">
       <table class="data-table">
         <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Talent</th><th>Message</th><th></th></tr></thead>
         <tbody id="messagesTbody"></tbody>
       </table>
+      </div>
     </div>
   `;
   const tbody = document.getElementById('messagesTbody');
@@ -1298,10 +874,12 @@ async function renderProfilePage(){
       <div class="panel-head">
         <div><h2>Other Admin Accounts</h2><p>Everyone with access to this dashboard.</p></div>
       </div>
-      <table class="data-table" style="margin-bottom:18px;">
+      <div class="table-scroll" style="margin-bottom:18px;">
+      <table class="data-table">
         <thead><tr><th>Username</th><th>Created</th><th></th></tr></thead>
         <tbody id="adminsTbody"></tbody>
       </table>
+      </div>
       <form id="addAdminForm">
         <div class="field-row">
           <div class="field"><label>New Admin Username</label><input type="text" id="newAdminUsername" required></div>
