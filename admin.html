@@ -261,7 +261,21 @@ a{ color:inherit; }
   .sidebar{ width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto; padding:14px; }
   .sidebar .brand{ display:none; }
   .sidebar nav{ flex-direction:row; }
-  .sidebar-foot{ display:none; }
+  /* Used to be `display:none` here, which silently removed the ONLY way to
+     sign out on mobile (Sign Out lives in .sidebar-foot, not inside <nav>,
+     so it never got swept into the horizontal nav-item strip above). Instead
+     of hiding it, fold it into that same horizontal scroll row — drop the
+     vertical-stack spacing (border-top/margin-top/padding-top) that only
+     made sense when this sat stacked under the nav, and hide the "Signed in
+     as" text (redundant on a phone, and the tightest thing to sacrifice for
+     space) so just the Sign Out button remains, reachable by scrolling the
+     row like every other nav item. */
+  .sidebar-foot{
+    display:flex; align-items:center; flex-shrink:0;
+    border-top:none; padding-top:0; margin-top:0;
+  }
+  .sidebar-foot .whoami{ display:none; }
+  .sidebar-foot .nav-item{ white-space:nowrap; }
   #dashboard.show{ flex-direction:column; }
   .main{ margin-left:0; padding:24px 18px 60px; }
 }
