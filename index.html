@@ -212,6 +212,30 @@
       <a href="#contact"><span>Contact</span></a>
     </div>
 
+    <!-- NAV TALENTS — shows the current campaign cast (talent added via the
+         "+ Add to Campaign" button on each talent card). Hidden until the
+         cast has at least one talent. Replaces the old bottom cast tray;
+         tapping/clicking opens a dropdown with the cast list, Clear, and
+         Send Campaign Brief actions (see renderNavTalents() in script.js). -->
+    <div class="nav-talents-wrap" id="navTalentsWrap">
+      <button type="button" class="nav-talents-btn" id="navTalentsBtn" aria-haspopup="true" aria-expanded="false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Talents</span>
+        <span class="nav-talents-count" id="navTalentsCount">0</span>
+      </button>
+      <div class="nav-talents-dropdown" id="navTalentsDropdown">
+        <div class="nav-talents-dropdown-head">
+          <span>Your Cast</span>
+          <button type="button" class="nav-talents-clear" id="navTalentsClear">Clear</button>
+        </div>
+        <div class="nav-talents-list" id="navTalentsList"></div>
+        <button type="button" class="btn btn-primary nav-talents-send" id="navTalentsSend">
+          Send Campaign Brief
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
       <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -1105,28 +1129,6 @@
         <button type="submit" class="btn btn-primary">Send Campaign Brief</button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- CAST TRAY — persistent bottom bar showing talent added "to campaign" via
-     the + Add to Campaign button on each talent card. Hidden until the cast
-     has at least one talent (see renderCastTray() in script.js). -->
-<div class="cast-tray" id="castTray">
-  <div class="wrap cast-tray-inner">
-    <div class="cast-tray-info">
-      <div class="cast-tray-avatars" id="castTrayAvatars"></div>
-      <div class="cast-tray-text">
-        <span class="cast-tray-label">Your Cast</span>
-        <span class="cast-tray-count" id="castTrayCount">0 Talent</span>
-      </div>
-    </div>
-    <div class="cast-tray-actions">
-      <button type="button" class="cast-tray-clear" id="castTrayClear">Clear</button>
-      <button type="button" class="btn btn-primary cast-tray-send" id="castTraySend">
-        Send Campaign Brief
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
   </div>
 </div>
 
