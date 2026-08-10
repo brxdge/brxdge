@@ -978,6 +978,14 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   .nav-login-link{ padding: 7px 13px; font-size: 11.5px; }
   .mobile-tabbar{ display: flex; }
   body{ padding-bottom: 64px; } /* keep page content clear of the fixed bottom tab bar */
+  /* Compact the Talents pill to icon + count on mobile. The brand wordmark
+     reappears at 381px+ (see .navbar .brand .brand-name below) — at widths
+     just above that (~381-420px) the full "Talents" label button had no
+     room left next to it and visually overlapped "BRXDGE". Icon + count is
+     legible enough at this size and keeps the pill compact at every mobile
+     width, not just the ones that happened to collide. */
+  .nav-talents-label{ display: none; }
+  .nav-talents-btn{ padding: 7px 10px; gap: 5px; }
 }
 @media (min-width: 861px){
   .mobile-tabbar{ display: none; }
@@ -2335,6 +2343,14 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   .nav-login-link{ padding: 7px 13px; font-size: 11.5px; }
   .mobile-tabbar{ display: flex; }
   body{ padding-bottom: 64px; } /* keep page content clear of the fixed bottom tab bar */
+  /* Compact the Talents pill to icon + count on mobile. The brand wordmark
+     reappears at 381px+ (see .navbar .brand .brand-name below) — at widths
+     just above that (~381-420px) the full "Talents" label button had no
+     room left next to it and visually overlapped "BRXDGE". Icon + count is
+     legible enough at this size and keeps the pill compact at every mobile
+     width, not just the ones that happened to collide. */
+  .nav-talents-label{ display: none; }
+  .nav-talents-btn{ padding: 7px 10px; gap: 5px; }
 }
 @media (min-width: 861px){
   .mobile-tabbar{ display: none; }
