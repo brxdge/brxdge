@@ -599,10 +599,10 @@ async function loadRoster(){
   }
   renderRoster();
   // Cast is stored as talent ids in localStorage and rendered against
-  // rosterData, so it can't build its avatar list until the roster itself
-  // has loaded — this is the earliest point that's true, including on a
-  // returning visit where localStorage already has a saved shortlist.
-  renderCastTray();
+  // rosterData, so the nav Talents pill can't reflect it until the roster
+  // itself has loaded — this is the earliest point that's true, including
+  // on a returning visit where localStorage already has a saved shortlist.
+  renderNavTalents();
 
   // Deep link: if the URL already points at a specific talent (e.g. a
   // shared link like ?talent=mark-ramirez), open their media kit right away.
@@ -1675,7 +1675,7 @@ function toggleCast(id){
   }
   saveCast();
   refreshCastButtons();
-  renderCastTray();
+  renderNavTalents();
   renderCastBriefList();
   // Sending the last talent to zero while the brief modal is open would
   // leave it showing an empty list — close it rather than let that happen.
@@ -1689,45 +1689,76 @@ function castTalents(){
   return castIds.map(id => rosterData.find(t => t.id === id)).filter(Boolean);
 }
 
-const castTray = document.getElementById('castTray');
+// Shared chip-list renderer — builds the same removable "name + ×" chip
+// markup used by both the campaign brief modal's cast list and the top-nav
+// Talents dropdown, so the two stay visually and behaviorally identical.
+function renderCastChips(container){
+  if(!container) return;
+  const talents = castTalents();
+  container.innerHTML = talents.map(t => `
+    <span class="cast-brief-chip">
+      ${escapeHtml(t.name)}
+      <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${escapeHtml(t.name)} from cast">&times;</button>
+    </span>
+  `).join('');
+  container.querySelectorAll('[data-remove-cast]').forEach(btn => {
+    btn.addEventListener('click', () => toggleCast(btn.dataset.removeCast));
+  });
+}
 
-function renderCastTray(){
-  if(!castTray) return;
+// TOP-NAV TALENTS — replaces the old fixed-position bottom cast tray. Lives
+// inside the navbar's right column (same markup on desktop + mobile), shows
+// a "Talents (N)" pill that's hidden while the cast is empty, and opens a
+// dropdown with the cast list + Clear + Send Campaign Brief actions.
+const navTalentsWrap = document.getElementById('navTalentsWrap');
+const navTalentsBtn = document.getElementById('navTalentsBtn');
+const navTalentsDropdown = document.getElementById('navTalentsDropdown');
+const navTalentsCount = document.getElementById('navTalentsCount');
+const navTalentsList = document.getElementById('navTalentsList');
+
+function closeNavTalentsDropdown(){
+  if(!navTalentsDropdown) return;
+  navTalentsDropdown.classList.remove('show');
+  if(navTalentsBtn) navTalentsBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleNavTalentsDropdown(){
+  if(!navTalentsDropdown) return;
+  const willShow = !navTalentsDropdown.classList.contains('show');
+  navTalentsDropdown.classList.toggle('show', willShow);
+  if(navTalentsBtn) navTalentsBtn.setAttribute('aria-expanded', String(willShow));
+  if(willShow) renderCastChips(navTalentsList);
+}
+
+if(navTalentsBtn){
+  navTalentsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleNavTalentsDropdown();
+  });
+}
+// Close on outside click / Escape, same UX as the other dropdown-style menus on the site.
+document.addEventListener('click', (e) => {
+  if(navTalentsWrap && !navTalentsWrap.contains(e.target)) closeNavTalentsDropdown();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeNavTalentsDropdown();
+});
+
+function renderNavTalents(){
+  if(!navTalentsWrap) return;
   const talents = castTalents();
   if(!talents.length){
-    castTray.classList.remove('show');
-    document.body.classList.remove('has-cast-tray');
+    navTalentsWrap.classList.remove('show');
+    closeNavTalentsDropdown();
     return;
   }
-  castTray.classList.add('show');
-  // The tray is position:fixed and outranks the fullscreen overlays
-  // (media kit / talent roster / blog post — see .mediakit-overlay's
-  // z-index comment in style.css) so it stays visible over them, but
-  // those overlays had no idea it existed and never left room for it —
-  // their own bottom content (a CTA, the last gallery row, the "scroll
-  // for more" cue) rendered right underneath and got covered by the tray,
-  // which is what looked like a stray floating bar plastered over the
-  // page. Recording the tray's real height as a CSS var lets those
-  // overlays reserve exactly that much bottom padding (see
-  // body.has-cast-tray .mediakit-overlay in style.css) — measured after
-  // paint since avatar count can wrap the tray onto a second line.
-  document.body.classList.add('has-cast-tray');
-
-  const countEl = document.getElementById('castTrayCount');
-  if(countEl) countEl.textContent = `${talents.length} Talent${talents.length === 1 ? '' : 's'}`;
-
-  const avatarsEl = document.getElementById('castTrayAvatars');
-  if(avatarsEl){
-    const VISIBLE = 5;
-    const shown = talents.slice(0, VISIBLE);
-    const overflow = talents.length - shown.length;
-    avatarsEl.innerHTML = shown.map(t => `<img class="cast-tray-avatar" src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}" title="${escapeHtml(t.name)}">`).join('')
-      + (overflow > 0 ? `<span class="cast-tray-avatar cast-tray-avatar-more">+${overflow}</span>` : '');
+  navTalentsWrap.classList.add('show');
+  if(navTalentsCount) navTalentsCount.textContent = talents.length;
+  // Keep the dropdown's list live if it's currently open (e.g. removing a
+  // chip from inside it shouldn't require closing/reopening to see it gone).
+  if(navTalentsDropdown && navTalentsDropdown.classList.contains('show')){
+    renderCastChips(navTalentsList);
   }
-
-  requestAnimationFrame(() => {
-    document.documentElement.style.setProperty('--cast-tray-height', castTray.offsetHeight + 'px');
-  });
 }
 
 const campaignBriefOverlay = document.getElementById('campaignBriefOverlay');
@@ -1735,38 +1766,28 @@ const campaignBriefCloseBtn = document.getElementById('campaignBriefClose');
 if(campaignBriefCloseBtn) campaignBriefCloseBtn.addEventListener('click', () => campaignBriefOverlay.classList.remove('show'));
 
 function renderCastBriefList(){
-  const list = document.getElementById('castBriefList');
-  if(!list) return;
-  const talents = castTalents();
-  list.innerHTML = talents.map(t => `
-    <span class="cast-brief-chip">
-      ${escapeHtml(t.name)}
-      <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${escapeHtml(t.name)} from cast">&times;</button>
-    </span>
-  `).join('');
-  list.querySelectorAll('[data-remove-cast]').forEach(btn => {
-    btn.addEventListener('click', () => toggleCast(btn.dataset.removeCast));
-  });
+  renderCastChips(document.getElementById('castBriefList'));
 }
 
 function openCampaignBriefModal(){
   if(!castIds.length) return;
+  closeNavTalentsDropdown();
   renderCastBriefList();
   if(campaignBriefOverlay) campaignBriefOverlay.classList.add('show');
 }
 
-const castTrayClearBtn = document.getElementById('castTrayClear');
-if(castTrayClearBtn){
-  castTrayClearBtn.addEventListener('click', () => {
+const navTalentsClearBtn = document.getElementById('navTalentsClear');
+if(navTalentsClearBtn){
+  navTalentsClearBtn.addEventListener('click', () => {
     castIds = [];
     saveCast();
     refreshCastButtons();
-    renderCastTray();
+    renderNavTalents();
   });
 }
 
-const castTraySendBtn = document.getElementById('castTraySend');
-if(castTraySendBtn) castTraySendBtn.addEventListener('click', openCampaignBriefModal);
+const navTalentsSendBtn = document.getElementById('navTalentsSend');
+if(navTalentsSendBtn) navTalentsSendBtn.addEventListener('click', openCampaignBriefModal);
 
 const campaignBriefForm = document.getElementById('campaignBriefForm');
 if(campaignBriefForm){
@@ -1799,7 +1820,7 @@ if(campaignBriefForm){
       castIds = [];
       saveCast();
       refreshCastButtons();
-      renderCastTray();
+      renderNavTalents();
     } catch(err){
       console.error(err);
       showToast("Couldn't send right now — please try again in a moment");
