@@ -1367,6 +1367,9 @@ document.getElementById('mkBack').addEventListener('click', closeMediakit);
 function closeMediakit(opts){
   mediakitOverlay.classList.remove('show');
   document.body.style.overflow = talentRosterOverlay.classList.contains('show') ? 'hidden' : '';
+  // Re-enable the roster overlay's own scroll now that the media kit
+  // covering it is gone — see the matching suspend in openMediakit().
+  talentRosterOverlay.style.overflow = '';
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
@@ -1693,9 +1696,22 @@ function renderCastTray(){
   const talents = castTalents();
   if(!talents.length){
     castTray.classList.remove('show');
+    document.body.classList.remove('has-cast-tray');
     return;
   }
   castTray.classList.add('show');
+  // The tray is position:fixed and outranks the fullscreen overlays
+  // (media kit / talent roster / blog post — see .mediakit-overlay's
+  // z-index comment in style.css) so it stays visible over them, but
+  // those overlays had no idea it existed and never left room for it —
+  // their own bottom content (a CTA, the last gallery row, the "scroll
+  // for more" cue) rendered right underneath and got covered by the tray,
+  // which is what looked like a stray floating bar plastered over the
+  // page. Recording the tray's real height as a CSS var lets those
+  // overlays reserve exactly that much bottom padding (see
+  // body.has-cast-tray .mediakit-overlay in style.css) — measured after
+  // paint since avatar count can wrap the tray onto a second line.
+  document.body.classList.add('has-cast-tray');
 
   const countEl = document.getElementById('castTrayCount');
   if(countEl) countEl.textContent = `${talents.length} Talent${talents.length === 1 ? '' : 's'}`;
@@ -1708,6 +1724,10 @@ function renderCastTray(){
     avatarsEl.innerHTML = shown.map(t => `<img class="cast-tray-avatar" src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}" title="${escapeHtml(t.name)}">`).join('')
       + (overflow > 0 ? `<span class="cast-tray-avatar cast-tray-avatar-more">+${overflow}</span>` : '');
   }
+
+  requestAnimationFrame(() => {
+    document.documentElement.style.setProperty('--cast-tray-height', castTray.offsetHeight + 'px');
+  });
 }
 
 const campaignBriefOverlay = document.getElementById('campaignBriefOverlay');
@@ -2021,6 +2041,17 @@ function openMediakit(id, opts){
   mediakitOverlay.classList.add('show');
   mediakitOverlay.scrollTop = 0;
   document.body.style.overflow = 'hidden';
+  // openMediakit() can be triggered from inside the "View All Talent"
+  // roster overlay (clicking a card there) — that overlay is deliberately
+  // left .show'd underneath so "Back to Roster" doesn't need to re-render
+  // it, but it's ALSO its own independently-scrollable fixed/fullscreen
+  // panel (overflow-y:auto), same as this one. Left alone, that meant two
+  // separate scrollable regions were live at once — the roster underneath
+  // and the media kit on top — each showing its own scrollbar. Suspend the
+  // roster's own scroll while it's covered; closeMediakit() restores it.
+  if(talentRosterOverlay.classList.contains('show')){
+    talentRosterOverlay.style.overflow = 'hidden';
+  }
   updateHeroScrollProgress();
   initHeroParallax(content.querySelector('.mk-hero-intro'));
 
