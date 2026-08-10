@@ -6254,113 +6254,116 @@ html.dark-mode .mediakit-overlay::after{
 .tcf-addcast.added .cast-icon-plus{ display: none; }
 .tcf-addcast.added .cast-icon-check{ display: inline-flex; }
 
-/* Persistent bottom bar — sits above the mobile tab bar (which is
-   height ~64px incl. safe area), full-width above nothing on desktop
-   since there's no tab bar there. Hidden by default; .show slides it
-   into view so it never visually "pops" for a visitor with an empty cast. */
-.cast-tray{
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  /* Must outrank the fullscreen overlays (.mediakit-overlay / the full
-     roster view / the blog post view all sit at z-index:250 with an
-     opaque background) so the tray still shows while one of those is
-     open — but stay below real modals (z-index:400, e.g. the campaign
-     brief form itself) so a modal correctly takes over the screen. */
-  z-index: 260;
+/* NAV TALENTS — top-navbar button + dropdown showing the current campaign
+   cast (talent added via the "+ Add to Campaign" button on each talent
+   card). Lives inside .nav-col-right, so it renders identically in the
+   desktop navbar and the mobile navbar (the mobile @media rules only hide
+   .nav-links.right-links and .navbar .theme-toggle, not this wrapper —
+   verified against the 860px breakpoint block above). Replaces the old
+   fixed-position bottom cast tray entirely: no more fixed-positioning /
+   z-index-stacking-above-overlays / pointer-events edge cases to manage. */
+.nav-talents-wrap{
+  position: relative;
+  /* Hidden by default (empty cast); toggled by renderNavTalents() in
+     script.js so it never visually "pops" for a visitor with no cast yet. */
+  display: none;
+}
+.nav-talents-wrap.show{ display: block; }
+.nav-talents-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--panel-line);
   background: var(--panel);
-  border-top: 1px solid var(--panel-line);
-  box-shadow: 0 -8px 28px rgba(0,0,0,0.14);
-  transform: translateY(120%);
+  color: var(--text);
+  border-radius: 100px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.nav-talents-btn:hover{ border-color: var(--coral); color: var(--coral); }
+.nav-talents-count{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 100px;
+  background: var(--coral);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.nav-talents-dropdown{
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+  padding: 16px;
+  z-index: 260;
   opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-  padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
-.cast-tray.show{ transform: translateY(0); opacity: 1; }
-/* The tray sits at z-index:260, above the fullscreen overlays (media kit /
-   talent roster / blog post, all sharing .mediakit-overlay at z-index:250)
-   so it stays visible while one is open — but those overlays' own scrollable
-   content had no bottom clearance for it, so their last content (a CTA, the
-   final gallery row, the hero's "scroll for more" cue) rendered right behind
-   the tray and looked covered/floating rather than intentionally layered.
-   renderCastTray() (script.js) adds .has-cast-tray to <body> and measures
-   the tray's real height into --cast-tray-height whenever it's shown. */
-body.has-cast-tray .mediakit-overlay{
-  padding-bottom: var(--cast-tray-height, 0px);
-}
-.cast-tray-inner{
+.nav-talents-dropdown.show{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+.nav-talents-dropdown-head{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.cast-tray-info{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.cast-tray-avatars{
-  display: flex;
-  align-items: center;
-}
-.cast-tray-avatar{
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--avatar-bg);
-  border: 2px solid var(--panel);
-  margin-left: -10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.cast-tray-avatar:first-child{ margin-left: 0; }
-.cast-tray-avatar-more{
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--text);
-  background: var(--avatar-bg);
-}
-.cast-tray-text{ display: flex; flex-direction: column; }
-.cast-tray-label{
+  margin-bottom: 10px;
   font-family: 'Space Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--coral);
 }
-.cast-tray-count{ font-size: 14.5px; font-weight: 700; letter-spacing: -0.01em; }
-.cast-tray-actions{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.cast-tray-clear{
+.nav-talents-clear{
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  font-family: inherit;
+  letter-spacing: normal;
+  text-transform: none;
   cursor: pointer;
-  padding: 6px 4px;
+  padding: 2px 4px;
 }
-.cast-tray-clear:hover{ color: var(--text); }
-.cast-tray-send{
-  display: inline-flex;
+.nav-talents-clear:hover{ color: var(--text); }
+.nav-talents-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.nav-talents-list:empty::after{
+  content: 'No talent added yet.';
+  font-size: 13px;
+  color: var(--muted);
+}
+.nav-talents-send{
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: 100%;
   padding: 11px 20px;
   font-size: 13.5px;
 }
 
-@media (max-width: 860px){
-  .cast-tray{ bottom: 64px; } /* clears the fixed mobile tab bar */
-}
 @media (max-width: 560px){
-  .cast-tray-inner{ justify-content: center; text-align: center; }
-  .cast-tray-actions{ width: 100%; justify-content: space-between; }
+  .nav-talents-dropdown{ right: -8px; }
 }
 
 /* Removable talent chips inside the Campaign Brief modal */
