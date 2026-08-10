@@ -6276,6 +6276,17 @@ html.dark-mode .mediakit-overlay::after{
   padding: 14px 0 calc(14px + env(safe-area-inset-bottom));
 }
 .cast-tray.show{ transform: translateY(0); opacity: 1; }
+/* The tray sits at z-index:260, above the fullscreen overlays (media kit /
+   talent roster / blog post, all sharing .mediakit-overlay at z-index:250)
+   so it stays visible while one is open — but those overlays' own scrollable
+   content had no bottom clearance for it, so their last content (a CTA, the
+   final gallery row, the hero's "scroll for more" cue) rendered right behind
+   the tray and looked covered/floating rather than intentionally layered.
+   renderCastTray() (script.js) adds .has-cast-tray to <body> and measures
+   the tray's real height into --cast-tray-height whenever it's shown. */
+body.has-cast-tray .mediakit-overlay{
+  padding-bottom: var(--cast-tray-height, 0px);
+}
 .cast-tray-inner{
   display: flex;
   align-items: center;
