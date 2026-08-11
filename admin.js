@@ -391,8 +391,24 @@ function openTalentModal(id){
           const originalLabel = btn.textContent;
           btn.disabled = true; btn.textContent = 'Fetching…';
           try {
-            posts = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
+            // The endpoint returns { posts, stats }, not a bare array — this
+            // used to assign that whole wrapper object to `posts` directly,
+            // which looked fine here but crashed the server on Save (it
+            // expects posts to be an array to iterate over). Unwrap it.
+            const result = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
+            posts = result.posts || [];
             renderPostThumbs();
+            // Auto-fill the stat fields from real YouTube data, same as the
+            // backend comment intends — but only if empty, so this never
+            // overwrites numbers you've already typed in by hand.
+            if (result.stats) {
+              const avgViewsEl = extra.querySelector('.stat-avgviews');
+              const avgLikesEl = extra.querySelector('.stat-avglikes');
+              const engagementEl = extra.querySelector('.stat-engagement');
+              if (avgViewsEl && !avgViewsEl.value.trim()) avgViewsEl.value = result.stats.avgViews;
+              if (avgLikesEl && !avgLikesEl.value.trim()) avgLikesEl.value = result.stats.avgLikes;
+              if (engagementEl && !engagementEl.value.trim()) engagementEl.value = result.stats.engagementRate;
+            }
             showToast('Latest videos fetched');
           } catch(err){
             showToast('Could not fetch latest videos — check the channel URL');
