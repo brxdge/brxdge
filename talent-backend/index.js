@@ -5,17 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
-const dns = require('dns');
 const db = require('./db');
-
-// Railway's containers don't have working outbound IPv6 routing. Gmail's
-// SMTP hostname resolves to both an IPv4 and an IPv6 address, and Node
-// was picking the IPv6 one first and then hanging (ENETUNREACH / Connection
-// timeout) instead of falling back to IPv4 — that's what was breaking the
-// contact form's email notifications. This makes Node prefer IPv4 results
-// for every outbound connection this process makes, app-wide.
-dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
@@ -30,10 +20,17 @@ app.set('trust proxy', 1);
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
-// Email notification settings (Gmail App Password — see setup notes below)
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-const EMAIL_TO = process.env.EMAIL_TO || EMAIL_USER;
+// Email notification settings — sent via Resend's HTTP API (see the
+// CONTACT FORM MESSAGES section below for why this replaced nodemailer/
+// Gmail: Railway couldn't reliably reach Gmail's SMTP servers, but a
+// plain HTTPS request works everywhere, so this sidesteps that entirely.
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+// Resend's shared onboarding sender — works immediately with no setup,
+// but can ONLY deliver to the email address the RESEND_API_KEY account
+// was signed up with. Verify a domain in the Resend dashboard (free) to
+// send to any address instead; until then, EMAIL_TO must be that address.
+const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
+const EMAIL_TO = process.env.EMAIL_TO;
 
 // --- MIDDLEWARE ---
 app.use(cors());
@@ -378,37 +375,39 @@ app.post('/api/roster', requireAuth, (req, res) => {
 });
 
 // --- CONTACT FORM MESSAGES ---
-let mailTransporter = null;
-if (EMAIL_USER && EMAIL_PASS) {
-  mailTransporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-    // Belt-and-suspenders alongside the app-wide dns.setDefaultResultOrder
-    // above: force this specific connection to use IPv4, since Railway's
-    // network can't route the IPv6 address Gmail's hostname also resolves to.
-    family: 4,
-  });
-
-  // Verify the Gmail login works right away at boot, instead of only
-  // finding out the first time someone submits the contact form. Check
-  // the Railway deploy logs after a restart — this prints one line that
-  // tells you definitively whether email notifications will work:
-  //   "Email transporter verified" -> good, sendMail will work
-  //   "Email transporter FAILED to verify" -> auth is wrong, see message
-  // The #1 cause of failure here: EMAIL_PASS must be a 16-character Gmail
-  // "App Password" (myaccount.google.com/apppasswords), NOT the normal
-  // account password — Google has not accepted regular passwords for
-  // SMTP login since 2022. App Passwords require 2-Step Verification to
-  // be turned on for the account first.
-  mailTransporter.verify((err) => {
-    if (err) {
-      console.error('Email transporter FAILED to verify — contact form emails will NOT send:', err.message);
-    } else {
-      console.log('Email transporter verified — contact form emails will send to', EMAIL_TO);
-    }
-  });
+// We tried nodemailer + Gmail SMTP first — Railway's containers couldn't
+// reliably reach Gmail's mail servers (repeated ENETUNREACH/timeout on
+// the connection itself, not an auth problem), so this sends through
+// Resend's HTTP API instead. It's a plain HTTPS POST, same as any other
+// fetch() call in this file, so none of that networking trouble applies.
+if (!RESEND_API_KEY) {
+  console.warn('RESEND_API_KEY not set — contact form messages will be saved to the database but NO email notification will be sent.');
+} else if (!EMAIL_TO) {
+  console.warn('EMAIL_TO not set — contact form messages will be saved to the database but NO email notification will be sent (no recipient configured).');
 } else {
-  console.warn('EMAIL_USER / EMAIL_PASS not set — contact form messages will be saved to the database but NO email notification will be sent.');
+  console.log('Resend configured — contact form emails will send to', EMAIL_TO, 'from', RESEND_FROM);
+}
+
+async function sendContactEmail({ name, email, message, talent }) {
+  if (!RESEND_API_KEY || !EMAIL_TO) return;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: EMAIL_TO,
+      reply_to: email,
+      subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+      text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Resend API responded ${res.status}: ${body}`);
+  }
 }
 
 const insertMessage = db.prepare(`
@@ -428,22 +427,17 @@ app.post('/api/contact', async (req, res) => {
     insertMessage.run(name, email, message, talent || '', receivedAt);
 
     // 2. Best-effort email notification — failure here does NOT fail the request
-    if (mailTransporter) {
+    if (RESEND_API_KEY && EMAIL_TO) {
       try {
-        await mailTransporter.sendMail({
-          from: EMAIL_USER,
-          to: EMAIL_TO,
-          subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
-          text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
-        });
+        await sendContactEmail({ name, email, message, talent });
       } catch (mailErr) {
         console.error('Email notification failed (message was still saved):', mailErr.message);
-        if (/invalid login|username and password not accepted/i.test(mailErr.message || '')) {
-          console.error('  -> This is almost always a Gmail App Password problem. EMAIL_PASS must be a 16-character App Password from myaccount.google.com/apppasswords, not the regular account password.');
+        if (/testing emails|verify a domain|only send testing/i.test(mailErr.message || '')) {
+          console.error('  -> Resend is in sandbox mode: with the shared onboarding@resend.dev sender, EMAIL_TO must be the exact email address your Resend account was signed up with. Verify a domain in the Resend dashboard to send to any address.');
         }
       }
     } else {
-      console.warn('Contact message saved, but no email was sent (EMAIL_USER/EMAIL_PASS not configured).');
+      console.warn('Contact message saved, but no email was sent (RESEND_API_KEY/EMAIL_TO not configured).');
     }
 
     res.json({ ok: true });
