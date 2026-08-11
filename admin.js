@@ -17,6 +17,8 @@ let managersData = [];
 let messagesData = [];
 let adminsData = [];
 let brandsData = [];
+let blogData = [];
+let campaignsData = [];
 
 try { token = sessionStorage.getItem(TOKEN_KEY); } catch(e) {}
 
@@ -104,12 +106,14 @@ async function enterDashboard(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').classList.add('show');
   document.getElementById('whoamiName').textContent = me.username;
-  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages()]);
+  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages(), loadBlog(), loadCampaigns()]);
   renderTalentPage();
   renderManagersPage();
   renderBrandsPage();
   renderMessagesPage();
   renderProfilePage();
+  renderBlogPage();
+  renderCampaignsPage();
 }
 
 /* ---------------- NAVIGATION ---------------- */
@@ -137,6 +141,23 @@ async function loadBrands(){
   } catch(err){
     console.error('Failed to load brands:', err);
     brandsData = [];
+  }
+}
+async function loadBlog(){
+  // Same "catch locally" reasoning as loadBrands() above.
+  try {
+    blogData = await api('/api/blog');
+  } catch(err){
+    console.error('Failed to load blog posts:', err);
+    blogData = [];
+  }
+}
+async function loadCampaigns(){
+  try {
+    campaignsData = await api('/api/campaigns');
+  } catch(err){
+    console.error('Failed to load campaigns:', err);
+    campaignsData = [];
   }
 }
 async function loadMessages(){
@@ -766,6 +787,297 @@ function openBrandModal(index){
       overlay.classList.remove('show');
       showToast(existing ? 'Brand updated' : 'Brand added');
       renderBrandsPage();
+    } catch(err){
+      showToast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+/* ============================================================
+   PAGE: BLOG & CASE STUDIES
+   ============================================================ */
+// slugify() already exists above (shared with the talent-card URL slugs).
+
+function renderBlogPage(){
+  document.getElementById('page-blog').innerHTML = `
+    <h1 class="page-title">Blog &amp; Case Studies</h1>
+    <p class="page-sub">Articles and case studies shown in the "Blog &amp; Case Studies" section on the public site.</p>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Posts</h2><p>${blogData.length} post${blogData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addBlogBtn" style="width:auto;">+ Add Post</button>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th></th><th>Title</th><th>Type</th><th>Talent</th><th></th></tr></thead>
+        <tbody id="blogTbody"></tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('addBlogBtn').addEventListener('click', () => openBlogModal(null));
+
+  const tbody = document.getElementById('blogTbody');
+  if(!blogData.length){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:16px 0;">No posts yet — add your first one above.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = blogData.map((p, i) => `
+    <tr>
+      <td>${p.coverImage
+        ? `<img class="table-logo" src="${p.coverImage}" onerror="this.style.background='#eee'">`
+        : `<div class="brand-logo-fallback">${escapeHtml((p.title||'?').charAt(0).toUpperCase())}</div>`}</td>
+      <td><b>${escapeHtml(p.title)}</b></td>
+      <td style="color:var(--muted);">${p.postType === 'case-study' ? 'Case Study' : 'Article'}</td>
+      <td style="color:var(--muted);">${escapeHtml(p.talentName) || '—'}</td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBlogModal(Number(btn.dataset.edit))));
+  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteBlogPost(Number(btn.dataset.delete))));
+}
+
+async function deleteBlogPost(index){
+  const p = blogData[index];
+  if(!confirm(`Delete "${p.title}"?`)) return;
+  blogData = blogData.filter((_, i) => i !== index);
+  try {
+    await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
+    showToast('Post deleted');
+    renderBlogPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+function openBlogModal(index){
+  const existing = index !== null ? blogData[index] : null;
+  const isCaseStudy = existing?.postType === 'case-study';
+  document.getElementById('blogModal').innerHTML = `
+    <button class="modal-close" data-close>&times;</button>
+    <h3>${existing ? 'Edit Post' : 'Add Post'}</h3>
+    <p class="sub">Shown in the Blog &amp; Case Studies section on the public site.</p>
+    <form id="blogForm">
+      <div class="field"><label>Title</label><input type="text" id="pTitle" value="${escapeHtml(existing?.title)}" required></div>
+      <div class="field">
+        <label>Type</label>
+        <select id="pType">
+          <option value="article" ${!isCaseStudy ? 'selected' : ''}>Article</option>
+          <option value="case-study" ${isCaseStudy ? 'selected' : ''}>Case Study</option>
+        </select>
+      </div>
+      <div class="field"><label>Talent (optional)</label><input type="text" id="pTalent" value="${escapeHtml(existing?.talentName)}"></div>
+      <div class="field"><label>Author (optional)</label><input type="text" id="pAuthor" value="${escapeHtml(existing?.author)}"></div>
+      <div class="field"><label>Excerpt</label><textarea id="pExcerpt" rows="2">${escapeHtml(existing?.excerpt)}</textarea></div>
+      <div class="field"><label>Body</label><textarea id="pBody" rows="6">${escapeHtml(existing?.body)}</textarea></div>
+      <div class="field">
+        <label>Cover Image</label>
+        ${existing?.coverImage ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.coverImage}">` : ''}
+        <input type="file" id="pCoverFile" accept="image/*">
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Optional — without one, a generated avatar is used instead.</p>
+      </div>
+      <div id="pCaseStudyFields" style="display:${isCaseStudy ? 'block' : 'none'};">
+        <div class="field"><label>Followers Before / After</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="pFollowersBefore" placeholder="e.g. 12K" value="${escapeHtml(existing?.statFollowersBefore)}">
+            <input type="text" id="pFollowersAfter" placeholder="e.g. 84K" value="${escapeHtml(existing?.statFollowersAfter)}">
+          </div>
+        </div>
+        <div class="field"><label>Engagement Before / After</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="pEngagementBefore" placeholder="e.g. 2.1%" value="${escapeHtml(existing?.statEngagementBefore)}">
+            <input type="text" id="pEngagementAfter" placeholder="e.g. 6.4%" value="${escapeHtml(existing?.statEngagementAfter)}">
+          </div>
+        </div>
+        <div class="field"><label>Brand Deals</label><input type="text" id="pBrandDeals" value="${escapeHtml(existing?.statBrandDeals)}"></div>
+        <div class="field"><label>Revenue</label><input type="text" id="pRevenue" value="${escapeHtml(existing?.statRevenue)}"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  `;
+  const overlay = document.getElementById('blogModalOverlay');
+  overlay.classList.add('show');
+  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
+
+  document.getElementById('pType').addEventListener('change', (e) => {
+    document.getElementById('pCaseStudyFields').style.display = e.target.value === 'case-study' ? 'block' : 'none';
+  });
+
+  document.getElementById('blogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      let coverImage = existing?.coverImage || '';
+      const file = document.getElementById('pCoverFile').files[0];
+      if(file) coverImage = await uploadImage(file);
+
+      const title = document.getElementById('pTitle').value.trim();
+      const entry = {
+        slug: existing?.slug || (slugify(title) + '-' + Date.now().toString(36)),
+        title,
+        postType: document.getElementById('pType').value,
+        talentName: document.getElementById('pTalent').value.trim(),
+        author: document.getElementById('pAuthor').value.trim(),
+        excerpt: document.getElementById('pExcerpt').value.trim(),
+        body: document.getElementById('pBody').value.trim(),
+        coverImage,
+        publishedAt: existing?.publishedAt || new Date().toISOString(),
+        statFollowersBefore: document.getElementById('pFollowersBefore').value.trim(),
+        statFollowersAfter: document.getElementById('pFollowersAfter').value.trim(),
+        statEngagementBefore: document.getElementById('pEngagementBefore').value.trim(),
+        statEngagementAfter: document.getElementById('pEngagementAfter').value.trim(),
+        statBrandDeals: document.getElementById('pBrandDeals').value.trim(),
+        statRevenue: document.getElementById('pRevenue').value.trim(),
+      };
+      if(existing){ blogData[index] = entry; } else { blogData.push(entry); }
+      await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
+      overlay.classList.remove('show');
+      showToast(existing ? 'Post updated' : 'Post added');
+      renderBlogPage();
+    } catch(err){
+      showToast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+/* ============================================================
+   PAGE: CAMPAIGNS
+   ============================================================ */
+function renderCampaignsPage(){
+  document.getElementById('page-campaigns').innerHTML = `
+    <h1 class="page-title">Campaigns</h1>
+    <p class="page-sub">Brand &times; creator campaign case studies shown in the "Campaigns" section on the public site.</p>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Campaigns</h2><p>${campaignsData.length} campaign${campaignsData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addCampaignBtn" style="width:auto;">+ Add Campaign</button>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th></th><th>Brand</th><th>Creator</th><th></th></tr></thead>
+        <tbody id="campaignsTbody"></tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('addCampaignBtn').addEventListener('click', () => openCampaignModal(null));
+
+  const tbody = document.getElementById('campaignsTbody');
+  if(!campaignsData.length){
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted); padding:16px 0;">No campaigns yet — add your first one above.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = campaignsData.map((c, i) => `
+    <tr>
+      <td>${c.brandLogo
+        ? `<img class="table-logo" src="${c.brandLogo}" onerror="this.style.background='#eee'">`
+        : `<div class="brand-logo-fallback">${escapeHtml((c.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
+      <td><b>${escapeHtml(c.brandName)}</b></td>
+      <td style="color:var(--muted);">${escapeHtml(c.creatorName) || '—'}</td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCampaignModal(Number(btn.dataset.edit))));
+  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteCampaign(Number(btn.dataset.delete))));
+}
+
+async function deleteCampaign(index){
+  const c = campaignsData[index];
+  if(!confirm(`Remove the "${c.brandName}" campaign?`)) return;
+  campaignsData = campaignsData.filter((_, i) => i !== index);
+  try {
+    await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
+    showToast('Campaign removed');
+    renderCampaignsPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+function openCampaignModal(index){
+  const existing = index !== null ? campaignsData[index] : null;
+  document.getElementById('campaignModal').innerHTML = `
+    <button class="modal-close" data-close>&times;</button>
+    <h3>${existing ? 'Edit Campaign' : 'Add Campaign'}</h3>
+    <p class="sub">Shown in the Campaigns section on the public site.</p>
+    <form id="campaignForm">
+      <div class="field"><label>Brand Name</label><input type="text" id="cBrandName" value="${escapeHtml(existing?.brandName)}" required></div>
+      <div class="field"><label>Creator (optional)</label><input type="text" id="cCreatorName" value="${escapeHtml(existing?.creatorName)}"></div>
+      <div class="field"><label>Objective</label><textarea id="cObjective" rows="2">${escapeHtml(existing?.objective)}</textarea></div>
+      <div class="field"><label>Deliverables (comma-separated)</label><input type="text" id="cDeliverables" placeholder="e.g. 3 TikToks, 1 IG Reel, 2 Stories" value="${escapeHtml((existing?.deliverables || []).join(', '))}"></div>
+      <div class="field"><label>Reach / Engagement</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="cReach" placeholder="e.g. 2.4M" value="${escapeHtml(existing?.reach)}">
+          <input type="text" id="cEngagement" placeholder="e.g. 8.1%" value="${escapeHtml(existing?.engagement)}">
+        </div>
+      </div>
+      <div class="field"><label>Results</label><textarea id="cResults" rows="2">${escapeHtml(existing?.results)}</textarea></div>
+      <div class="field">
+        <label>Brand Logo</label>
+        ${existing?.brandLogo ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.brandLogo}">` : ''}
+        <input type="file" id="cLogoFile" accept="image/*">
+      </div>
+      <div class="field">
+        <label>Cover Image</label>
+        ${existing?.coverImage ? `<img class="table-logo" style="width:56px; height:56px; margin-bottom:8px;" src="${existing.coverImage}">` : ''}
+        <input type="file" id="cCoverFile" accept="image/*">
+        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Optional — without one, a generated avatar is used instead.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  `;
+  const overlay = document.getElementById('campaignModalOverlay');
+  overlay.classList.add('show');
+  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
+
+  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      let brandLogo = existing?.brandLogo || '';
+      const logoFile = document.getElementById('cLogoFile').files[0];
+      if(logoFile) brandLogo = await uploadImage(logoFile);
+
+      let coverImage = existing?.coverImage || '';
+      const coverFile = document.getElementById('cCoverFile').files[0];
+      if(coverFile) coverImage = await uploadImage(coverFile);
+
+      const entry = {
+        brandName: document.getElementById('cBrandName').value.trim(),
+        creatorName: document.getElementById('cCreatorName').value.trim(),
+        objective: document.getElementById('cObjective').value.trim(),
+        deliverables: document.getElementById('cDeliverables').value.split(',').map(s => s.trim()).filter(Boolean),
+        reach: document.getElementById('cReach').value.trim(),
+        engagement: document.getElementById('cEngagement').value.trim(),
+        results: document.getElementById('cResults').value.trim(),
+        brandLogo,
+        coverImage,
+      };
+      if(existing){ campaignsData[index] = entry; } else { campaignsData.push(entry); }
+      await api('/api/campaigns', { method: 'POST', body: JSON.stringify(campaignsData) });
+      overlay.classList.remove('show');
+      showToast(existing ? 'Campaign updated' : 'Campaign added');
+      renderCampaignsPage();
     } catch(err){
       showToast(err.message);
     } finally {
