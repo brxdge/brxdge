@@ -18,6 +18,18 @@ dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
+// Express auto-generates an ETag for every res.json()/res.send() response
+// by default. That's fine for content that rarely changes, but this app's
+// API responses are live data (roster, contact messages, "fetch the latest
+// videos right now") — nothing here should ever be conditionally cached.
+// With ETags on, a repeat request can get a bodyless 304 Not Modified back,
+// which is what was making "Fetch latest videos" intermittently look like
+// it failed even though the server had the right data the whole time. This
+// only affects dynamic responses from route handlers below — static files
+// (index.html, script.js, style.css, images) are served separately via
+// express.static and keep their own normal caching.
+app.set('etag', false);
+
 // Render (like most PaaS hosts) terminates HTTPS at its own load balancer
 // and forwards requests to this process over plain HTTP internally.
 // Without telling Express to trust that proxy, req.protocol below reports
