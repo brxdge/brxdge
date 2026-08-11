@@ -4669,8 +4669,8 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 .campaign-card{
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: 44% 1fr;
   background: var(--panel);
   border: 1px solid var(--panel-line);
   border-radius: var(--radius-lg);
@@ -4682,20 +4682,36 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   border-color: var(--coral);
   box-shadow: 0 14px 34px rgba(0,0,0,0.12);
 }
-/* Alternate the image side every other card for an editorial feel */
+/* Alternate the image side every other card for an editorial feel. Uses
+   Grid placement (not flex row-reverse) because <img> elements don't
+   reliably stretch to fill a flex row's height across browsers — Grid
+   items fill their cell by default, so the image and text column end up
+   the same height with no extra rules needed. */
 .campaign-card:nth-child(even){
-  flex-direction: row-reverse;
+  grid-template-columns: 1fr 44%;
+}
+.campaign-card:nth-child(even) .campaign-card-cover{
+  grid-column: 2;
+  grid-row: 1;
+}
+.campaign-card:nth-child(even) .campaign-card-body{
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .campaign-card-cover{
-  width: 44%;
-  flex-shrink: 0;
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  display: block;
   min-height: 340px;
 }
 
 .campaign-card-body{
-  flex: 1;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   padding: 44px;
   display: flex;
@@ -4782,13 +4798,20 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 @media (max-width: 860px){
   .campaign-card,
   .campaign-card:nth-child(even){
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
-  .campaign-card-cover{
+  .campaign-card-cover,
+  .campaign-card:nth-child(even) .campaign-card-cover{
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
+    height: auto;
     min-height: 220px;
   }
-  .campaign-card-body{
+  .campaign-card-body,
+  .campaign-card:nth-child(even) .campaign-card-body{
+    grid-column: 1;
+    grid-row: 2;
     padding: 26px;
   }
   .campaign-card-stats{
