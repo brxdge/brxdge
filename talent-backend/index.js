@@ -5,7 +5,16 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const dns = require('dns');
 const db = require('./db');
+
+// Railway's containers don't have working outbound IPv6 routing. This bit
+// us first with Gmail's SMTP server, but it's NOT Gmail-specific — this
+// makes Node prefer IPv4 results for EVERY outbound connection this
+// process makes, which also covers the /api/youtube-latest endpoint's
+// calls to googleapis.com (Google's APIs resolve IPv6 addresses too) and
+// anything else that reaches out to the internet from this server.
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
@@ -400,7 +409,7 @@ async function sendContactEmail({ name, email, message, talent }) {
       from: RESEND_FROM,
       to: EMAIL_TO,
       reply_to: email,
-      subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+      subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
       text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
     }),
   });
