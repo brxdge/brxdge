@@ -204,6 +204,101 @@ app.post('/api/brands', requireAuth, (req, res) => {
   }
 });
 
+// --- BLOG & CASE STUDIES ---
+// Rebuilt from scratch — admin.html already had the nav item, page
+// container, and modal markup for this (and for Campaigns below), but the
+// backend routes and admin.js logic to drive them had gone missing, so
+// the public site's fetch(API + '/api/blog') calls were silently 404ing.
+const replaceBlog = db.transaction((posts) => {
+  db.prepare(`DELETE FROM blog_posts`).run();
+  const insert = db.prepare(`
+    INSERT INTO blog_posts (
+      slug, title, excerpt, coverImage, postType, talentName, publishedAt,
+      author, body, statFollowersBefore, statFollowersAfter,
+      statEngagementBefore, statEngagementAfter, statBrandDeals, statRevenue, sortOrder
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  posts.forEach((p, i) => {
+    insert.run(
+      p.slug, p.title || '', p.excerpt || '', p.coverImage || '',
+      p.postType || 'article', p.talentName || '', p.publishedAt || '',
+      p.author || '', p.body || '',
+      p.statFollowersBefore || '', p.statFollowersAfter || '',
+      p.statEngagementBefore || '', p.statEngagementAfter || '',
+      p.statBrandDeals || '', p.statRevenue || '', i
+    );
+  });
+});
+
+// GET /api/blog — public, list of posts for the grid (public site + admin table both use this)
+app.get('/api/blog', (req, res) => {
+  const posts = db.prepare(`SELECT * FROM blog_posts ORDER BY sortOrder ASC, id ASC`).all();
+  res.json(posts);
+});
+
+// GET /api/blog/post/:slug — public, full single post (script.js re-fetches this on open)
+app.get('/api/blog/post/:slug', (req, res) => {
+  const post = db.prepare(`SELECT * FROM blog_posts WHERE slug = ?`).get(req.params.slug);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+  res.json(post);
+});
+
+// POST /api/blog — requires a signed-in manager, replaces the entire list
+// (same "save the whole array at once" pattern as /api/roster and /api/brands)
+app.post('/api/blog', requireAuth, (req, res) => {
+  if (!Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Expected an array of blog posts' });
+  }
+  try {
+    replaceBlog(req.body);
+    res.send('Saved');
+  } catch (err) {
+    console.error('blog save error:', err);
+    res.status(500).json({ error: 'Failed to save blog posts' });
+  }
+});
+
+// --- CAMPAIGNS (brand x creator case studies) ---
+const replaceCampaigns = db.transaction((campaigns) => {
+  db.prepare(`DELETE FROM campaigns`).run();
+  const insert = db.prepare(`
+    INSERT INTO campaigns (
+      brandName, creatorName, brandLogo, coverImage, objective,
+      deliverables, reach, engagement, results, sortOrder
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  campaigns.forEach((c, i) => {
+    insert.run(
+      c.brandName || '', c.creatorName || '', c.brandLogo || '', c.coverImage || '',
+      c.objective || '', JSON.stringify(Array.isArray(c.deliverables) ? c.deliverables : []),
+      c.reach || '', c.engagement || '', c.results || '', i
+    );
+  });
+});
+
+app.get('/api/campaigns', (req, res) => {
+  const rows = db.prepare(`SELECT * FROM campaigns ORDER BY sortOrder ASC, id ASC`).all();
+  const campaigns = rows.map(c => {
+    let deliverables = [];
+    try { deliverables = JSON.parse(c.deliverables || '[]'); } catch (err) { /* leave empty */ }
+    return { ...c, deliverables };
+  });
+  res.json(campaigns);
+});
+
+app.post('/api/campaigns', requireAuth, (req, res) => {
+  if (!Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Expected an array of campaigns' });
+  }
+  try {
+    replaceCampaigns(req.body);
+    res.send('Saved');
+  } catch (err) {
+    console.error('campaigns save error:', err);
+    res.status(500).json({ error: 'Failed to save campaigns' });
+  }
+});
+
 // --- ADMIN ACCOUNT MANAGEMENT (profile, password/username changes, other admins) ---
 
 // GET /api/me — the signed-in admin's own username + notes
