@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 const db = require('./db');
 
 const app = express();
@@ -20,94 +21,33 @@ app.set('trust proxy', 1);
 
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
-// Email notification settings. Sent through Resend's HTTPS API (see the
-// sendContactNotification() function further down) rather than raw Gmail
-// SMTP — Railway blocks outbound SMTP on the Free/Trial/Hobby plans, but
-// plain HTTPS requests like this one are never blocked on any plan.
+// Email notification settings (Gmail App Password — see setup notes below)
 const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 const EMAIL_TO = process.env.EMAIL_TO || EMAIL_USER;
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-// The "from" address Resend sends as. onboarding@resend.dev works out of
-// the box with zero setup, but only delivers to the email address you used
-// to sign up for Resend — sign up with the same address as EMAIL_TO above.
-// Once you verify your own domain in Resend, set RESEND_FROM to something
-// like notifications@yourdomain.com instead.
-const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
 // --- MIDDLEWARE ---
 app.use(cors());
-// Raised from Express's 100kb default — blog posts save as one whole-array
-// POST just like roster/managers/brands below, and a handful of real
-// article bodies comfortably clears 100kb on their own.
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json()); // Essential for receiving JSON from your frontend
 
-// A handful of standard security response headers. Deliberately not using
-// the `helmet` package here — these few lines cover the safe, no-risk wins
-// without adding a new dependency, and without a Content-Security-Policy
-// (which is easy to get subtly wrong and would need live testing against
-// every external image/embed source the site uses before it's safe to ship).
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff'); // stops browsers from "guessing" a file's type
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // stops the site being embedded in someone else's iframe
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin'); // don't leak full URLs to other sites you link to
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains'); // once loaded over https, always use https
-  next();
-});
-
-// --- FILE STORAGE SETUP ---
-// Persistent volume directory (see db.js for the full explanation — same
-// Railway volume, mounted once at talent-backend/data, covers both the
-// database and these uploaded photos).
+// --- FILE STORAGE SETUP (uploads still live on disk — only the talent
+// data itself moved into the database) ---
+// Same ephemeral-disk problem as db.js: Railway wipes local files on every
+// redeploy/restart unless they live on an attached Volume. Use the
+// Volume's mount path when one is attached (RAILWAY_VOLUME_MOUNT_PATH is
+// set automatically by Railway), otherwise fall back to a local
+// './uploads' folder for local development.
+const uploadDir = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'uploads')
+  : 'uploads';
 const fs = require('fs');
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const uploadDir = path.join(DATA_DIR, 'uploads');
-fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// One-time seed: copy over whatever's in the git-committed uploads/ folder
-// the first time this runs against a brand-new/empty volume, so existing
-// photos aren't blank until each one gets re-uploaded by hand. Only ever
-// copies a file that isn't already on the volume, so this is safe to leave
-// in permanently — it's a no-op on every boot after the first.
-const SEED_UPLOAD_DIR = path.join(__dirname, 'uploads');
-if (fs.existsSync(SEED_UPLOAD_DIR)) {
-  for (const file of fs.readdirSync(SEED_UPLOAD_DIR)) {
-    const dest = path.join(uploadDir, file);
-    if (!fs.existsSync(dest)) fs.copyFileSync(path.join(SEED_UPLOAD_DIR, file), dest);
-  }
-}
-
-// Maps each allowed MIME type to a fixed, known-safe extension. The saved
-// filename's extension is taken from THIS map (keyed off the server-checked
-// mimetype below), never from the original filename — path.extname() on an
-// attacker-supplied name is not trustworthy: a request could claim
-// mimetype "image/jpeg" (passing fileFilter) while naming the file
-// "payload.svg" or "payload.html", and the old code would have saved it
-// with THAT extension anyway, landing an executable-in-the-browser file
-// in the publicly-served /uploads folder. Deriving the extension from the
-// verified type instead closes that off.
-const MIME_EXTENSIONS = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'image/gif': '.gif',
-};
-const ALLOWED_IMAGE_TYPES = new Set(Object.keys(MIME_EXTENSIONS));
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, Date.now() + (MIME_EXTENSIONS[file.mimetype] || '')),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB — plenty for a talent photo, stops accidental huge uploads
-  // Only real image files can be uploaded — this endpoint requires a signed-in
-  // admin already, but restricting the file type is a cheap extra layer: it
-  // stops even a compromised admin session from dropping an arbitrary file
-  // (e.g. an HTML file with embedded script) into the publicly-served /uploads folder.
-  fileFilter: (req, file, cb) => {
-    if (ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(null, true);
-    cb(new Error('Only JPG, PNG, WEBP, or GIF images are allowed'));
-  },
-});
+const upload = multer({ storage: storage });
 
 // --- MANAGER SESSIONS ---
 // Simple in-memory bearer tokens — plenty for a small internal admin tool.
@@ -129,60 +69,7 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// --- RATE LIMITING ---
-// A simple in-memory per-IP throttle, hand-rolled (no new npm dependency)
-// rather than a single-purpose one-off — used both for login (a brute-force
-// guard: an unlimited login endpoint can be guessed against indefinitely)
-// and for the public contact/campaign-brief form (which had no limit at
-// all before this — anyone could script a flood of fake submissions,
-// which would also spam your inbox and burn through the Resend email quota).
-function makeRateLimiter({ max, windowMs, message }) {
-  const attempts = new Map(); // ip -> { count, windowStart }
-
-  // Periodic cleanup so this map doesn't grow forever — old entries are
-  // just a few bytes each, but there's no reason to keep them once their
-  // window's up.
-  setInterval(() => {
-    const now = Date.now();
-    for (const [ip, entry] of attempts.entries()) {
-      if (now - entry.windowStart > windowMs) attempts.delete(ip);
-    }
-  }, windowMs).unref();
-
-  return function rateLimit(req, res, next) {
-    const ip = req.ip || 'unknown';
-    const now = Date.now();
-    const entry = attempts.get(ip);
-    if (!entry || now - entry.windowStart > windowMs) {
-      attempts.set(ip, { count: 1, windowStart: now });
-      return next();
-    }
-    if (entry.count >= max) {
-      const retryAfterSec = Math.ceil((entry.windowStart + windowMs - now) / 1000);
-      res.setHeader('Retry-After', retryAfterSec);
-      return res.status(429).json({ error: message });
-    }
-    entry.count++;
-    next();
-  };
-}
-
-const loginRateLimit = makeRateLimiter({
-  max: 10,
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  message: 'Too many login attempts. Please try again in a few minutes.',
-});
-
-// Generous enough that a real brand submitting a couple of inquiries (or a
-// campaign brief right after browsing) never gets blocked, but still shuts
-// down a scripted flood.
-const contactRateLimit = makeRateLimiter({
-  max: 8,
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  message: 'Too many messages sent. Please try again in a few minutes.',
-});
-
-app.post('/api/login', loginRateLimit, (req, res) => {
+app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'username and password are required' });
@@ -203,225 +90,21 @@ app.post('/api/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// --- PER-TALENT SOCIAL PREVIEW (Open Graph / Twitter Card) ---
-// Link-preview crawlers (iMessage, Slack, Twitter/X, Facebook, Discord,
-// WhatsApp...) never run this site's JavaScript — they only read the
-// static <meta> tags already present in the HTML response. Since talent
-// profiles are rendered client-side (the name/photo only appear in the
-// page after JS runs), every shared talent link would otherwise preview
-// as the same generic "BRXDGE — Talent Management" card no matter which
-// talent's URL (?talent=slug) was actually shared. This intercepts just
-// that one case and serves index.html with those specific tags swapped
-// to the talent's own name/bio/photo before express.static ever sees the
-// request — the actual site and all its JS are completely untouched;
-// visitors' browsers load and run the exact same app either way, this
-// only changes what a crawler sees in the raw HTML.
-const INDEX_HTML_PATH = path.join(__dirname, '..', 'index.html');
-
-function slugifyServer(str) {
-  return (str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-function escapeHtmlAttr(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-// Safely serializes a JSON-LD object into an inline <script> block. The
-// object can ultimately contain admin-entered text (a talent bio, a blog
-// title/body) — escaping "<" stops something like a bio containing
-// "</script>" from breaking out of the tag and injecting markup.
-function jsonLdScript(obj) {
-  return `<script type="application/ld+json">\n${JSON.stringify(obj, null, 2).replace(/</g, '\\u003c')}\n</script>`;
-}
-
-app.get('/', (req, res, next) => {
-  const talentSlug = req.query.talent;
-  const blogSlug = req.query.blog;
-  if (!talentSlug && !blogSlug) return next(); // plain static file — keeps its own Organization JSON-LD as-is
-
-  let title, description, image, urlSlugParam, urlSlugValue, structuredData;
-  const siteUrl = `${req.protocol}://${req.get('host')}`;
-
-  if (talentSlug) {
-    let talent;
-    try {
-      talent = getFullRoster().find((t) => slugifyServer(t.name) === talentSlug);
-    } catch (err) {
-      return next(); // DB hiccup — fall back to the plain file rather than 500
-    }
-    if (!talent) return next(); // unknown slug — plain file; the SPA shows its own "not found" state
-
-    title = `${talent.name} — BRXDGE`;
-    description = talent.bio || `${talent.name}'s media kit on BRXDGE.`;
-    image = talent.photo || talent.coverPhoto || 'https://www.brxdge.com/assets/og-image.jpg';
-    urlSlugParam = 'talent';
-    urlSlugValue = talentSlug;
-
-    // Person schema, tied back to BRXDGE as the talent's agency (worksFor)
-    // and linked out to their real social profiles (sameAs) — both help
-    // Google connect this page to the creator as a real, searchable entity
-    // rather than just a generic profile page.
-    structuredData = {
-      '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: talent.name,
-      description: talent.bio || undefined,
-      image: talent.photo || talent.coverPhoto || undefined,
-      url: `${siteUrl}/?talent=${encodeURIComponent(talentSlug)}`,
-      jobTitle: 'Content Creator',
-      worksFor: { '@type': 'Organization', name: 'BRXDGE', url: `${siteUrl}/` },
-      sameAs: (talent.socials || []).map((s) => s.url).filter(Boolean),
-    };
-  } else {
-    let post;
-    try {
-      post = db.prepare(`SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'`).get(blogSlug);
-    } catch (err) {
-      return next();
-    }
-    if (!post) return next(); // unpublished/unknown slug — plain file
-
-    title = `${post.title} — BRXDGE Blog`;
-    description = post.excerpt || (post.body || '').slice(0, 160);
-    image = post.coverImage || 'https://www.brxdge.com/assets/og-image.jpg';
-    urlSlugParam = 'blog';
-    urlSlugValue = blogSlug;
-
-    // BlogPosting is the schema.org type Google's rich-result docs expect
-    // for both regular articles and case studies — there's no separate
-    // "CaseStudy" type, so postType only affects the site's own UI, not
-    // which schema gets used here.
-    structuredData = {
-      '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
-      headline: post.title,
-      description: post.excerpt || undefined,
-      image: post.coverImage || undefined,
-      datePublished: post.publishedAt || undefined,
-      author: { '@type': 'Organization', name: post.author || 'BRXDGE' },
-      publisher: {
-        '@type': 'Organization',
-        name: 'BRXDGE',
-        logo: { '@type': 'ImageObject', url: `${siteUrl}/brxdge.png` },
-      },
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `${siteUrl}/?blog=${encodeURIComponent(blogSlug)}` },
-    };
-  }
-
-  fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
-    if (err) return next();
-
-    const url = `${siteUrl}/?${urlSlugParam}=${encodeURIComponent(urlSlugValue)}`;
-    const t = escapeHtmlAttr(title), d = escapeHtmlAttr(description), i = escapeHtmlAttr(image), u = escapeHtmlAttr(url);
-    const ld = jsonLdScript(structuredData);
-
-    // Every replacement below uses a function, not a plain string. Passing
-    // a string to String.replace() gives "$&", "$1", "$$" etc. special
-    // meaning — and title/description/bio here can contain admin-entered
-    // free text (a talent bio, a blog excerpt) that might itself contain a
-    // "$" followed by a digit (e.g. a bio mentioning "$1M in brand deals"),
-    // which would otherwise silently corrupt the output. A function return
-    // value is always inserted literally, so that risk goes away entirely.
-    const out = html
-      .replace(/<title>.*?<\/title>/, () => `<title>${t}</title>`)
-      .replace(/<meta name="description" content=".*?">/, () => `<meta name="description" content="${d}">`)
-      // The canonical tag previously stayed hardcoded to the homepage on
-      // every talent/blog page, which tells Google "this is a duplicate of
-      // the homepage" and suppresses it from being indexed as its own
-      // result — defeating the point of building these pages out at all.
-      .replace(/<link rel="canonical" href=".*?">/, () => `<link rel="canonical" href="${u}">`)
-      .replace(/<meta property="og:title" content=".*?">/, () => `<meta property="og:title" content="${t}">`)
-      .replace(/<meta property="og:description" content=".*?">/, () => `<meta property="og:description" content="${d}">`)
-      .replace(/<meta property="og:url" content=".*?">/, () => `<meta property="og:url" content="${u}">`)
-      .replace(/<meta property="og:image" content=".*?">/, () => `<meta property="og:image" content="${i}">`)
-      // Talent photos / blog cover images aren't guaranteed to be 1200x630
-      // like the default og-image.jpg — dropping these size hints rather
-      // than leaving wrong ones in; most platforms handle a missing
-      // width/height gracefully.
-      .replace(/\s*<meta property="og:image:width" content=".*?">\n?/, () => '\n')
-      .replace(/\s*<meta property="og:image:height" content=".*?">\n?/, () => '\n')
-      .replace(/<meta name="twitter:title" content=".*?">/, () => `<meta name="twitter:title" content="${t}">`)
-      .replace(/<meta name="twitter:description" content=".*?">/, () => `<meta name="twitter:description" content="${d}">`)
-      .replace(/<meta name="twitter:image" content=".*?">/, () => `<meta name="twitter:image" content="${i}">`)
-      // Swap the homepage's generic Organization block for a Person (talent)
-      // or BlogPosting (case study/article) block — the specific schema
-      // each page is actually about, which is what makes it eligible for
-      // richer search results instead of just inheriting the site-wide one.
-      .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => ld);
-
-    res.send(out);
-  });
-});
-
-// GET /sitemap.xml — lists the homepage plus every published talent media
-// kit and blog/case-study post, so Google can discover those ?talent=/
-// ?blog= pages by crawling this file instead of relying purely on internal
-// links. Registered ahead of the static-file middleware below so it always
-// wins over any stray sitemap.xml that might otherwise sit in the frontend
-// folder. Built dynamically (not a static file) so a newly published
-// talent or post shows up here on the very next crawl, no redeploy needed.
-app.get('/sitemap.xml', (req, res) => {
-  try {
-    const siteUrl = `${req.protocol}://${req.get('host')}`;
-    const urls = [{ loc: `${siteUrl}/`, changefreq: 'weekly', priority: '1.0' }];
-
-    getFullRoster().forEach((t) => {
-      urls.push({
-        loc: `${siteUrl}/?talent=${encodeURIComponent(slugifyServer(t.name))}`,
-        changefreq: 'monthly',
-        priority: '0.8',
-      });
-    });
-
-    db.prepare(`SELECT slug, publishedAt FROM blog_posts WHERE status = 'published'`)
-      .all()
-      .forEach((p) => {
-        urls.push({
-          loc: `${siteUrl}/?blog=${encodeURIComponent(p.slug)}`,
-          lastmod: p.publishedAt ? p.publishedAt.slice(0, 10) : undefined,
-          changefreq: 'monthly',
-          priority: '0.7',
-        });
-      });
-
-    const body = urls
-      .map((u) => {
-        const lastmod = u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : '';
-        return `  <url>\n    <loc>${escapeHtmlAttr(u.loc)}</loc>${lastmod}\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`;
-      })
-      .join('\n');
-
-    res.set('Content-Type', 'application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>`);
-  } catch (err) {
-    console.error('sitemap error:', err);
-    res.status(500).send('');
-  }
-});
-
 // --- ROUTES ---
 // Serve the frontend (brxdge.html, style.css, script.js, and the assets/
 // folder with card images) from the project root, one level up from this
 // talent-backend folder.
 app.use(express.static(path.join(__dirname, '..')));
 
-// Serve uploaded images — from the persistent volume now, not the
-// git-committed talent-backend/uploads/ folder (that folder's only job now
-// is seeding a brand-new volume on first boot — see the FILE STORAGE SETUP
-// block above).
+// Serve uploaded images — same directory multer writes to above, so this
+// automatically follows the Volume when one is attached.
 app.use('/uploads', express.static(uploadDir));
 
 // Image Upload Endpoint — requires a signed-in manager
-app.post('/upload', requireAuth, (req, res) => {
-  // Calling multer this way (instead of chaining it as regular middleware)
-  // lets us catch a rejected file type/size and send back a clean JSON error
-  // instead of Express's default HTML error page, which the admin dashboard's
-  // fetch-based code can't parse.
-  upload.single('talentImage')(req, res, (err) => {
-    if (err) return res.status(400).json({ error: err.message || 'Upload failed' });
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    res.json({ url: imageUrl });
-  });
+app.post('/upload', requireAuth, upload.single('talentImage'), (req, res) => {
+  if (!req.file) return res.status(400).send('No file uploaded.');
+  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({ url: imageUrl });
 });
 
 // --- PUBLIC "MANAGERS" SECTION CONTENT (distinct from admin logins) ---
@@ -491,178 +174,6 @@ app.post('/api/brands', requireAuth, (req, res) => {
   } catch (err) {
     console.error('brands save error:', err);
     res.status(500).json({ error: 'Failed to save brands' });
-  }
-});
-
-// --- BLOG ---
-// Same "whole array, replace on save" convention as /api/managers and
-// /api/brands above — the admin dashboard always keeps the full post list
-// in memory and re-sends it on every save, so replacing everything inside
-// one transaction matches how the rest of this file's content sections work.
-
-function slugifyBlog(str) {
-  return slugifyServer(str);
-}
-
-// GET /api/blog — public, published posts only, newest first. Anyone
-// visiting the site's Blog section is meant to see this.
-app.get('/api/blog', (req, res) => {
-  const rows = db.prepare(`
-    SELECT id, title, slug, excerpt, coverImage, author, publishedAt, postType, talentName,
-           statFollowersBefore, statFollowersAfter, statEngagementBefore, statEngagementAfter,
-           statBrandDeals, statRevenue
-    FROM blog_posts WHERE status = 'published'
-    ORDER BY publishedAt DESC, sortOrder ASC
-  `).all();
-  res.json(rows);
-});
-
-// GET /api/blog/all — requires a signed-in manager; includes drafts, for
-// the admin dashboard's own post list.
-app.get('/api/blog/all', requireAuth, (req, res) => {
-  const rows = db.prepare(`SELECT * FROM blog_posts ORDER BY sortOrder ASC`).all();
-  res.json(rows);
-});
-
-// GET /api/blog/:slug — a single published post's full content, for the
-// public post-detail view. Requires a signed-in manager to preview drafts.
-app.get('/api/blog/post/:slug', (req, res) => {
-  const post = db.prepare(`SELECT * FROM blog_posts WHERE slug = ?`).get(req.params.slug);
-  if (!post) return res.status(404).json({ error: 'Post not found' });
-  if (post.status !== 'published') {
-    const authHeader = req.headers.authorization || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    const session = token ? sessions.get(token) : null;
-    if (!session || session.expiresAt < Date.now()) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
-  }
-  res.json(post);
-});
-
-app.post('/api/blog', requireAuth, (req, res) => {
-  const posts = req.body;
-  if (!Array.isArray(posts)) {
-    return res.status(400).json({ error: 'Expected an array of blog posts' });
-  }
-  try {
-    const now = new Date().toISOString();
-    const usedSlugs = new Set();
-
-    // Resolve slugs up front (unique within this save) and stamp
-    // publishedAt the moment a post first goes live, before any of it
-    // touches the database.
-    const prepared = posts.map((p) => {
-      let slug = slugifyBlog(p.slug || p.title || '');
-      if (!slug) slug = 'post-' + Date.now();
-      let candidate = slug, n = 2;
-      while (usedSlugs.has(candidate)) { candidate = `${slug}-${n++}`; }
-      usedSlugs.add(candidate);
-
-      const status = p.status === 'published' ? 'published' : 'draft';
-      const publishedAt = status === 'published' ? (p.publishedAt || now) : (p.publishedAt || null);
-
-      return {
-        id: p.id || ('b' + Date.now() + Math.random().toString(36).slice(2, 7)),
-        title: p.title || '',
-        slug: candidate,
-        excerpt: p.excerpt || '',
-        body: p.body || '',
-        coverImage: p.coverImage || '',
-        author: p.author || '',
-        status,
-        publishedAt,
-        postType: p.postType === 'case_study' ? 'case_study' : 'article',
-        talentName: p.talentName || '',
-        statFollowersBefore: p.statFollowersBefore || '',
-        statFollowersAfter: p.statFollowersAfter || '',
-        statEngagementBefore: p.statEngagementBefore || '',
-        statEngagementAfter: p.statEngagementAfter || '',
-        statBrandDeals: p.statBrandDeals || '',
-        statRevenue: p.statRevenue || '',
-      };
-    });
-
-    const deleteAll = db.prepare(`DELETE FROM blog_posts`);
-    const insert = db.prepare(`
-      INSERT INTO blog_posts (
-        id, title, slug, excerpt, body, coverImage, author, status, publishedAt, sortOrder,
-        postType, talentName, statFollowersBefore, statFollowersAfter,
-        statEngagementBefore, statEngagementAfter, statBrandDeals, statRevenue
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const runAll = db.transaction((rows) => {
-      deleteAll.run();
-      rows.forEach((p, i) => insert.run(
-        p.id, p.title, p.slug, p.excerpt, p.body, p.coverImage, p.author, p.status, p.publishedAt, i,
-        p.postType, p.talentName, p.statFollowersBefore, p.statFollowersAfter,
-        p.statEngagementBefore, p.statEngagementAfter, p.statBrandDeals, p.statRevenue
-      ));
-    });
-    runAll(prepared);
-    res.json({ ok: true, posts: prepared });
-  } catch (err) {
-    console.error('blog save error:', err);
-    res.status(500).json({ error: 'Failed to save blog posts' });
-  }
-});
-
-// --- CAMPAIGNS ("Brand x Creator" proof section) ---
-// Same whole-array-replace convention as /api/managers and /api/brands —
-// simpler than blog's slug-based system since campaigns don't need their
-// own individual shareable page, just a public results grid.
-
-app.get('/api/campaigns', (req, res) => {
-  const rows = db.prepare(`
-    SELECT * FROM campaigns WHERE status = 'published' ORDER BY sortOrder ASC
-  `).all().map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
-  res.json(rows);
-});
-
-app.get('/api/campaigns/all', requireAuth, (req, res) => {
-  const rows = db.prepare(`SELECT * FROM campaigns ORDER BY sortOrder ASC`).all()
-    .map((c) => ({ ...c, deliverables: safeParseJsonArray(c.deliverables) }));
-  res.json(rows);
-});
-
-app.post('/api/campaigns', requireAuth, (req, res) => {
-  const campaigns = req.body;
-  if (!Array.isArray(campaigns)) {
-    return res.status(400).json({ error: 'Expected an array of campaigns' });
-  }
-  try {
-    const prepared = campaigns.map((c) => ({
-      id: c.id || ('camp' + Date.now() + Math.random().toString(36).slice(2, 7)),
-      brandName: c.brandName || '',
-      brandLogo: c.brandLogo || '',
-      creatorName: c.creatorName || '',
-      coverImage: c.coverImage || '',
-      objective: c.objective || '',
-      deliverables: JSON.stringify(Array.isArray(c.deliverables) ? c.deliverables : []),
-      reach: c.reach || '',
-      engagement: c.engagement || '',
-      results: c.results || '',
-      status: c.status === 'published' ? 'published' : 'draft',
-    }));
-
-    const deleteAll = db.prepare(`DELETE FROM campaigns`);
-    const insert = db.prepare(`
-      INSERT INTO campaigns (id, brandName, brandLogo, creatorName, coverImage, objective, deliverables, reach, engagement, results, status, sortOrder)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const runAll = db.transaction((rows) => {
-      deleteAll.run();
-      rows.forEach((c, i) => insert.run(
-        c.id, c.brandName, c.brandLogo, c.creatorName, c.coverImage, c.objective,
-        c.deliverables, c.reach, c.engagement, c.results, c.status, i
-      ));
-    });
-    runAll(prepared);
-    res.json({ ok: true, campaigns: prepared.map((c) => ({ ...c, deliverables: JSON.parse(c.deliverables) })) });
-  } catch (err) {
-    console.error('campaigns save error:', err);
-    res.status(500).json({ error: 'Failed to save campaigns' });
   }
 });
 
@@ -796,30 +307,13 @@ function getFullRoster() {
     return {
       id: t.id, name: t.name, niche: t.niche, gender: t.gender,
       photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio, socials,
-      categories: safeParseJsonArray(t.categories),
-      audienceAge: t.audienceAge || '',
-      audienceLocation: t.audienceLocation || '',
-      availableFor: safeParseJsonArray(t.availableFor),
     };
   });
 }
 
-// categories/availableFor are stored as JSON-array text — parse defensively
-// so one malformed row (or an empty '' from a very old pre-migration read)
-// can't take the whole roster endpoint down with it.
-function safeParseJsonArray(str) {
-  if (!str) return [];
-  try {
-    const parsed = JSON.parse(str);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    return [];
-  }
-}
-
 const insertTalent = db.prepare(`
-  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, sortOrder, categories, audienceAge, audienceLocation, availableFor)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, sortOrder)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, sortOrder) VALUES (?, ?, ?)`);
 const insertSocial = db.prepare(`
@@ -837,10 +331,7 @@ const replaceRoster = db.transaction((roster) => {
   roster.forEach((t, ti) => {
     insertTalent.run(
       t.id, t.name || '', t.niche || '', t.gender || '',
-      t.photo || '', t.coverPhoto || '', t.bio || '', ti,
-      JSON.stringify(Array.isArray(t.categories) ? t.categories : []),
-      t.audienceAge || '', t.audienceLocation || '',
-      JSON.stringify(Array.isArray(t.availableFor) ? t.availableFor : [])
+      t.photo || '', t.coverPhoto || '', t.bio || '', ti
     );
     (t.gallery || []).forEach((url, gi) => insertGalleryImg.run(t.id, url, gi));
     (t.socials || []).forEach((s, si) => {
@@ -878,29 +369,33 @@ app.post('/api/roster', requireAuth, (req, res) => {
 });
 
 // --- CONTACT FORM MESSAGES ---
-
-// Sends the "someone messaged you" notification via Resend's HTTPS API.
-// Resolves silently (does nothing) if RESEND_API_KEY isn't configured, so
-// contact-form saves keep working even before Resend is set up.
-async function sendContactNotification({ name, email, talent, message }) {
-  if (!RESEND_API_KEY) return;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: RESEND_FROM,
-      to: EMAIL_TO,
-      subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
-      text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
-    }),
+let mailTransporter = null;
+if (EMAIL_USER && EMAIL_PASS) {
+  mailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Resend API request failed (status ${res.status}): ${body}`);
-  }
+
+  // Verify the Gmail login works right away at boot, instead of only
+  // finding out the first time someone submits the contact form. Check
+  // the Railway deploy logs after a restart — this prints one line that
+  // tells you definitively whether email notifications will work:
+  //   "Email transporter verified" -> good, sendMail will work
+  //   "Email transporter FAILED to verify" -> auth is wrong, see message
+  // The #1 cause of failure here: EMAIL_PASS must be a 16-character Gmail
+  // "App Password" (myaccount.google.com/apppasswords), NOT the normal
+  // account password — Google has not accepted regular passwords for
+  // SMTP login since 2022. App Passwords require 2-Step Verification to
+  // be turned on for the account first.
+  mailTransporter.verify((err) => {
+    if (err) {
+      console.error('Email transporter FAILED to verify — contact form emails will NOT send:', err.message);
+    } else {
+      console.log('Email transporter verified — contact form emails will send to', EMAIL_TO);
+    }
+  });
+} else {
+  console.warn('EMAIL_USER / EMAIL_PASS not set — contact form messages will be saved to the database but NO email notification will be sent.');
 }
 
 const insertMessage = db.prepare(`
@@ -908,7 +403,7 @@ const insertMessage = db.prepare(`
 `);
 
 // POST /api/contact  { name, email, message, talent? } — public, anyone can submit
-app.post('/api/contact', contactRateLimit, async (req, res) => {
+app.post('/api/contact', async (req, res) => {
   try {
     const { name, email, message, talent } = req.body;
     if (!name || !email || !message) {
@@ -919,18 +414,26 @@ app.post('/api/contact', contactRateLimit, async (req, res) => {
     // 1. Save first — this is the source of truth, independent of email working
     insertMessage.run(name, email, message, talent || '', receivedAt);
 
-    // 2. Respond to the visitor right away. Don't make them sit on the
-    // "Sending…" button while we wait on Gmail's SMTP round-trip — that
-    // handshake alone can take several seconds, and Railway's outbound
-    // network to Gmail can add more on top. The message is already saved,
-    // so there's nothing left that the visitor's response should wait on.
-    res.json({ ok: true });
+    // 2. Best-effort email notification — failure here does NOT fail the request
+    if (mailTransporter) {
+      try {
+        await mailTransporter.sendMail({
+          from: EMAIL_USER,
+          to: EMAIL_TO,
+          subject: talent ? `New inquiry about ${talent} — 6ixBuzz` : 'New contact form message — 6ixBuzz',
+          text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
+        });
+      } catch (mailErr) {
+        console.error('Email notification failed (message was still saved):', mailErr.message);
+        if (/invalid login|username and password not accepted/i.test(mailErr.message || '')) {
+          console.error('  -> This is almost always a Gmail App Password problem. EMAIL_PASS must be a 16-character App Password from myaccount.google.com/apppasswords, not the regular account password.');
+        }
+      }
+    } else {
+      console.warn('Contact message saved, but no email was sent (EMAIL_USER/EMAIL_PASS not configured).');
+    }
 
-    // 3. Best-effort email notification, fired in the background — failure
-    // here can't fail the request since we've already responded.
-    sendContactNotification({ name, email, talent, message }).catch(mailErr => {
-      console.error('Email notification failed (message was still saved):', mailErr);
-    });
+    res.json({ ok: true });
   } catch (err) {
     console.error('contact error:', err);
     res.status(500).json({ error: 'Failed to save message' });
@@ -1065,13 +568,8 @@ app.get('/api/tiktok-oembed', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ error: 'url is required' });
 
-    const oembedRes = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-      },
-    });
-    if (!oembedRes.ok) throw new Error(`TikTok oEmbed request failed (status ${oembedRes.status}) — is this a valid, public video URL?`);
+    const oembedRes = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);
+    if (!oembedRes.ok) throw new Error('TikTok oEmbed request failed — is this a valid, public video URL?');
     const data = await oembedRes.json();
 
     res.json({
