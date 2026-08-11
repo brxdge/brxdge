@@ -6,7 +6,16 @@ const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const db = require('./db');
+
+// Railway's containers don't have working outbound IPv6 routing. Gmail's
+// SMTP hostname resolves to both an IPv4 and an IPv6 address, and Node
+// was picking the IPv6 one first and then hanging (ENETUNREACH / Connection
+// timeout) instead of falling back to IPv4 — that's what was breaking the
+// contact form's email notifications. This makes Node prefer IPv4 results
+// for every outbound connection this process makes, app-wide.
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
@@ -374,6 +383,10 @@ if (EMAIL_USER && EMAIL_PASS) {
   mailTransporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    // Belt-and-suspenders alongside the app-wide dns.setDefaultResultOrder
+    // above: force this specific connection to use IPv4, since Railway's
+    // network can't route the IPv6 address Gmail's hostname also resolves to.
+    family: 4,
   });
 
   // Verify the Gmail login works right away at boot, instead of only
