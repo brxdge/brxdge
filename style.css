@@ -4651,3 +4651,147 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   cursor: pointer;
 }
 .cast-brief-remove:hover{ background: var(--coral); color: #fff; }
+
+/* =========================================================
+   CAMPAIGNS — big featured showcase (one per row, alternating
+   image side), replacing the previously-unstyled campaign cards.
+   Uses the same color tokens, radius, and stat-number treatment
+   already established elsewhere on the site (--panel/--panel-line/
+   --coral/--muted, var(--radius-lg), and the Space Mono stat-number
+   pattern from .about-stats-bar) so this matches the rest of the
+   page rather than introducing a new visual style.
+========================================================= */
+.campaigns-grid{
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 48px;
+}
+
+.campaign-card{
+  display: flex;
+  align-items: stretch;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.campaign-card:hover{
+  transform: translateY(-4px);
+  border-color: var(--coral);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.12);
+}
+/* Alternate the image side every other card for an editorial feel */
+.campaign-card:nth-child(even){
+  flex-direction: row-reverse;
+}
+
+.campaign-card-cover{
+  width: 44%;
+  flex-shrink: 0;
+  object-fit: cover;
+  min-height: 340px;
+}
+
+.campaign-card-body{
+  flex: 1;
+  min-width: 0;
+  padding: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+.campaign-card-head{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.campaign-card-logo{
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--panel-line);
+  flex-shrink: 0;
+}
+.campaign-card-brand{
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.campaign-card-objective{
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+
+.campaign-card-deliverables{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.campaign-deliverable-tag{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-line);
+  color: var(--text);
+  background: rgba(0,0,0,0.02);
+}
+
+.campaign-card-stats{
+  display: flex;
+  gap: 32px;
+  margin-top: 6px;
+}
+.campaign-stat-chip{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.campaign-stat-chip b{
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(24px, 2.2vw, 30px);
+  font-weight: 700;
+  color: var(--coral);
+  line-height: 1;
+}
+
+.campaign-card-results{
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  padding-top: 14px;
+  border-top: 1px solid var(--panel-line);
+  margin: 4px 0 0;
+}
+
+@media (max-width: 860px){
+  .campaign-card,
+  .campaign-card:nth-child(even){
+    flex-direction: column;
+  }
+  .campaign-card-cover{
+    width: 100%;
+    min-height: 220px;
+  }
+  .campaign-card-body{
+    padding: 26px;
+  }
+  .campaign-card-stats{
+    gap: 24px;
+  }
+}
