@@ -90,6 +90,46 @@ db.exec(`
     sortOrder INTEGER NOT NULL DEFAULT 0
   );
 
+  -- Public "Blog & Case Studies" section. postType is 'article' or
+  -- 'case-study' — case studies additionally use the stat* columns, which
+  -- script.js only renders when they're non-empty.
+  CREATE TABLE IF NOT EXISTS blog_posts (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug                  TEXT UNIQUE NOT NULL,
+    title                 TEXT NOT NULL,
+    excerpt               TEXT,
+    coverImage            TEXT,
+    postType              TEXT NOT NULL DEFAULT 'article',
+    talentName            TEXT,
+    publishedAt           TEXT,
+    author                TEXT,
+    body                  TEXT,
+    statFollowersBefore   TEXT,
+    statFollowersAfter    TEXT,
+    statEngagementBefore  TEXT,
+    statEngagementAfter   TEXT,
+    statBrandDeals        TEXT,
+    statRevenue           TEXT,
+    sortOrder             INTEGER NOT NULL DEFAULT 0
+  );
+
+  -- Public "Campaigns" section (brand x creator case studies). deliverables
+  -- is stored as a JSON-encoded array of strings — it's just a handful of
+  -- short tags, not worth a separate child table.
+  CREATE TABLE IF NOT EXISTS campaigns (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    brandName     TEXT NOT NULL,
+    creatorName   TEXT,
+    brandLogo     TEXT,
+    coverImage    TEXT,
+    objective     TEXT,
+    deliverables  TEXT NOT NULL DEFAULT '[]',
+    reach         TEXT,
+    engagement    TEXT,
+    results       TEXT,
+    sortOrder     INTEGER NOT NULL DEFAULT 0
+  );
+
   CREATE INDEX IF NOT EXISTS idx_gallery_talent ON gallery_images(talent_id);
   CREATE INDEX IF NOT EXISTS idx_socials_talent ON socials(talent_id);
   CREATE INDEX IF NOT EXISTS idx_posts_social ON posts(social_id);
