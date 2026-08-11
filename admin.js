@@ -1,13 +1,13 @@
 /* ============================================================
    BRXDGE ADMIN DASHBOARD
+   IS_LOCAL / API are now defined once in config.js, loaded by a
+   <script> tag in admin.html right before this file — this used to be
+   its own hardcoded copy of the URL that drifted out of sync with
+   script.js's copy (this dashboard was pointed at an old, dead Render
+   deployment while the public site had already moved to Railway,
+   silently reading/writing a completely different set of data). See
+   config.js for the full story.
    ============================================================ */
-// Was pointed at 'https://brxdge-backend.onrender.com' — an old Render
-// deployment left over from before the move to Railway. The public site
-// (script.js) has pointed at the real Railway backend the whole time, so
-// this dashboard was silently reading/writing a stale, disconnected copy
-// of the data (different roster, different messages, different admin
-// accounts) instead of what visitors actually see on brxdge.com.
-const API = 'https://brxdge-production.up.railway.app';
 const TOKEN_KEY = 'brxdge-admin-token';
 let token = null;
 let me = { username: '' };
