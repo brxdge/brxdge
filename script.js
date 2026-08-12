@@ -569,6 +569,54 @@ const BRAND_TILE_POSITION = 4; // 0-based index -> 5th card, middle of row 2 in 
 let trGenderFilter = 'All';   // gender filter, scoped to the full talent-roster overlay
 let trSearchQuery = '';       // name search, scoped to the full talent-roster overlay
 
+// Expanded filters (niche/location/audience-size are single-select "All"
+// dropdowns; platform/availability are multi-select chip sets), all scoped
+// to the full talent-roster overlay same as the two above.
+let trNicheFilter = 'All';
+let trLocationFilter = 'All';
+let trAudienceSizeFilter = 'All';
+let trPlatformFilters = new Set();
+let trAvailabilityFilters = new Set();
+
+// Preset combined-reach buckets for the "Audience Size" filter — computed
+// from totalReach(t.socials) rather than a stored field, since reach is
+// already derived from each platform's follower count.
+const AUDIENCE_SIZE_BUCKETS = [
+  { key: 'All', label: 'Any audience size' },
+  { key: 'under100k', label: 'Under 100K', test: n => n < 100000 },
+  { key: '100k-500k', label: '100K – 500K', test: n => n >= 100000 && n < 500000 },
+  { key: '500k-1m', label: '500K – 1M', test: n => n >= 500000 && n < 1000000 },
+  { key: '1m-5m', label: '1M – 5M', test: n => n >= 1000000 && n < 5000000 },
+  { key: '5m-plus', label: '5M+', test: n => n >= 5000000 },
+];
+
+// True if any filter beyond the defaults is active — drives the "Filters"
+// badge count, the "Clear all filters" link visibility, and the trSub
+// "showing X of Y" vs "showing all" copy.
+function trHasActiveFilters(){
+  return trGenderFilter !== 'All' || !!trSearchQuery.trim() || trNicheFilter !== 'All' ||
+    trLocationFilter !== 'All' || trAudienceSizeFilter !== 'All' ||
+    trPlatformFilters.size > 0 || trAvailabilityFilters.size > 0;
+}
+
+// Count of active filters inside the collapsible panel specifically
+// (everything except gender + search, which live outside it) — shown as
+// the toggle button's badge.
+function trActivePanelFilterCount(){
+  return (trNicheFilter !== 'All' ? 1 : 0) + (trLocationFilter !== 'All' ? 1 : 0) +
+    (trAudienceSizeFilter !== 'All' ? 1 : 0) + trPlatformFilters.size + trAvailabilityFilters.size;
+}
+
+function resetTrFilters(){
+  trGenderFilter = 'All';
+  trSearchQuery = '';
+  trNicheFilter = 'All';
+  trLocationFilter = 'All';
+  trAudienceSizeFilter = 'All';
+  trPlatformFilters.clear();
+  trAvailabilityFilters.clear();
+}
+
 const defaultRoster = [
   { id:'t1', name:'Nova Reyes', niche:'Lifestyle', gender:'Female', bio:'Toronto street style meets everyday storytelling, one outfit post at a time.', seed:'Nova', photo:'', gallery:[],
     socials:[ {platform:'Instagram', url:'https://instagram.com', followers:'1.6M'}, {platform:'TikTok', url:'https://tiktok.com', followers:'2.4M'}, {platform:'YouTube', url:'https://youtube.com', followers:'622K'} ] },
@@ -703,6 +751,7 @@ function buildTalentCard(t, index){
     </div>
     <div class="talent-card-foot">
       ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+      ${t.location ? `<p class="tcf-line"><span class="tcf-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
       ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${escapeHtml(audience)}</p>` : ''}
       ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${escapeHtml(availableFor.join(' • '))}</p>` : ''}
       <div class="tcf-actions">
@@ -1204,15 +1253,22 @@ talentFilterOverlay.querySelectorAll('.gender-option').forEach(btn => {
 });
 
 function openTalentRosterOverlay(gender){
+  resetTrFilters();
   trGenderFilter = gender || 'All';
-  trSearchQuery = '';
   const searchInput = document.getElementById('talentSearchInput');
   if (searchInput) searchInput.value = '';
+  // Collapse the expanded-filters panel back down each time the overlay is
+  // freshly opened, same "start clean" behavior as the search box above.
+  const filtersPanel = document.getElementById('trFiltersPanel');
+  if (filtersPanel) filtersPanel.classList.remove('show');
+  const filtersToggle = document.getElementById('trFiltersToggle');
+  if (filtersToggle) { filtersToggle.classList.remove('active'); filtersToggle.setAttribute('aria-expanded', 'false'); }
   // Clear so this open's grid always builds+reveals immediately, rather than
   // fading out whatever the overlay happened to be showing last time.
   const grid = document.getElementById('talentRosterGrid');
   if (grid) grid.innerHTML = '';
   renderTrGenderFilters();
+  renderTrExpandedFilters();
   renderTalentRosterGrid();
   talentRosterOverlay.classList.add('show');
   talentRosterOverlay.classList.remove('tr-in'); // restart entrance choreography each time it opens
@@ -1249,6 +1305,7 @@ function renderTrGenderFilters(){
       trGenderFilter = g;
       renderTrGenderFilters();
       renderTalentRosterGrid();
+      updateTrFiltersUI();
     });
     bar.appendChild(chip);
   });
@@ -1274,6 +1331,137 @@ window.addEventListener('resize', () => {
   if (talentRosterOverlay && talentRosterOverlay.classList.contains('show')) positionChipHighlight();
 });
 
+// Updates the "Filters" toggle badge count and the "Clear all filters"
+// link's visibility — called after any filter control changes, so both
+// stay in sync no matter which control triggered the change.
+function updateTrFiltersUI(){
+  const badge = document.getElementById('trFiltersBadge');
+  if (badge) {
+    const count = trActivePanelFilterCount();
+    badge.textContent = String(count);
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+  const clearBtn = document.getElementById('trClearFilters');
+  if (clearBtn) clearBtn.style.display = trHasActiveFilters() ? 'inline-flex' : 'none';
+}
+
+// Builds the Niche / Location / Audience Size selects and the Platform /
+// Available For chip multi-selects inside the collapsible filters panel,
+// every option list generated fresh from whatever's actually on the
+// roster right now — same "derive options from live data" approach as
+// renderTrGenderFilters() above, so a talent added with a new niche or
+// platform shows up as a filterable option without any code changes.
+function renderTrExpandedFilters(){
+  const nicheSelect = document.getElementById('trNicheSelect');
+  if (nicheSelect) {
+    const niches = [...new Set(rosterData.map(t => t.niche).filter(Boolean))].sort();
+    nicheSelect.innerHTML = `<option value="All">Any niche</option>` +
+      niches.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    nicheSelect.value = trNicheFilter;
+  }
+
+  const locationSelect = document.getElementById('trLocationSelect');
+  if (locationSelect) {
+    const locations = [...new Set(rosterData.map(t => t.location).filter(Boolean))].sort();
+    locationSelect.innerHTML = `<option value="All">Any location</option>` +
+      locations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+    locationSelect.value = trLocationFilter;
+  }
+
+  const audienceSizeSelect = document.getElementById('trAudienceSizeSelect');
+  if (audienceSizeSelect) {
+    audienceSizeSelect.innerHTML = AUDIENCE_SIZE_BUCKETS
+      .map(b => `<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
+    audienceSizeSelect.value = trAudienceSizeFilter;
+  }
+
+  const platformBar = document.getElementById('trPlatformFilters');
+  if (platformBar) {
+    const platforms = [...new Set(rosterData.flatMap(t => (t.socials || []).map(s => s.platform)).filter(Boolean))].sort();
+    platformBar.innerHTML = '';
+    platforms.forEach(p => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip' + (trPlatformFilters.has(p) ? ' active' : '');
+      chip.textContent = p;
+      chip.addEventListener('click', () => {
+        if (trPlatformFilters.has(p)) trPlatformFilters.delete(p); else trPlatformFilters.add(p);
+        chip.classList.toggle('active');
+        renderTalentRosterGrid();
+        updateTrFiltersUI();
+      });
+      platformBar.appendChild(chip);
+    });
+  }
+
+  const availabilityBar = document.getElementById('trAvailabilityFilters');
+  if (availabilityBar) {
+    const tags = [...new Set(rosterData.flatMap(t => t.availableFor || []).filter(Boolean))].sort();
+    availabilityBar.innerHTML = '';
+    tags.forEach(tag => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip' + (trAvailabilityFilters.has(tag) ? ' active' : '');
+      chip.textContent = tag;
+      chip.addEventListener('click', () => {
+        if (trAvailabilityFilters.has(tag)) trAvailabilityFilters.delete(tag); else trAvailabilityFilters.add(tag);
+        chip.classList.toggle('active');
+        renderTalentRosterGrid();
+        updateTrFiltersUI();
+      });
+      availabilityBar.appendChild(chip);
+    });
+  }
+
+  updateTrFiltersUI();
+}
+
+const trFiltersToggle = document.getElementById('trFiltersToggle');
+const trFiltersPanel = document.getElementById('trFiltersPanel');
+if (trFiltersToggle && trFiltersPanel) {
+  trFiltersToggle.addEventListener('click', () => {
+    const isOpen = trFiltersPanel.classList.toggle('show');
+    trFiltersToggle.classList.toggle('active', isOpen);
+    trFiltersToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+}
+
+const trNicheSelectEl = document.getElementById('trNicheSelect');
+if (trNicheSelectEl) {
+  trNicheSelectEl.addEventListener('change', (e) => {
+    trNicheFilter = e.target.value;
+    renderTalentRosterGrid();
+    updateTrFiltersUI();
+  });
+}
+const trLocationSelectEl = document.getElementById('trLocationSelect');
+if (trLocationSelectEl) {
+  trLocationSelectEl.addEventListener('change', (e) => {
+    trLocationFilter = e.target.value;
+    renderTalentRosterGrid();
+    updateTrFiltersUI();
+  });
+}
+const trAudienceSizeSelectEl = document.getElementById('trAudienceSizeSelect');
+if (trAudienceSizeSelectEl) {
+  trAudienceSizeSelectEl.addEventListener('change', (e) => {
+    trAudienceSizeFilter = e.target.value;
+    renderTalentRosterGrid();
+    updateTrFiltersUI();
+  });
+}
+const trClearFiltersBtn = document.getElementById('trClearFilters');
+if (trClearFiltersBtn) {
+  trClearFiltersBtn.addEventListener('click', () => {
+    resetTrFilters();
+    const searchInput = document.getElementById('talentSearchInput');
+    if (searchInput) searchInput.value = '';
+    renderTrGenderFilters();
+    renderTrExpandedFilters();
+    renderTalentRosterGrid();
+  });
+}
+
 // Bumped on every call so a slow-arriving fade-out from a previous filter
 // change can't clobber a newer one (e.g. rapid search typing).
 let trRenderToken = 0;
@@ -1293,11 +1481,29 @@ function renderTalentRosterGrid(){
       const q = trSearchQuery.trim().toLowerCase();
       list = list.filter(t => (t.name || '').toLowerCase().includes(q));
     }
+    if (trNicheFilter !== 'All') {
+      list = list.filter(t => t.niche === trNicheFilter);
+    }
+    if (trLocationFilter !== 'All') {
+      list = list.filter(t => t.location === trLocationFilter);
+    }
+    if (trAudienceSizeFilter !== 'All') {
+      const bucket = AUDIENCE_SIZE_BUCKETS.find(b => b.key === trAudienceSizeFilter);
+      if (bucket && bucket.test) list = list.filter(t => bucket.test(totalReach(t.socials)));
+    }
+    if (trPlatformFilters.size) {
+      // Match talent with a profile on ANY of the selected platforms (OR
+      // within this filter), same relationship used for availability below.
+      list = list.filter(t => (t.socials || []).some(s => trPlatformFilters.has(s.platform)));
+    }
+    if (trAvailabilityFilters.size) {
+      list = list.filter(t => (t.availableFor || []).some(a => trAvailabilityFilters.has(a)));
+    }
 
     const sub = document.getElementById('trSub');
     if (sub) {
       const total = rosterData.length;
-      sub.textContent = trGenderFilter === 'All' && !trSearchQuery.trim()
+      sub.textContent = !trHasActiveFilters()
         ? `Showing all ${total} talent`
         : `Showing ${list.length} of ${total} talent`;
       sub.classList.remove('pulse');
@@ -1310,7 +1516,10 @@ function renderTalentRosterGrid(){
 
     if (list.length === 0) {
       const safeQuery = trSearchQuery.trim().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-      grid.innerHTML = `<div class="roster-empty">${trSearchQuery.trim() ? `No talent matching "${safeQuery}".` : 'No talent here yet.'}</div>`;
+      let emptyMsg = 'No talent here yet.';
+      if (safeQuery) emptyMsg = `No talent matching "${safeQuery}".`;
+      else if (trHasActiveFilters()) emptyMsg = 'No talent matches these filters.';
+      grid.innerHTML = `<div class="roster-empty">${emptyMsg}</div>`;
       return;
     }
 
@@ -1344,6 +1553,7 @@ if (talentSearchInput) {
   talentSearchInput.addEventListener('input', (e) => {
     trSearchQuery = e.target.value;
     renderTalentRosterGrid();
+    updateTrFiltersUI();
   });
 }
 if (talentSearchClear) {
@@ -1351,6 +1561,7 @@ if (talentSearchClear) {
     trSearchQuery = '';
     if (talentSearchInput) { talentSearchInput.value = ''; talentSearchInput.focus(); }
     renderTalentRosterGrid();
+    updateTrFiltersUI();
   });
 }
 /* ---------------- MEDIA KIT VIEW ---------------- */
@@ -2047,6 +2258,7 @@ function openMediakit(id, opts){
     </div>
     <div class="mk-main">
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
+      ${t.location ? `<p class="mk-meta-line"><span class="mk-meta-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
       ${(t.audienceAge || t.audienceLocation) ? `<p class="mk-meta-line"><span class="mk-meta-label">Audience</span>${escapeHtml([t.audienceAge, t.audienceLocation].filter(Boolean).join(' • '))}</p>` : ''}
       ${(t.availableFor && t.availableFor.length) ? `<p class="mk-meta-line"><span class="mk-meta-label">Available for</span>${escapeHtml(t.availableFor.join(' • '))}</p>` : ''}
       <p class="mk-bio">${escapeHtml(t.bio)}</p>
