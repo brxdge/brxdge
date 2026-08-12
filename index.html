@@ -1250,6 +1250,40 @@
         <input type="text" id="talentSearchInput" class="talent-search-input" placeholder="Search talent by name…" autocomplete="off" aria-label="Search talent by name">
         <button type="button" id="talentSearchClear" class="talent-search-clear" aria-label="Clear search" style="display:none;">&times;</button>
       </div>
+      <button type="button" class="tr-filters-toggle" id="trFiltersToggle" aria-expanded="false" aria-controls="trFiltersPanel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Filters
+        <span class="tr-filters-badge" id="trFiltersBadge">0</span>
+      </button>
+    </div>
+
+    <!-- Niche / platform / audience size / location / availability —
+         collapsed behind the "Filters" toggle above so the default view
+         stays as clean as the old gender-chips-only layout. Gender itself
+         stays as its own always-visible chip row (trGenderFilters above)
+         since it was already there and reads best up top. -->
+    <div class="tr-filters-panel" id="trFiltersPanel">
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trNicheSelect">Niche</label>
+        <select class="tr-filter-select" id="trNicheSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trLocationSelect">Location</label>
+        <select class="tr-filter-select" id="trLocationSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trAudienceSizeSelect">Audience Size</label>
+        <select class="tr-filter-select" id="trAudienceSizeSelect"></select>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Platform</label>
+        <div class="filters tr-chip-multi" id="trPlatformFilters"></div>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Available For</label>
+        <div class="filters tr-chip-multi" id="trAvailabilityFilters"></div>
+      </div>
+      <button type="button" class="tr-filters-clear" id="trClearFilters">Clear all filters</button>
     </div>
 
     <div class="roster-grid roster-grid--all" id="talentRosterGrid"></div>
