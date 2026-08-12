@@ -1935,6 +1935,38 @@ function initHeroParallax(heroIntro){
   heroIntro.addEventListener('mousemove', onMove);
   heroIntro.addEventListener('mouseleave', onLeave);
 }
+
+// ---------------- MEDIA KIT SPLASH: interactive 3D tilt ----------------
+// Desktop-only mouse-tracked tilt on the splash logo, same gating pattern
+// as attachTiltInteraction()/initHeroParallax() above. The splash element
+// is static in the DOM (not rebuilt on every open), so this only needs to
+// attach its listeners once at script load.
+(function initSplashTilt(){
+  const splash = document.getElementById('mkSplash');
+  const img = document.getElementById('mkSplashLogoImg');
+  if(!splash || !img) return;
+  if(!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const maxTilt = 12;
+  let raf = null;
+  function onMove(e){
+    if(raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = null;
+      const rect = splash.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      img.style.setProperty('--splash-rx', ((px - 0.5) * maxTilt * 2).toFixed(2) + 'deg');
+      img.style.setProperty('--splash-ry', ((0.5 - py) * maxTilt * 2).toFixed(2) + 'deg');
+    });
+  }
+  function onLeave(){
+    img.style.setProperty('--splash-rx', '0deg');
+    img.style.setProperty('--splash-ry', '0deg');
+  }
+  splash.addEventListener('mousemove', onMove);
+  splash.addEventListener('mouseleave', onLeave);
+})();
+
 mediakitOverlay.addEventListener('scroll', () => {
   if(heroScrollTicking) return;
   heroScrollTicking = true;
