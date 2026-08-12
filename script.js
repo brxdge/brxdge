@@ -218,68 +218,78 @@
 })();
 
 
-/* =========================================================
-   LOADER + BRAND INTRO (combined)
-   The brand mark pops in above the percentage almost immediately,
-   then the bold wordmark appears below the bar once loading is
-   mostly done. Once it hits 100%, the loader fades straight into
-   the hero reveal — no separate full-screen intro overlay.
-   Triggered on DOMContentLoaded rather than window's `load` event:
-   `load` waits for every last resource on the page — every image,
-   plus the external jsPDF script pulled in from cdnjs at the bottom
-   of the page — to finish downloading before it fires. On a slow or
-   flaky mobile connection that can take a long time or effectively
-   never resolve, which stalls the percentage counter and, since the
-   hero's entrance-animation `.play` classes are triggered at the end
-   of this same callback, silently takes every animation on the page
-   down with it. DOMContentLoaded only waits for the HTML itself to
-   finish parsing (which this script, loaded at the end of <body>,
-   is part of) — it doesn't care whether images or third-party
-   scripts have loaded, which is all this purely DOM-class-toggling
-   logic actually needs. */
-  document.addEventListener('DOMContentLoaded', () => {
+/*
+  REPLACE the existing loader IIFE in script.js with this one.
+
+  Find the block that starts with:
+    document.addEventListener('DOMContentLoaded', () => {
+      const loader = document.getElementById('loader');
+      ...
+  (the one reading .loader-mark / #loaderMark / .loader-word / #loaderWord)
+  and delete the whole addEventListener(...) block — paste this in its place.
+*/
+document.addEventListener('DOMContentLoaded', () => {
   const loader = document.getElementById('loader');
   const loadPercent = document.getElementById('loadPercent');
   const loadBar = document.getElementById('loadBar');
-  const loaderMark = document.getElementById('loaderMark');
-  const loaderWord = document.getElementById('loaderWord');
+  const loaderContent = document.getElementById('loaderContent');
+  const loaderLogoStage = document.getElementById('loaderLogoStage');
+  const loaderLogoImg = document.getElementById('loaderLogoImg');
   const heroAnim = document.querySelector('.hero-anim');
   const heroItems = document.querySelectorAll('.hero-anim-item');
 
-  // Brand mark pops in first, ahead of the counting
-  setTimeout(() => { if (loaderMark) loaderMark.classList.add('show'); }, 150);
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  setTimeout(() => { if (loaderLogoStage) loaderLogoStage.classList.add('show'); }, 150);
+
+  // Mouse/touch-tracked 3D tilt on the logo — skips entirely if the
+  // visitor has requested reduced motion.
+  const maxTilt = 14;
+  function applyTilt(clientX, clientY) {
+    if (!loaderLogoImg || !loaderLogoStage) return;
+    const rect = loaderLogoStage.getBoundingClientRect();
+    const px = (clientX - rect.left) / rect.width;
+    const py = (clientY - rect.top) / rect.height;
+    const rx = (px - 0.5) * maxTilt * 2;
+    const ry = (0.5 - py) * maxTilt * 2;
+    loaderLogoImg.style.setProperty('--loader-rx', rx.toFixed(2) + 'deg');
+    loaderLogoImg.style.setProperty('--loader-ry', ry.toFixed(2) + 'deg');
+  }
+  function resetTilt() {
+    if (!loaderLogoImg) return;
+    loaderLogoImg.style.setProperty('--loader-rx', '0deg');
+    loaderLogoImg.style.setProperty('--loader-ry', '0deg');
+  }
+  if (!prefersReducedMotion && loader) {
+    loader.addEventListener('mousemove', (e) => applyTilt(e.clientX, e.clientY));
+    loader.addEventListener('mouseleave', resetTilt);
+    loader.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) applyTilt(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    loader.addEventListener('touchend', resetTilt);
+  }
 
   let p = 0;
-  let wordShown = false;
-  // Count up more gradually so the loader has room to breathe
+  let flourished = false;
   const interval = setInterval(() => {
-    p += Math.random() * 9; 
+    p += Math.random() * 9;
     if (p > 100) p = 100;
-    
     loadPercent.textContent = Math.floor(p) + '%';
     loadBar.style.width = p + '%';
-
-    // Wordmark reveals letter-by-letter once loading is nearly finished,
-    // not mid-way through — it should feel like the last flourish before
-    // the site is ready, not a halfway checkpoint.
-    if (!wordShown && p >= 85) {
-      wordShown = true;
-      if (loaderWord) loaderWord.classList.add('show');
+    if (!flourished && p >= 85) {
+      flourished = true;
+      if (loaderLogoStage) loaderLogoStage.classList.add('flourish');
     }
-    
     if (p === 100) {
       clearInterval(interval);
       setTimeout(() => {
-        // Everything else steps back so the mark can take over the transition
-        loader.querySelector('.loader-content').classList.add('exit');
-        if (loaderMark) loaderMark.classList.add('expand');
+        if (loaderContent) loaderContent.classList.add('exit');
         setTimeout(() => {
           loader.style.opacity = '0';
           setTimeout(() => loader.style.display = 'none', 500);
-          // Straight into the hero content entrance
           if (heroAnim) heroAnim.classList.add('play');
           heroItems.forEach((item) => item.classList.add('play'));
-        }, 650);
+        }, 550);
       }, 400);
     }
   }, 200);
