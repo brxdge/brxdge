@@ -173,7 +173,6 @@
   </div>
 </div>
 
-
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <!-- Left column -->
@@ -1264,28 +1263,20 @@
     Back to Roster
   </button>
 
-  <!-- Splash intro — your actual logo file (brxdge.png), which already
-       carries the wordmark + bridge cable together as one designed asset,
-       then fades to reveal the media kit underneath. -->
-  <!--
-  REPLACE this exact block in index.html (search for the comment
-  "Splash intro — your actual logo file" to find it — it's right
-  before <div id="mkContent"></div> inside #mediakitOverlay):
-
-    <div class="mk-splash" id="mkSplash">
-      <img class="mk-splash-logo-img" src="brxdge.png" alt="BRXDGE">
-    </div>
-
-  ...with this:
--->
-<div class="mk-splash" id="mkSplash">
-  <div class="mk-splash-logo-stage" id="mkSplashLogoStage">
-    <div class="mk-splash-logo-glow" aria-hidden="true"></div>
-    <div class="mk-splash-logo-float">
-      <img class="mk-splash-logo-img" id="mkSplashLogoImg" src="assets/brxdge-loader-3d.png" alt="BRXDGE">
-      <div class="mk-splash-logo-sheen" aria-hidden="true"></div>
+  <!-- Splash intro — 3D BRXDGE wordmark, shown briefly (~900ms) then
+       fades to reveal the media kit underneath. See mk-splash CSS for
+       the layered stage/glow/float/sheen animation. -->
+  <div class="mk-splash" id="mkSplash">
+    <div class="mk-splash-logo-stage" id="mkSplashLogoStage">
+      <div class="mk-splash-logo-glow" aria-hidden="true"></div>
+      <div class="mk-splash-logo-float">
+        <img class="mk-splash-logo-img" id="mkSplashLogoImg" src="assets/brxdge-loader-3d.png" alt="BRXDGE">
+        <div class="mk-splash-logo-sheen" aria-hidden="true"></div>
+      </div>
     </div>
   </div>
+
+  <div id="mkContent"></div>
 </div>
 
 <!-- CASE STUDY / BLOG POST DETAIL VIEW — reuses the same fullscreen-panel
