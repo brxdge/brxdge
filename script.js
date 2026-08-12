@@ -17,12 +17,22 @@
   const root = document.documentElement;
   const STORAGE_KEY = 'brxdge-theme';
 
+  // Keeps every switch-styled toggle's aria-checked in sync with the
+  // actual theme — there can be more than one on screen at once (desktop
+  // navbar + mobile tabbar), plus the media kit's own instance.
+  function syncSwitchAria(isDark) {
+    document.querySelectorAll('.theme-switch[role="switch"]').forEach(el => {
+      el.setAttribute('aria-checked', isDark ? 'true' : 'false');
+    });
+  }
+
   function applyTheme(theme) {
     if (theme === 'dark') {
       root.classList.add('dark-mode');
     } else {
       root.classList.remove('dark-mode');
     }
+    syncSwitchAria(theme === 'dark');
   }
 
   // Preference order: saved choice -> system preference -> light
@@ -37,6 +47,7 @@
 
   function toggleTheme() {
     const isDark = root.classList.toggle('dark-mode');
+    syncSwitchAria(isDark);
     try { localStorage.setItem(STORAGE_KEY, isDark ? 'dark' : 'light'); } catch (e) { /* ignore */ }
   }
   // Exposed so the media kit's theme toggle — rendered fresh into the DOM
@@ -51,6 +62,10 @@
     }
     wireToggle('themeToggle');
     wireToggle('themeToggleMobile');
+    // Re-sync now that the two switches above actually exist in the DOM —
+    // the very first applyTheme() call (above) ran before DOMContentLoaded,
+    // so its aria-checked write had nothing to attach to yet.
+    syncSwitchAria(root.classList.contains('dark-mode'));
     // The full "View All Talent" roster page intentionally has no toggle
     // of its own — it just inherits whatever theme is already active.
     // mkThemeToggle no longer exists as a static element — it's rendered
