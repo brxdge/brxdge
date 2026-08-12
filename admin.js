@@ -327,9 +327,17 @@ function openTalentModal(id){
             <option value="Female" ${existing?.gender==='Female'?'selected':''}>Female</option>
           </select>
         </div>
-        <div class="field"><label>Profile Photo</label><input type="file" id="tPhotoFile" accept="image/*"></div>
+        <div class="field"><label>Location</label><input type="text" id="tLocation" value="${escapeHtml(existing?.location)}" placeholder="e.g. Toronto, ON"></div>
       </div>
-      <div class="field"><label>Cover Photo (media kit header)</label><input type="file" id="tCoverFile" accept="image/*"></div>
+      <div class="field">
+        <label>Available For</label>
+        <input type="text" id="tAvailableFor" value="${escapeHtml((existing?.availableFor || []).join(', '))}" placeholder="e.g. Brand Deals, Appearances, Collaborations">
+        <p class="field-hint" style="margin:4px 0 0; font-size:12px; color:var(--muted);">Comma-separated — shown as tags on the talent's card and used for the "Availability" filter.</p>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Profile Photo</label><input type="file" id="tPhotoFile" accept="image/*"></div>
+        <div class="field"><label>Cover Photo (media kit header)</label><input type="file" id="tCoverFile" accept="image/*"></div>
+      </div>
       <div class="field"><label>Bio</label><textarea id="tBio" rows="2">${escapeHtml(existing?.bio)}</textarea></div>
       <div class="field"><label>Gallery Photos</label>
         <div class="gallery-thumbs" id="galleryThumbs"></div>
@@ -548,6 +556,9 @@ function openTalentModal(id){
         name: document.getElementById('tName').value.trim(),
         niche: document.getElementById('tNiche').value.trim(),
         gender: document.getElementById('tGender').value,
+        location: document.getElementById('tLocation').value.trim(),
+        availableFor: document.getElementById('tAvailableFor').value
+          .split(',').map(s => s.trim()).filter(Boolean),
         photo: photoUrl,
         coverPhoto: coverUrl,
         bio: document.getElementById('tBio').value.trim(),
