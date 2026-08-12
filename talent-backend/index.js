@@ -426,16 +426,19 @@ function getFullRoster() {
       }
       return social;
     });
+    let availableFor = [];
+    try { availableFor = JSON.parse(t.availableFor || '[]'); } catch (err) { /* leave empty */ }
     return {
       id: t.id, name: t.name, niche: t.niche, gender: t.gender,
-      photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio, socials,
+      photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio,
+      location: t.location, availableFor, socials,
     };
   });
 }
 
 const insertTalent = db.prepare(`
-  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, sortOrder)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, location, availableFor, sortOrder)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, sortOrder) VALUES (?, ?, ?)`);
 const insertSocial = db.prepare(`
@@ -453,7 +456,8 @@ const replaceRoster = db.transaction((roster) => {
   roster.forEach((t, ti) => {
     insertTalent.run(
       t.id, t.name || '', t.niche || '', t.gender || '',
-      t.photo || '', t.coverPhoto || '', t.bio || '', ti
+      t.photo || '', t.coverPhoto || '', t.bio || '', t.location || '',
+      JSON.stringify(Array.isArray(t.availableFor) ? t.availableFor : []), ti
     );
     (t.gallery || []).forEach((url, gi) => insertGalleryImg.run(t.id, url, gi));
     (t.socials || []).forEach((s, si) => {
