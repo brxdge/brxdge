@@ -29,6 +29,8 @@ db.exec(`
     photo       TEXT,
     coverPhoto  TEXT,
     bio         TEXT,
+    location      TEXT,
+    availableFor  TEXT NOT NULL DEFAULT '[]',
     sortOrder   INTEGER NOT NULL DEFAULT 0
   );
 
@@ -140,6 +142,19 @@ db.exec(`
 const managerColumns = db.prepare(`PRAGMA table_info(managers)`).all().map(c => c.name);
 if (!managerColumns.includes('notes')) {
   db.exec(`ALTER TABLE managers ADD COLUMN notes TEXT NOT NULL DEFAULT ''`);
+}
+
+// Same pattern for talents: `location` (the talent's own base location —
+// distinct from the audience-demographics fields) and `availableFor` (a
+// JSON-encoded array of booking types, e.g. ["Brand Deals","Appearances"])
+// were added after the talents table already existed in production —
+// add them without touching existing rows.
+const talentColumns = db.prepare(`PRAGMA table_info(talents)`).all().map(c => c.name);
+if (!talentColumns.includes('location')) {
+  db.exec(`ALTER TABLE talents ADD COLUMN location TEXT`);
+}
+if (!talentColumns.includes('availableFor')) {
+  db.exec(`ALTER TABLE talents ADD COLUMN availableFor TEXT NOT NULL DEFAULT '[]'`);
 }
 
 // A small helper matching the shape better-sqlite3's db.transaction() gave
