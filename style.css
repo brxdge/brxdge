@@ -865,6 +865,82 @@
 html.dark-mode .theme-toggle .icon-sun{ opacity: 0; transform: rotate(60deg) scale(0.5); }
 html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(1); }
 
+/* ---------- THEME SWITCH (navbar + mobile tabbar) ----------
+   A proper day/night pill switch instead of a plain icon button — a
+   sliding knob finished in the site's own --chrome gradient (the same
+   metallic treatment used on the hero's emphasized headline text), with
+   the sun/moon icons flanking it inside the track rather than crossfading
+   in place. Deliberately a SEPARATE class from .theme-toggle above rather
+   than a redesign of it, since .theme-toggle is also reused as-is on the
+   media kit's share-icon row, where a wide pill would break the row's
+   uniform circular-icon rhythm — that instance is intentionally untouched.
+   Track/knob math: 58px track, 3px inset, 24px knob -> 58-24-3*2 = 28px
+   of travel between the resting positions. */
+.theme-switch{
+  position: relative;
+  width: 58px; height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(206,212,220,0.22);
+  background: rgba(206,212,220,0.08);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.theme-switch:hover{ border-color: rgba(206,212,220,0.4); }
+.theme-switch:focus-visible{ outline: 2px solid var(--coral); outline-offset: 3px; }
+html.dark-mode .theme-switch{ border-color: rgba(255,255,255,0.35); }
+
+.ts-icon{
+  position: relative; z-index: 1;
+  color: rgba(208,208,208,0.4);
+  transition: color 0.35s ease;
+}
+.ts-icon-sun{ color: #F0F0F0; }
+html.dark-mode .ts-icon-sun{ color: rgba(208,208,208,0.4); }
+html.dark-mode .ts-icon-moon{ color: #F0F0F0; }
+
+.theme-switch-knob{
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--chrome);
+  background-size: 250% 100%;
+  background-position: 0% 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), background-position 0.7s ease;
+}
+html.dark-mode .theme-switch-knob{ transform: translateX(28px); }
+/* A one-shot sweep of the chrome gradient on hover/focus, rather than a
+   continuous loop — keeps the metallic finish feeling alive without ever
+   competing with the icons for attention while at rest. */
+.theme-switch:hover .theme-switch-knob,
+.theme-switch:focus-visible .theme-switch-knob{ background-position: 100% 50%; }
+
+@media (prefers-reduced-motion: reduce){
+  .theme-switch-knob{ transition: background-position 0.3s ease; }
+}
+
+/* Mobile tabbar's version sits on var(--panel), which actually flips with
+   the site theme (unlike the always-dark floating navbar), so it needs
+   theme-aware colors instead of the fixed light-on-dark palette above. */
+.mobile-tabbar .theme-switch{
+  width: 50px; height: 26px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  border-color: var(--panel-line);
+  background: var(--ink-2);
+  padding: 0 6px;
+}
+.mobile-tabbar .theme-switch .ts-icon{ color: var(--muted); }
+.mobile-tabbar .theme-switch .ts-icon-sun{ color: var(--text); }
+html.dark-mode .mobile-tabbar .theme-switch .ts-icon-sun{ color: var(--muted); }
+html.dark-mode .mobile-tabbar .theme-switch .ts-icon-moon{ color: var(--text); }
+.mobile-tabbar .theme-switch .theme-switch-knob{ width: 20px; height: 20px; }
+html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: translateX(24px); } /* 50-20-3*2 */
+
 /* Mobile-only "Contact" link shown top-left in place of the full left-links list.
    Styled to match .nav-login-link (uppercase, tracked) so both ends of the mobile
    navbar read consistently. */
@@ -885,9 +961,6 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
 .mobile-tabbar{ display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: var(--panel); border-top: 1px solid var(--panel-line); padding: 10px 6px calc(10px + env(safe-area-inset-bottom)); align-items: center; justify-content: space-around; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease; transform: translateY(0); opacity: 1; }
 .mobile-tabbar.hidden{ transform: translateY(100%); opacity: 0; }
 .mobile-tabbar a{ color: var(--text); font-size: 12px; font-weight: 600; text-align: center; flex: 1; padding: 6px 4px; }
-.mobile-tabbar .theme-toggle{ width: 34px; height: 34px; margin: 0 auto; flex-shrink: 0; border-color: var(--panel-line); background: transparent; color: var(--text); }
-.mobile-tabbar .theme-toggle:hover{ background: rgba(128,128,128,0.12); }
-
 @media (max-width: 860px) {
   .navbar{ padding: 14px 20px; column-gap: 10px; }
   .navbar.scrolled{ padding: 11px 20px; }
@@ -900,7 +973,7 @@ html.dark-mode .theme-toggle .icon-moon{ opacity: 1; transform: rotate(0) scale(
   /* The sun/moon toggle moves down to the bottom tab bar on mobile, so the top
      navbar stays a clean two-item balance: Contact on the left, Manager Login
      on the right. */
-  .navbar .theme-toggle{ display: none; }
+  .navbar .theme-switch{ display: none; }
   .nav-login-link{ padding: 7px 13px; font-size: 11.5px; }
   .mobile-tabbar{ display: flex; }
   body{ padding-bottom: 64px; } /* keep page content clear of the fixed bottom tab bar */
@@ -4664,7 +4737,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
    cast (talent added via the "+ Add to Campaign" button on each talent
    card). Lives inside .nav-col-right, so it renders identically in the
    desktop navbar and the mobile navbar (the mobile @media rules only hide
-   .nav-links.right-links and .navbar .theme-toggle, not this wrapper —
+   .nav-links.right-links and .navbar .theme-switch, not this wrapper —
    verified against the 860px breakpoint block above). Replaces the old
    fixed-position bottom cast tray entirely: no more fixed-positioning /
    z-index-stacking-above-overlays / pointer-events edge cases to manage. */
