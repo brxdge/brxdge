@@ -146,32 +146,19 @@
 
 
 <div id="loader">
-  <div class="loader-content">
-    <div class="loader-mark-drop-zone">
-      <svg class="loader-mark" id="loaderMark" viewBox="0 0 100 100">
-        <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
-        <path class="loader-arc" d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#loaderGrad)" stroke-width="3"/>
-        <line class="loader-hanger" x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
-        <defs>
-          <linearGradient id="loaderGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
-          </linearGradient>
-        </defs>
-      </svg>
-      <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
+  <div class="loader-content" id="loaderContent">
+    <div class="loader-logo-stage" id="loaderLogoStage">
+      <div class="loader-logo-glow" aria-hidden="true"></div>
+      <div class="loader-logo-float">
+        <img class="loader-logo-img" id="loaderLogoImg" src="assets/brxdge-loader-3d.png" alt="BRXDGE">
+        <div class="loader-logo-sheen" aria-hidden="true"></div>
+      </div>
     </div>
     <div class="percentage" id="loadPercent">0%</div>
     <div class="bar"><div class="fill" id="loadBar"></div></div>
-    <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
-      <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
-      <span class="lw-underline" aria-hidden="true"></span>
-    </div>
   </div>
 </div>
+
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
