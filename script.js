@@ -1908,20 +1908,35 @@ function castTalents(){
   return castIds.map(id => rosterData.find(t => t.id === id)).filter(Boolean);
 }
 
-// Shared chip-list renderer — builds the same removable "name + ×" chip
-// markup used by both the campaign brief modal's cast list and the top-nav
-// Talents dropdown, so the two stay visually and behaviorally identical.
-function renderCastChips(container){
+// Shared row renderer — builds the same removable talent row (photo, name,
+// niche + reach, remove) used by both the Campaign Request modal's
+// "Selected Talent" recap and the top-nav Talents dropdown, so the two stay
+// visually and behaviorally identical. Clicking a name jumps to that
+// talent's media kit (closing whichever cast UI is open first).
+function renderCastRows(container){
   if(!container) return;
   const talents = castTalents();
-  container.innerHTML = talents.map(t => `
-    <span class="cast-brief-chip">
-      ${escapeHtml(t.name)}
+  container.innerHTML = talents.map(t => {
+    const reach = formatFollowers(totalReach(t.socials));
+    return `
+    <div class="cast-row">
+      <img class="cast-row-avatar" src="${escapeHtml(t.photo || '')}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="cast-row-info">
+        <button type="button" class="cast-row-name" data-view-talent="${t.id}">${escapeHtml(t.name)}</button>
+        <span class="cast-row-meta">${escapeHtml(t.niche || 'Creator')} · ${reach} reach</span>
+      </div>
       <button type="button" class="cast-brief-remove" data-remove-cast="${t.id}" aria-label="Remove ${escapeHtml(t.name)} from cast">&times;</button>
-    </span>
-  `).join('');
+    </div>`;
+  }).join('');
   container.querySelectorAll('[data-remove-cast]').forEach(btn => {
     btn.addEventListener('click', () => toggleCast(btn.dataset.removeCast));
+  });
+  container.querySelectorAll('[data-view-talent]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      closeNavTalentsDropdown();
+      if(campaignBriefOverlay) campaignBriefOverlay.classList.remove('show');
+      openMediakit(btn.dataset.viewTalent);
+    });
   });
 }
 
@@ -1946,7 +1961,7 @@ function toggleNavTalentsDropdown(){
   const willShow = !navTalentsDropdown.classList.contains('show');
   navTalentsDropdown.classList.toggle('show', willShow);
   if(navTalentsBtn) navTalentsBtn.setAttribute('aria-expanded', String(willShow));
-  if(willShow) renderCastChips(navTalentsList);
+  if(willShow) renderCastRows(navTalentsList);
 }
 
 if(navTalentsBtn){
@@ -1976,7 +1991,7 @@ function renderNavTalents(){
   // Keep the dropdown's list live if it's currently open (e.g. removing a
   // chip from inside it shouldn't require closing/reopening to see it gone).
   if(navTalentsDropdown && navTalentsDropdown.classList.contains('show')){
-    renderCastChips(navTalentsList);
+    renderCastRows(navTalentsList);
   }
 }
 
@@ -1985,7 +2000,7 @@ const campaignBriefCloseBtn = document.getElementById('campaignBriefClose');
 if(campaignBriefCloseBtn) campaignBriefCloseBtn.addEventListener('click', () => campaignBriefOverlay.classList.remove('show'));
 
 function renderCastBriefList(){
-  renderCastChips(document.getElementById('castBriefList'));
+  renderCastRows(document.getElementById('castBriefList'));
 }
 
 function openCampaignBriefModal(){
@@ -2008,6 +2023,39 @@ if(navTalentsClearBtn){
 const navTalentsSendBtn = document.getElementById('navTalentsSend');
 if(navTalentsSendBtn) navTalentsSendBtn.addEventListener('click', openCampaignBriefModal);
 
+// CAMPAIGN TYPE — single-select pill group (radio-like: only one active at
+// a time), value mirrored into the hidden #briefCampaignType input so the
+// submit handler can read + validate it like any other required field.
+const briefCampaignTypePills = document.getElementById('briefCampaignTypePills');
+const briefCampaignTypeInput = document.getElementById('briefCampaignType');
+if(briefCampaignTypePills){
+  briefCampaignTypePills.querySelectorAll('[data-type]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      briefCampaignTypePills.querySelectorAll('[data-type]').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      if(briefCampaignTypeInput) briefCampaignTypeInput.value = pill.dataset.type;
+    });
+  });
+}
+
+// DELIVERABLES — multi-select pill group; any number can be active at once.
+const briefDeliverablesPills = document.getElementById('briefDeliverablesPills');
+if(briefDeliverablesPills){
+  briefDeliverablesPills.querySelectorAll('[data-deliverable]').forEach(pill => {
+    pill.addEventListener('click', () => pill.classList.toggle('active'));
+  });
+}
+
+// Native form.reset() only clears real form controls (input/select/
+// textarea) — it doesn't touch the pill buttons' .active class or the
+// hidden campaign-type value, so that has to be done explicitly whenever
+// the form is cleared out after a successful submit.
+function resetBriefPills(){
+  if(briefCampaignTypePills) briefCampaignTypePills.querySelectorAll('.active').forEach(p => p.classList.remove('active'));
+  if(briefDeliverablesPills) briefDeliverablesPills.querySelectorAll('.active').forEach(p => p.classList.remove('active'));
+  if(briefCampaignTypeInput) briefCampaignTypeInput.value = '';
+}
+
 const campaignBriefForm = document.getElementById('campaignBriefForm');
 if(campaignBriefForm){
   campaignBriefForm.addEventListener('submit', async (e) => {
@@ -2015,13 +2063,40 @@ if(campaignBriefForm){
     const talents = castTalents();
     if(!talents.length){ showToast('Add at least one talent to your cast first'); return; }
 
+    const campaignType = (briefCampaignTypeInput && briefCampaignTypeInput.value.trim()) || '';
+    if(!campaignType){ showToast('Pick a campaign type'); return; }
+
     const btn = e.target.querySelector('button[type="submit"]');
     const originalLabel = btn.textContent;
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
       const talentNames = talents.map(t => t.name);
       const brandName = document.getElementById('briefBrandName').value.trim();
+      const campaignName = document.getElementById('briefCampaignName').value.trim();
+      const deliverables = briefDeliverablesPills
+        ? Array.from(briefDeliverablesPills.querySelectorAll('.active')).map(p => p.dataset.deliverable)
+        : [];
+      const budget = document.getElementById('briefBudget').value;
+      const timeline = document.getElementById('briefTimeline').value.trim();
       const details = document.getElementById('briefMessage').value.trim();
+
+      // Backend still stores this as one free-text `message` field (see
+      // POST /api/contact in index.js) — no schema change needed. Formatted
+      // as readable labeled lines since the admin inbox renders it with
+      // white-space:pre-wrap, so every structured field the manager filled
+      // in still shows up clearly instead of being crammed into one blob.
+      const message = [
+        `Campaign Request: ${campaignName}`,
+        `Brand: ${brandName}`,
+        `Campaign Type: ${campaignType}`,
+        `Selected Talent: ${talentNames.join(', ')}`,
+        `Deliverables: ${deliverables.length ? deliverables.join(', ') : '—'}`,
+        `Budget: ${budget || 'Not sure yet'}`,
+        `Timeline: ${timeline || '—'}`,
+        '',
+        details ? `Additional Information:\n${details}` : 'Additional Information: —',
+      ].join('\n');
+
       const res = await fetch(API + '/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2029,13 +2104,14 @@ if(campaignBriefForm){
           name: document.getElementById('briefContactName').value.trim(),
           email: document.getElementById('briefEmail').value.trim(),
           talent: talentNames.join(', '),
-          message: `Campaign Brief — Cast: ${talentNames.join(', ')}\nBrand: ${brandName}\n\n${details}`,
+          message,
         }),
       });
       if(!res.ok) throw new Error('Request failed');
       campaignBriefOverlay.classList.remove('show');
-      showToast("Campaign brief sent — we'll be in touch soon");
+      showToast("Campaign request sent — we'll be in touch within 1 business day");
       e.target.reset();
+      resetBriefPills();
       castIds = [];
       saveCast();
       refreshCastButtons();
