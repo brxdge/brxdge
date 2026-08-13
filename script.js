@@ -658,7 +658,7 @@ async function loadRoster(){
   // rosterData, so the nav Talents pill can't reflect it until the roster
   // itself has loaded — this is the earliest point that's true, including
   // on a returning visit where localStorage already has a saved shortlist.
-  renderNavTalents();
+  renderAllCastWidgets();
 
   // Deep link: if the URL already points at a specific talent (e.g. a
   // shared link like ?talent=mark-ramirez), open their media kit right away.
@@ -1894,7 +1894,7 @@ function toggleCast(id){
   }
   saveCast();
   refreshCastButtons();
-  renderNavTalents();
+  renderAllCastWidgets();
   renderCastBriefList();
   // Sending the last talent to zero while the brief modal is open would
   // leave it showing an empty list — close it rather than let that happen.
@@ -1933,67 +1933,106 @@ function renderCastRows(container){
   });
   container.querySelectorAll('[data-view-talent]').forEach(btn => {
     btn.addEventListener('click', () => {
-      closeNavTalentsDropdown();
+      closeAllCastWidgets();
       if(campaignBriefOverlay) campaignBriefOverlay.classList.remove('show');
       openMediakit(btn.dataset.viewTalent);
     });
   });
 }
 
-// TOP-NAV TALENTS — replaces the old fixed-position bottom cast tray. Lives
-// inside the navbar's right column (same markup on desktop + mobile), shows
-// a "Talents (N)" pill that's hidden while the cast is empty, and opens a
-// dropdown with the cast list + Clear + Send Campaign Brief actions.
-const navTalentsWrap = document.getElementById('navTalentsWrap');
-const navTalentsBtn = document.getElementById('navTalentsBtn');
-const navTalentsDropdown = document.getElementById('navTalentsDropdown');
-const navTalentsCount = document.getElementById('navTalentsCount');
-const navTalentsList = document.getElementById('navTalentsList');
+// CAST WIDGET (generic) — a "Talents (N)" trigger + dropdown (cast list,
+// Clear, Build Campaign Request). The same widget now appears in three
+// places: the top nav (always available), the full talent-roster overlay
+// (floating top-right, since that overlay covers the navbar), and each
+// individual media kit (next to "Get in Touch"). All instances share the
+// same castIds state and are kept in sync via renderAllCastWidgets(),
+// called anywhere the cast changes.
+//
+// Stored in a Map keyed by a stable name rather than a plain array because
+// the media kit's instance is rebuilt from scratch every time openMediakit()
+// re-renders #mkContent — re-registering under the same key replaces the
+// old (now-detached) entry instead of leaking a new one on every profile
+// view. The outside-click/Escape handling is registered ONCE globally
+// (not per-widget) for the same reason — so it never needs re-binding.
+const castWidgets = new Map();
 
-function closeNavTalentsDropdown(){
-  if(!navTalentsDropdown) return;
-  navTalentsDropdown.classList.remove('show');
-  if(navTalentsBtn) navTalentsBtn.setAttribute('aria-expanded', 'false');
+function setupCastWidget(key, ids){
+  const wrap = document.getElementById(ids.wrapId);
+  const btn = document.getElementById(ids.btnId);
+  const dropdown = document.getElementById(ids.dropdownId);
+  if(!wrap || !btn || !dropdown){ castWidgets.delete(key); return null; }
+  const count = document.getElementById(ids.countId);
+  const list = document.getElementById(ids.listId);
+  const clearBtn = document.getElementById(ids.clearId);
+  const sendBtn = document.getElementById(ids.sendId);
+
+  function close(){
+    dropdown.classList.remove('show');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  function open(){
+    closeAllCastWidgets();
+    dropdown.classList.add('show');
+    btn.setAttribute('aria-expanded', 'true');
+    renderCastRows(list);
+  }
+  function toggle(){
+    if(dropdown.classList.contains('show')) close(); else open();
+  }
+  function render(){
+    const talents = castTalents();
+    if(!talents.length){
+      wrap.classList.remove('show');
+      close();
+      return;
+    }
+    wrap.classList.add('show');
+    if(count) count.textContent = talents.length;
+    // Keep the dropdown's list live if it's currently open (e.g. removing
+    // a row from inside it shouldn't require closing/reopening to see it gone).
+    if(dropdown.classList.contains('show')) renderCastRows(list);
+  }
+
+  btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+  if(clearBtn){
+    clearBtn.addEventListener('click', () => {
+      castIds = [];
+      saveCast();
+      refreshCastButtons();
+      renderAllCastWidgets();
+    });
+  }
+  if(sendBtn){
+    sendBtn.addEventListener('click', () => {
+      close();
+      openCampaignBriefModal();
+    });
+  }
+
+  const instance = { render, close, wrap };
+  castWidgets.set(key, instance);
+  render();
+  return instance;
 }
 
-function toggleNavTalentsDropdown(){
-  if(!navTalentsDropdown) return;
-  const willShow = !navTalentsDropdown.classList.contains('show');
-  navTalentsDropdown.classList.toggle('show', willShow);
-  if(navTalentsBtn) navTalentsBtn.setAttribute('aria-expanded', String(willShow));
-  if(willShow) renderCastRows(navTalentsList);
-}
+function renderAllCastWidgets(){ castWidgets.forEach(w => w.render()); }
+function closeAllCastWidgets(){ castWidgets.forEach(w => w.close()); }
 
-if(navTalentsBtn){
-  navTalentsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleNavTalentsDropdown();
-  });
-}
-// Close on outside click / Escape, same UX as the other dropdown-style menus on the site.
+// Close on outside click / Escape, same UX as the other dropdown-style
+// menus on the site — registered once, applies to every current widget.
 document.addEventListener('click', (e) => {
-  if(navTalentsWrap && !navTalentsWrap.contains(e.target)) closeNavTalentsDropdown();
+  castWidgets.forEach(w => { if(!w.wrap.contains(e.target)) w.close(); });
 });
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape') closeNavTalentsDropdown();
+  if(e.key === 'Escape') closeAllCastWidgets();
 });
 
-function renderNavTalents(){
-  if(!navTalentsWrap) return;
-  const talents = castTalents();
-  if(!talents.length){
-    navTalentsWrap.classList.remove('show');
-    closeNavTalentsDropdown();
-    return;
-  }
-  navTalentsWrap.classList.add('show');
-  if(navTalentsCount) navTalentsCount.textContent = talents.length;
-  // Keep the dropdown's list live if it's currently open (e.g. removing a
-  // chip from inside it shouldn't require closing/reopening to see it gone).
-  if(navTalentsDropdown && navTalentsDropdown.classList.contains('show')){
-    renderCastRows(navTalentsList);
-  }
-}
+// Top nav (desktop + mobile share this markup) and the full talent-roster
+// overlay's floating widget both exist in the static page HTML, so they
+// can be wired up once here. The media kit's instance is wired inside
+// openMediakit() instead, since that markup is (re)built dynamically.
+setupCastWidget('nav', { wrapId: 'navTalentsWrap', btnId: 'navTalentsBtn', dropdownId: 'navTalentsDropdown', countId: 'navTalentsCount', listId: 'navTalentsList', clearId: 'navTalentsClear', sendId: 'navTalentsSend' });
+setupCastWidget('roster', { wrapId: 'trTalentsWrap', btnId: 'trTalentsBtn', dropdownId: 'trTalentsDropdown', countId: 'trTalentsCount', listId: 'trTalentsList', clearId: 'trTalentsClear', sendId: 'trTalentsSend' });
 
 const campaignBriefOverlay = document.getElementById('campaignBriefOverlay');
 const campaignBriefCloseBtn = document.getElementById('campaignBriefClose');
@@ -2005,23 +2044,14 @@ function renderCastBriefList(){
 
 function openCampaignBriefModal(){
   if(!castIds.length) return;
-  closeNavTalentsDropdown();
+  closeAllCastWidgets();
   renderCastBriefList();
   if(campaignBriefOverlay) campaignBriefOverlay.classList.add('show');
 }
 
-const navTalentsClearBtn = document.getElementById('navTalentsClear');
-if(navTalentsClearBtn){
-  navTalentsClearBtn.addEventListener('click', () => {
-    castIds = [];
-    saveCast();
-    refreshCastButtons();
-    renderNavTalents();
-  });
-}
-
-const navTalentsSendBtn = document.getElementById('navTalentsSend');
-if(navTalentsSendBtn) navTalentsSendBtn.addEventListener('click', openCampaignBriefModal);
+// Note: each cast widget's own Clear/Build-Campaign-Request buttons are
+// already wired inside setupCastWidget() above (ids.clearId/ids.sendId) —
+// no separate handlers needed here.
 
 // CAMPAIGN TYPE — single-select pill group (radio-like: only one active at
 // a time), value mirrored into the hidden #briefCampaignType input so the
@@ -2115,7 +2145,7 @@ if(campaignBriefForm){
       castIds = [];
       saveCast();
       refreshCastButtons();
-      renderNavTalents();
+      renderAllCastWidgets();
     } catch(err){
       console.error(err);
       showToast("Couldn't send right now — please try again in a moment");
@@ -2345,7 +2375,27 @@ function openMediakit(id, opts){
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg>
         </button>
       </div>
-      <button class="btn btn-primary mk-cta" data-open-contact>Get in Touch</button>
+      <div class="mk-cta-row">
+        <button class="btn btn-primary mk-cta" data-open-contact>Get in Touch</button>
+        <div class="nav-talents-wrap mk-talents-wrap" id="mkTalentsWrap">
+          <button type="button" class="nav-talents-btn" id="mkTalentsBtn" aria-haspopup="true" aria-expanded="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="nav-talents-label">Talents</span>
+            <span class="nav-talents-count" id="mkTalentsCount">0</span>
+          </button>
+          <div class="nav-talents-dropdown" id="mkTalentsDropdown">
+            <div class="nav-talents-dropdown-head">
+              <span>Your Cast</span>
+              <button type="button" class="nav-talents-clear" id="mkTalentsClear">Clear</button>
+            </div>
+            <div class="nav-talents-list" id="mkTalentsList"></div>
+            <button type="button" class="btn btn-primary nav-talents-send" id="mkTalentsSend">
+              Build Campaign Request
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="mk-main">
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
@@ -2461,6 +2511,12 @@ function openMediakit(id, opts){
   if(shareBtn) shareBtn.addEventListener('click', () => shareProfile(t.name, shareUrl));
   const qrBtn = content.querySelector('[data-show-qr]');
   if(qrBtn) qrBtn.addEventListener('click', () => openQrModal(t.name, shareUrl));
+
+  // Cast widget beside "Get in Touch" — this markup is rebuilt from
+  // scratch every time (see #mkTalentsWrap in the template above), so it's
+  // re-registered under the same 'mediakit' key each visit rather than
+  // accumulating a fresh entry in castWidgets per profile viewed.
+  setupCastWidget('mediakit', { wrapId: 'mkTalentsWrap', btnId: 'mkTalentsBtn', dropdownId: 'mkTalentsDropdown', countId: 'mkTalentsCount', listId: 'mkTalentsList', clearId: 'mkTalentsClear', sendId: 'mkTalentsSend' });
 }
 
 // The full, shareable URL for a talent's media kit (matches the ?talent=
