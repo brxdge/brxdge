@@ -5024,3 +5024,38 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 #briefDeliverablesPills{ margin-top: 2px; }
 #briefCampaignTypePills .inquiry-pill,
 #briefDeliverablesPills .inquiry-pill{ font-size: 12.5px; padding: 8px 14px; }
+
+/* CAST WIDGET — additional placements. The trigger + dropdown markup and
+   base look are shared with the top-nav version (.nav-talents-* classes,
+   see the "NAV TALENTS" block above); these just adjust positioning for
+   the two extra contexts. */
+
+/* Media kit — sits inline next to "Get in Touch", centered as one row. */
+.mk-cta-row{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mk-cta-row .mk-talents-wrap .nav-talents-dropdown{ right: 0; }
+@media (max-width: 480px){
+  .mk-cta-row{ flex-direction: column; width: 100%; }
+  .mk-cta-row .mk-cta{ width: 100%; justify-content: center; }
+  .mk-cta-row .mk-talents-wrap.show{ width: 100%; }
+  .mk-cta-row .mk-talents-wrap.show .nav-talents-btn{ width: 100%; justify-content: center; }
+}
+
+/* Full talent-roster overlay — floats fixed top-right (mirrors .mk-back's
+   fixed top-left "Back to Roster" button) since this overlay covers the
+   navbar entirely, so the regular nav Talents button isn't reachable here. */
+.tr-talents-wrap{
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 260;
+}
+.tr-talents-wrap .nav-talents-dropdown{ right: 0; }
+@media (max-width: 640px){
+  .tr-talents-wrap{ top: 14px; right: 14px; }
+}
