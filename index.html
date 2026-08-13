@@ -230,7 +230,7 @@
         </div>
         <div class="nav-talents-list" id="navTalentsList"></div>
         <button type="button" class="btn btn-primary nav-talents-send" id="navTalentsSend">
-          Send Campaign Brief
+          Build Campaign Request
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
@@ -1115,20 +1115,79 @@
   </div>
 </div>
 
-<!-- CAMPAIGN BRIEF MODAL (opened from the cast tray's "Send Campaign Brief") -->
+<!-- CAMPAIGN BRIEF MODAL (opened from the cast tray's "Build Campaign Request").
+     Full flow: Talent -> Browse -> Filter -> View Profile -> Add to Campaign ->
+     Build Cast -> Submit Campaign Request. This modal is the last two steps:
+     it recaps who's in the cast, then collects the structured campaign
+     details a manager actually needs to scope the ask (type, deliverables,
+     budget, timeline) instead of a single free-text box. -->
 <div class="modal-overlay" id="campaignBriefOverlay">
-  <div class="modal" style="max-width:540px;">
+  <div class="modal modal-campaign-brief" style="max-width:620px;">
     <button class="modal-close" id="campaignBriefClose">&times;</button>
-    <h3>Send Campaign Brief</h3>
+    <h3>Submit Campaign Request</h3>
     <p class="sub">Tell us about your campaign and we'll get back to you about this cast within 1 business day.</p>
+
+    <div class="cast-brief-section-label">Selected Talent</div>
     <div class="cast-brief-list" id="castBriefList"></div>
+
     <form id="campaignBriefForm">
-      <div class="field"><label for="briefBrandName">Brand / Company Name</label><input type="text" id="briefBrandName" required></div>
-      <div class="field"><label for="briefContactName">Your Name</label><input type="text" id="briefContactName" required></div>
-      <div class="field"><label for="briefEmail">Email</label><input type="email" id="briefEmail" required></div>
-      <div class="field"><label for="briefMessage">Campaign Details</label><textarea id="briefMessage" required placeholder="What's the campaign? Budget, timeline, and deliverables you have in mind..."></textarea></div>
+      <div class="field"><label for="briefBrandName">Company / Brand</label><input type="text" id="briefBrandName" required placeholder="e.g. Nike"></div>
+
+      <div class="field-row">
+        <div class="field"><label for="briefContactName">Your Name</label><input type="text" id="briefContactName" required></div>
+        <div class="field"><label for="briefEmail">Email</label><input type="email" id="briefEmail" required></div>
+      </div>
+
+      <div class="field"><label for="briefCampaignName">Campaign Name</label><input type="text" id="briefCampaignName" required placeholder="e.g. Summer Running Campaign"></div>
+
+      <div class="field">
+        <label>Campaign Type</label>
+        <input type="hidden" id="briefCampaignType">
+        <div class="inquiry-toggle" id="briefCampaignTypePills">
+          <button type="button" class="inquiry-pill" data-type="Sponsored Content">Sponsored Content</button>
+          <button type="button" class="inquiry-pill" data-type="Product Launch">Product Launch</button>
+          <button type="button" class="inquiry-pill" data-type="Event">Event</button>
+          <button type="button" class="inquiry-pill" data-type="Brand Ambassador">Brand Ambassador</button>
+          <button type="button" class="inquiry-pill" data-type="UGC">UGC</button>
+          <button type="button" class="inquiry-pill" data-type="Other">Other</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Deliverables <span class="field-optional">(optional)</span></label>
+        <div class="inquiry-toggle" id="briefDeliverablesPills">
+          <button type="button" class="inquiry-pill" data-deliverable="Instagram Reel">Instagram Reel</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Instagram Story">Instagram Story</button>
+          <button type="button" class="inquiry-pill" data-deliverable="TikTok Video">TikTok Video</button>
+          <button type="button" class="inquiry-pill" data-deliverable="YouTube Video">YouTube Video</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Blog Post">Blog Post</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Event Appearance">Event Appearance</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="briefBudget">Campaign Budget <span class="field-optional">(optional)</span></label>
+          <select id="briefBudget">
+            <option value="">Not sure yet</option>
+            <option value="Under $2,500">Under $2,500</option>
+            <option value="$2,500–$5,000">$2,500–$5,000</option>
+            <option value="$5,000–$10,000">$5,000–$10,000</option>
+            <option value="$10,000–$25,000">$10,000–$25,000</option>
+            <option value="$25,000–$50,000">$25,000–$50,000</option>
+            <option value="$50,000+">$50,000+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="briefTimeline">Campaign Timeline <span class="field-optional">(optional)</span></label>
+          <input type="text" id="briefTimeline" placeholder="e.g. September 2026">
+        </div>
+      </div>
+
+      <div class="field"><label for="briefMessage">Additional Information <span class="field-optional">(optional)</span></label><textarea id="briefMessage" placeholder="Creative direction, must-haves, examples you like..."></textarea></div>
+
       <div class="modal-actions">
-        <button type="submit" class="btn btn-primary">Send Campaign Brief</button>
+        <button type="submit" class="btn btn-primary">Submit Campaign Request</button>
       </div>
     </form>
   </div>
