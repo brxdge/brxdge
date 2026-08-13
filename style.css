@@ -5082,3 +5082,353 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 @media (max-width: 480px){
   .tr-talents-wrap{ top: 14px; right: 14px; }
 }
+
+/* =========================================================================
+   COMPANY BACKGROUND — full-screen horizontal-scroll story
+   Opened from the About section's "See Our Background" button. Structured
+   like the Media Kit / Full Talent Roster overlays (fixed inset:0, shares
+   .mk-back, wired through setBodyScrollLocked in script.js) but instead of
+   the overlay itself scrolling vertically, a tall spacer (.bg-scrollpad)
+   holds a position:sticky stage (.bg-stage) pinned for 100vh while you
+   scroll; a flex row of panels + connector images (.bg-track) inside it
+   gets translateX'd in step with that scroll, so scrolling down reads as
+   moving right through the story. See initBackground()/updateBgTrack() in
+   script.js for the mechanics.
+
+   Below ~900px wide this collapses to a plain vertical stack instead —
+   scroll-jacked horizontal motion fights native touch scrolling and reads
+   as broken on a phone, so the JS simply never activates the engine under
+   that width and this fallback layout (block flow, normal-height panels,
+   connectors as horizontal strips) takes over automatically.
+========================================================================= */
+
+.background-overlay{
+  background: var(--ink);
+}
+
+/* ---- progress dots (desktop engine only) ---- */
+.bg-progress{
+  position: fixed;
+  top: 50%;
+  right: 28px;
+  transform: translateY(-50%);
+  z-index: 260;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bg-progress-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--panel-line);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.bg-progress-dot:hover{ background: var(--muted); }
+.bg-progress-dot.active{ background: var(--coral); transform: scale(1.35); }
+
+/* ---- scroll mechanics ---- */
+.bg-scrollpad{
+  position: relative;
+  /* height is set inline by script.js once panel widths are known —
+     100vh (for the sticky stage) + however much extra horizontal distance
+     the track needs to travel. */
+}
+.bg-stage{
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.bg-track{
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  will-change: transform;
+}
+
+/* ---- panels ---- */
+.bg-panel{
+  flex: 0 0 100vw;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.bg-panel-inner{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 60px;
+}
+.bg-panel-content{
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.7s cubic-bezier(0.19,1,0.22,1), transform 0.7s cubic-bezier(0.19,1,0.22,1);
+}
+.bg-panel.in-view .bg-panel-content{
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Stagger children of a panel one beat behind the panel itself. */
+.bg-panel-content > *:nth-child(2){ transition-delay: 0.08s; }
+.bg-panel-content > *:nth-child(3){ transition-delay: 0.16s; }
+.bg-panel-content > *:nth-child(4){ transition-delay: 0.24s; }
+
+.bg-kicker{
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bg-kicker::before{
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--coral);
+}
+.bg-panel-num{
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bg-headline{
+  font-size: clamp(30px, 4vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  max-width: 760px;
+}
+.bg-lede{
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.7;
+  max-width: 620px;
+}
+.bg-lede + .bg-lede{ margin-top: 12px; }
+
+/* ---- connectors: narrow vertical photo bridge between two panels ---- */
+.bg-connector{
+  flex: 0 0 clamp(200px, 24vw, 380px);
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.bg-connector-img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.15);
+  transition: transform 1.2s cubic-bezier(0.19,1,0.22,1);
+  filter: grayscale(0.25) contrast(1.05);
+}
+.bg-connector.in-view .bg-connector-img{ transform: scale(1); }
+.bg-connector-fade{
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
+}
+.bg-connector-caption{
+  position: absolute;
+  left: 50%;
+  bottom: 34px;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  opacity: 0;
+  transition: opacity 0.6s ease 0.2s;
+}
+.bg-connector.in-view .bg-connector-caption{ opacity: 1; }
+
+/* ---- panel 1: manifesto pillars ---- */
+.bg-pillars{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 34px;
+}
+.bg-pillar{
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  padding: 18px 16px;
+}
+.bg-pillar-icon{
+  width: 30px;
+  height: 30px;
+  color: var(--coral);
+  margin-bottom: 12px;
+}
+.bg-pillar-title{
+  font-weight: 700;
+  font-size: 13.5px;
+  margin-bottom: 4px;
+}
+.bg-pillar-desc{
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---- panel 2: history timeline ---- */
+.bg-timeline{
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.bg-timeline-row{
+  display: grid;
+  grid-template-columns: 90px 24px 1fr;
+  align-items: start;
+  min-height: 84px;
+}
+.bg-timeline-year{
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--coral);
+  padding-top: 2px;
+}
+.bg-timeline-rail{
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.bg-timeline-rail::before{
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: -18px;
+  width: 1px;
+  background: var(--panel-line);
+}
+.bg-timeline-row:last-child .bg-timeline-rail::before{ display: none; }
+.bg-timeline-dot{
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--coral);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.bg-timeline-title{
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.bg-timeline-desc{
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 460px;
+}
+
+/* ---- panel 4: founders ---- */
+.bg-founders{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 34px;
+}
+.bg-founder-card{
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+.bg-founder-photo{
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  display: block;
+  background: var(--avatar-bg);
+}
+.bg-founder-body{ padding: 16px 18px 20px; }
+.bg-founder-name{ font-weight: 700; font-size: 15.5px; }
+.bg-founder-title{
+  font-family: 'Space Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-top: 3px;
+}
+.bg-founder-bio{
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+/* ---- scroll cue (first panel only) ---- */
+.bg-scrollcue{
+  position: fixed;
+  left: 60px;
+  bottom: 30px;
+  z-index: 260;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.bg-scrollcue.hide{ opacity: 0; }
+.bg-scrollcue svg{ animation: bg-cue-nudge 1.4s ease-in-out infinite; }
+@keyframes bg-cue-nudge{
+  0%, 100%{ transform: translateX(0); }
+  50%{ transform: translateX(6px); }
+}
+
+/* =========================================================================
+   Mobile / narrow fallback — plain vertical stack, JS never starts the
+   horizontal engine under 900px (see initBackground() in script.js), so
+   these rules just need to make the same markup read correctly stacked.
+========================================================================= */
+@media (max-width: 900px){
+  .bg-progress{ display: none; }
+  .bg-scrollcue{ display: none; }
+  .bg-scrollpad{ height: auto !important; }
+  .bg-stage{ position: static; height: auto; overflow: visible; }
+  .bg-track{ display: block; }
+  .bg-panel{ flex-basis: auto; height: auto; padding: 110px 0 70px; display: block; }
+  .bg-panel-inner{ padding: 0 24px; }
+  .bg-panel-content{ opacity: 1; transform: none; transition: opacity 0.6s ease, transform 0.6s ease; }
+  /* Re-arm the same fade-up treatment, just IntersectionObserver-driven
+     instead of scroll-progress-driven on this layout (see script.js). */
+  .bg-panel-content.bg-mobile-pending{ opacity: 0; transform: translateY(24px); }
+  .bg-connector{ flex-basis: auto; height: 220px; }
+  .bg-connector-caption{ writing-mode: horizontal-tb; bottom: 18px; left: 24px; transform: none; opacity: 1; }
+  .bg-pillars{ grid-template-columns: repeat(2, 1fr); }
+  .bg-founders{ grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; }
+  .bg-timeline-row{ grid-template-columns: 76px 20px 1fr; min-height: 76px; }
+}
+@media (max-width: 560px){
+  .bg-pillars{ grid-template-columns: 1fr; }
+  .bg-headline{ font-size: clamp(26px, 8vw, 36px); }
+}
