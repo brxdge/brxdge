@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -656,6 +656,11 @@
           <span class="lbl">Brand deals closed</span>
         </div>
       </div>
+
+      <button type="button" class="btn btn-ghost view-all-btn" id="viewBackgroundBtn" style="margin-top:28px;">
+        <span>See Our Background</span>
+        <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
   </div>
 </section>
@@ -1372,6 +1377,218 @@
     </div>
 
     <div class="roster-grid roster-grid--all" id="talentRosterGrid"></div>
+  </div>
+</div>
+
+<!-- COMPANY BACKGROUND — opened from the About section's "See Our
+     Background" button (#viewBackgroundBtn). Horizontal-scroll story with
+     4 main panels (Manifesto / History / About Us / Founders) bridged by
+     3 narrow photo "connectors". See the big CSS comment above
+     ".background-overlay" in style.css for how the scroll mechanics work,
+     and initBackground()/updateBgTrack() in script.js for the JS side.
+     PLACEHOLDER CONTENT: founder names/titles/bios and all photos in this
+     block are placeholders — swap in the real ones whenever ready. -->
+<div class="mediakit-overlay background-overlay" id="backgroundOverlay">
+  <button class="mk-back" id="bgBack">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to Site
+  </button>
+
+  <div class="bg-progress" id="bgProgress" aria-hidden="true">
+    <button type="button" class="bg-progress-dot" data-bg-dot="0" aria-label="Manifesto"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="1" aria-label="History"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="2" aria-label="About Us"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="3" aria-label="Founders"></button>
+  </div>
+
+  <div class="bg-scrollpad" id="bgScrollPad">
+    <div class="bg-stage" id="bgStage">
+      <div class="bg-track" id="bgTrack">
+
+        <!-- PANEL 1 — MANIFESTO -->
+        <section class="bg-panel" data-bg-panel="0">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">Our Manifesto</div>
+              <h2 class="bg-headline">We built the bridge we wished existed.</h2>
+              <p class="bg-lede">Every creator we work with has a story about a brand deal that fell through, a contract nobody explained, or a DM that went unanswered for three weeks. BRXDGE exists to be the opposite of that — end to end.</p>
+              <p class="bg-lede">No templates. No roster-padding. No creator treated like a line item on someone else's media kit. We measure our own success by how far the people we represent get to go.</p>
+              <div class="bg-pillars">
+                <div class="bg-pillar">
+                  <svg class="bg-pillar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4"/></svg>
+                  <div class="bg-pillar-title">Transparency First</div>
+                  <div class="bg-pillar-desc">Real numbers, real terms — nothing buried in fine print.</div>
+                </div>
+                <div class="bg-pillar">
+                  <svg class="bg-pillar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.4"/></svg>
+                  <div class="bg-pillar-title">Creator-Led Strategy</div>
+                  <div class="bg-pillar-desc">Built around your audience, never a template.</div>
+                </div>
+                <div class="bg-pillar">
+                  <svg class="bg-pillar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.5 12.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7zM15.5 12.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" stroke="currentColor" stroke-width="1.4"/><path d="M4 19c.6-2.8 2.3-4.3 4.5-4.3s3.9 1.5 4.5 4.3M11 19c.6-2.8 2.3-4.3 4.5-4.3s3.9 1.5 4.5 4.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  <div class="bg-pillar-title">Real Relationships</div>
+                  <div class="bg-pillar-desc">Hands-on management, not a ticket queue.</div>
+                </div>
+                <div class="bg-pillar">
+                  <svg class="bg-pillar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 18l6-6 4 4 8-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div class="bg-pillar-title">Long-Term Growth</div>
+                  <div class="bg-pillar-desc">Careers we build for years, not one campaign.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="bg-connector" data-bg-connector="0">
+          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-1/700/1400" alt="" loading="lazy">
+          <div class="bg-connector-fade" aria-hidden="true"></div>
+          <span class="bg-connector-caption">Where It Started</span>
+        </div>
+
+        <!-- PANEL 2 — HISTORY -->
+        <section class="bg-panel" data-bg-panel="1">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">Our History</div>
+              <h2 class="bg-headline">From a group chat to a growing roster.</h2>
+              <p class="bg-lede">BRXDGE didn't start as a company — it started as three friends trying to help people they believed in.</p>
+              <div class="bg-timeline">
+                <div class="bg-timeline-row">
+                  <div class="bg-timeline-year">2021</div>
+                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
+                  <div>
+                    <div class="bg-timeline-title">Three friends, one group chat</div>
+                    <p class="bg-timeline-desc">What began as informal advice for a handful of local creators turned into something worth doing properly.</p>
+                  </div>
+                </div>
+                <div class="bg-timeline-row">
+                  <div class="bg-timeline-year">2022</div>
+                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
+                  <div>
+                    <div class="bg-timeline-title">First ten signings</div>
+                    <p class="bg-timeline-desc">Built out a real roster across TikTok, Instagram, and YouTube — a strategy for each creator, not a one-size pitch deck.</p>
+                  </div>
+                </div>
+                <div class="bg-timeline-row">
+                  <div class="bg-timeline-year">2023</div>
+                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
+                  <div>
+                    <div class="bg-timeline-title">Formalized brand partnerships</div>
+                    <p class="bg-timeline-desc">Standardized contracts, campaign management, and reporting, so creators could focus on making things instead of chasing invoices.</p>
+                  </div>
+                </div>
+                <div class="bg-timeline-row">
+                  <div class="bg-timeline-year">2024</div>
+                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
+                  <div>
+                    <div class="bg-timeline-title">Crossed 300M combined reach</div>
+                    <p class="bg-timeline-desc">Roster growth accelerated as brands started coming back for repeat campaigns.</p>
+                  </div>
+                </div>
+                <div class="bg-timeline-row">
+                  <div class="bg-timeline-year">Today</div>
+                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
+                  <div>
+                    <div class="bg-timeline-title">47 creators, 128 deals closed</div>
+                    <p class="bg-timeline-desc">Still hands-on with every single one of them.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="bg-connector" data-bg-connector="1">
+          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-2/700/1400" alt="" loading="lazy">
+          <div class="bg-connector-fade" aria-hidden="true"></div>
+          <span class="bg-connector-caption">Where We Are Now</span>
+        </div>
+
+        <!-- PANEL 3 — ABOUT US -->
+        <section class="bg-panel" data-bg-panel="2">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">About Us</div>
+              <h2 class="bg-headline">Hands-on management, without the corporate feel.</h2>
+              <p class="bg-lede">We handle everything from content strategy and audience growth to contract negotiation and brand matchmaking — so our talent can spend their time making things people actually want to watch, not managing spreadsheets.</p>
+              <p class="bg-lede">Every creator on our roster gets a strategy built around their actual audience, not a template pulled from someone else's playbook.</p>
+              <div class="about-stats-bar" style="margin-top:34px;">
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="47">0</span>
+                  <span class="lbl">Creators repped</span>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M7.8 8.2a6 6 0 0 0 0 7.6M16.2 8.2a6 6 0 0 1 0 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.6 4.8a11 11 0 0 0 0 14.4M19.4 4.8a11 11 0 0 1 0 14.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="310000000" data-suffix="+">0</span>
+                  <span class="lbl">Combined reach</span>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="128">0</span>
+                  <span class="lbl">Brand deals closed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="bg-connector" data-bg-connector="2">
+          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-3/700/1400" alt="" loading="lazy">
+          <div class="bg-connector-fade" aria-hidden="true"></div>
+          <span class="bg-connector-caption">Who's Behind It</span>
+        </div>
+
+        <!-- PANEL 4 — FOUNDERS (placeholder names/titles/bios/photos) -->
+        <section class="bg-panel" data-bg-panel="3">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">The Founders</div>
+              <h2 class="bg-headline">Three friends who turned a group chat into a company.</h2>
+              <p class="bg-lede">Placeholder bios below — swap in the real names, titles, and photos whenever you're ready.</p>
+              <div class="bg-founders">
+                <div class="bg-founder-card">
+                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-jordan/500/625" alt="Jordan Reyes" loading="lazy">
+                  <div class="bg-founder-body">
+                    <div class="bg-founder-name">Jordan Reyes</div>
+                    <div class="bg-founder-title">Co-Founder &amp; CEO</div>
+                    <p class="bg-founder-bio">Started BRXDGE by helping friends negotiate their first brand deals. Still reads every contract personally.</p>
+                  </div>
+                </div>
+                <div class="bg-founder-card">
+                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-sam/500/625" alt="Sam Okafor" loading="lazy">
+                  <div class="bg-founder-body">
+                    <div class="bg-founder-name">Sam Okafor</div>
+                    <div class="bg-founder-title">Co-Founder &amp; Head of Talent</div>
+                    <p class="bg-founder-bio">Builds every creator's growth strategy from scratch — no templates, no shortcuts.</p>
+                  </div>
+                </div>
+                <div class="bg-founder-card">
+                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-priya/500/625" alt="Priya Shah" loading="lazy">
+                  <div class="bg-founder-body">
+                    <div class="bg-founder-name">Priya Shah</div>
+                    <div class="bg-founder-title">Co-Founder &amp; Head of Brand Partnerships</div>
+                    <p class="bg-founder-bio">Turns cold brand outreach into long-term partners who keep coming back.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-scrollcue" id="bgScrollCue" aria-hidden="true">
+    <span>Scroll to explore</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div>
 </div>
 
