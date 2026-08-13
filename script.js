@@ -1877,7 +1877,10 @@ function refreshCastButtons(){
     btn.classList.toggle('added', inCast);
     btn.setAttribute('aria-pressed', inCast);
     const label = btn.querySelector('span');
-    if(label) label.textContent = inCast ? 'Added' : 'Add to Campaign';
+    // Most cast-toggle buttons (talent cards) read "Add to Campaign"; the
+    // media kit's version reads "Add to Cast" instead (data-cast-label-off)
+    // — both fall back to these defaults if unset.
+    if(label) label.textContent = inCast ? (btn.dataset.castLabelOn || 'Added') : (btn.dataset.castLabelOff || 'Add to Campaign');
   });
 }
 
@@ -2377,24 +2380,10 @@ function openMediakit(id, opts){
       </div>
       <div class="mk-cta-row">
         <button class="btn btn-primary mk-cta" data-open-contact>Get in Touch</button>
-        <div class="nav-talents-wrap mk-talents-wrap" id="mkTalentsWrap">
-          <button type="button" class="nav-talents-btn" id="mkTalentsBtn" aria-haspopup="true" aria-expanded="false">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="nav-talents-label">Talents</span>
-            <span class="nav-talents-count" id="mkTalentsCount">0</span>
-          </button>
-          <div class="nav-talents-dropdown" id="mkTalentsDropdown">
-            <div class="nav-talents-dropdown-head">
-              <span>Your Cast</span>
-              <button type="button" class="nav-talents-clear" id="mkTalentsClear">Clear</button>
-            </div>
-            <div class="nav-talents-list" id="mkTalentsList"></div>
-            <button type="button" class="btn btn-primary nav-talents-send" id="mkTalentsSend">
-              Build Campaign Request
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-        </div>
+        <button type="button" class="mk-addcast${castIds.includes(t.id) ? ' added' : ''}" id="mkAddCastBtn" data-cast-toggle="${t.id}" data-cast-label-off="Add to Cast" aria-pressed="${castIds.includes(t.id)}">
+          ${castCheckSvg}${castPlusSvg}
+          <span>${castIds.includes(t.id) ? 'Added' : 'Add to Cast'}</span>
+        </button>
       </div>
     </div>
     <div class="mk-main">
@@ -2512,11 +2501,13 @@ function openMediakit(id, opts){
   const qrBtn = content.querySelector('[data-show-qr]');
   if(qrBtn) qrBtn.addEventListener('click', () => openQrModal(t.name, shareUrl));
 
-  // Cast widget beside "Get in Touch" — this markup is rebuilt from
-  // scratch every time (see #mkTalentsWrap in the template above), so it's
-  // re-registered under the same 'mediakit' key each visit rather than
-  // accumulating a fresh entry in castWidgets per profile viewed.
-  setupCastWidget('mediakit', { wrapId: 'mkTalentsWrap', btnId: 'mkTalentsBtn', dropdownId: 'mkTalentsDropdown', countId: 'mkTalentsCount', listId: 'mkTalentsList', clearId: 'mkTalentsClear', sendId: 'mkTalentsSend' });
+  // "Add to Cast" toggle beside "Get in Touch" — same castIds toggle used
+  // by every talent card's "Add to Campaign" button (data-cast-toggle),
+  // just re-labeled for this context via data-cast-label-off (see
+  // refreshCastButtons()). Initial .added state is set directly in the
+  // template above; this only needs to wire the click.
+  const mkAddCastBtn = content.querySelector('[data-cast-toggle]');
+  if(mkAddCastBtn) mkAddCastBtn.addEventListener('click', () => toggleCast(mkAddCastBtn.dataset.castToggle));
 }
 
 // The full, shareable URL for a talent's media kit (matches the ?talent=
