@@ -4888,7 +4888,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 .nav-talents-clear:hover{ color: var(--text); }
 .nav-talents-list{
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -4911,25 +4911,77 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .nav-talents-dropdown{ right: -8px; }
 }
 
-/* Removable talent chips inside the Campaign Brief modal */
+/* Removable talent rows — shared by the top-nav "Your Cast" dropdown and
+   the Campaign Request modal's "Selected Talent" recap, via renderCastRows()
+   in script.js. Each row shows a photo + name (click -> view profile) +
+   niche/reach, so both the manager can recognize who's in the request
+   without re-opening every profile, matching the "build a cast, review it,
+   then submit" flow. */
 .cast-brief-list{
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   margin: 4px 0 20px;
 }
 .cast-brief-list:empty{ display: none; }
-.cast-brief-chip{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px 6px 14px;
-  border-radius: 100px;
-  background: var(--avatar-bg);
+.cast-brief-list:empty::after{
+  content: 'No talent added yet — browse the roster and use "Add to Campaign".';
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  color: var(--muted);
 }
+
+.cast-brief-section-label{
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 8px;
+}
+
+.cast-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--avatar-bg);
+}
+.cast-row-avatar{
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--panel-line);
+}
+.cast-row-info{
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.cast-row-name{
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cast-row-name:hover{ color: var(--coral); text-decoration: underline; }
+.cast-row-meta{ font-size: 11.5px; color: var(--muted); }
+
 .cast-brief-remove{
   display: inline-flex;
   align-items: center;
@@ -4943,5 +4995,32 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .cast-brief-remove:hover{ background: var(--coral); color: #fff; }
+
+/* Two-column field pairs used inside the Campaign Request modal (Your
+   Name/Email, Budget/Timeline) — stacks to one column on narrow screens. */
+.field-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 520px){
+  .field-row{ grid-template-columns: 1fr; }
+}
+.field-optional{
+  font-weight: 400;
+  color: var(--muted);
+  opacity: 0.8;
+  font-size: 0.92em;
+}
+
+/* Campaign Type / Deliverables pill groups reuse the contact form's
+   .inquiry-toggle/.inquiry-pill look for visual consistency. Campaign Type
+   behaves as a single-select (radio-like); Deliverables allows multiple
+   active pills at once — both just toggle .active via JS. */
+#briefCampaignTypePills,
+#briefDeliverablesPills{ margin-top: 2px; }
+#briefCampaignTypePills .inquiry-pill,
+#briefDeliverablesPills .inquiry-pill{ font-size: 12.5px; padding: 8px 14px; }
