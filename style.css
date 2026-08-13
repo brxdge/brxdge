@@ -4487,110 +4487,176 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* =========================================================
-   CAMPAIGNS — "Brand × Creator" proof grid (in-page section).
-   Same card-grid shape as .blog-grid, styled distinctly so it reads as
-   its own section rather than a repeat of the case studies above.
+   CAMPAIGNS — big featured showcase (one per row, alternating image
+   side). NOTE: this replaced an earlier small-grid-card version of
+   this section (auto-fill minmax(300px,1fr) cards) — if this section
+   ever looks like small uniform cards again instead of full-width
+   alternating rows, this block was reverted/overwritten by mistake;
+   this comment is here so that's obvious at a glance next time.
+   Uses the same color tokens, radius, and stat-number treatment
+   already established elsewhere on the site (--panel/--panel-line/
+   --coral/--muted, var(--radius-lg), and the Space Mono stat-number
+   pattern from .about-stats-bar) so this matches the rest of the
+   page rather than introducing a new visual style.
 ========================================================= */
 .campaigns-grid{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 28px;
-  margin-top: 12px;
-}
-.campaign-card{
-  background: var(--panel);
-  border: 1px solid var(--panel-line);
-  border-radius: var(--radius-lg, 28px);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+  gap: 40px;
+  margin-top: 48px;
+}
+
+.campaign-card{
+  display: grid;
+  grid-template-columns: 44% 1fr;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .campaign-card:hover{
   transform: translateY(-4px);
-  box-shadow: 0 16px 34px rgba(0,0,0,0.12);
+  border-color: var(--coral);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.12);
 }
+/* Alternate the image side every other card for an editorial feel. Uses
+   Grid placement (not flex row-reverse) because <img> elements don't
+   reliably stretch to fill a flex row's height across browsers — Grid
+   items fill their cell by default, so the image and text column end up
+   the same height with no extra rules needed. */
+.campaign-card:nth-child(even){
+  grid-template-columns: 1fr 44%;
+}
+.campaign-card:nth-child(even) .campaign-card-cover{
+  grid-column: 2;
+  grid-row: 1;
+}
+.campaign-card:nth-child(even) .campaign-card-body{
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .campaign-card-cover{
+  grid-column: 1;
+  grid-row: 1;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   object-fit: cover;
   display: block;
-  background: var(--avatar-bg);
+  min-height: 340px;
 }
+
 .campaign-card-body{
-  padding: 20px 22px 24px;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  padding: 44px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  justify-content: center;
 }
+
 .campaign-card-head{
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .campaign-card-logo{
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   object-fit: cover;
-  background: var(--avatar-bg);
+  border: 1px solid var(--panel-line);
   flex-shrink: 0;
 }
 .campaign-card-brand{
-  font-size: 17px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(20px, 2vw, 26px);
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--text);
 }
+
 .campaign-card-objective{
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 1.65;
   color: var(--muted);
-  line-height: 1.55;
+  margin: 0;
 }
+
 .campaign-card-deliverables{
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 .campaign-deliverable-tag{
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: var(--avatar-bg);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-line);
   color: var(--text);
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  max-width: 100%;
-  line-height: 1.4;
+  background: rgba(0,0,0,0.02);
 }
+
 .campaign-card-stats{
   display: flex;
-  gap: 18px;
-  padding-top: 8px;
-  border-top: 1px solid var(--panel-line);
+  gap: 32px;
+  margin-top: 6px;
 }
 .campaign-stat-chip{
-  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 .campaign-stat-chip b{
-  display: block;
-  font-size: 17px;
-  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(24px, 2.2vw, 30px);
   font-weight: 700;
+  color: var(--coral);
+  line-height: 1;
 }
-.campaign-card-results{
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--text);
-}
-.campaigns-empty{ color: var(--muted); font-size: 14.5px; text-align: center; padding: 40px 0; grid-column: 1 / -1; }
 
-@media (max-width: 640px){
-  .campaigns-grid{ grid-template-columns: 1fr; gap: 20px; }
+.campaign-card-results{
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  padding-top: 14px;
+  border-top: 1px solid var(--panel-line);
+  margin: 4px 0 0;
+}
+
+.campaigns-empty{ color: var(--muted); font-size: 14.5px; text-align: center; padding: 40px 0; }
+
+@media (max-width: 860px){
+  .campaign-card,
+  .campaign-card:nth-child(even){
+    grid-template-columns: 1fr;
+  }
+  .campaign-card-cover,
+  .campaign-card:nth-child(even) .campaign-card-cover{
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: auto;
+    min-height: 220px;
+  }
+  .campaign-card-body,
+  .campaign-card:nth-child(even) .campaign-card-body{
+    grid-column: 1;
+    grid-row: 2;
+    padding: 26px;
+  }
+  .campaign-card-stats{
+    gap: 24px;
+  }
 }
 
 /* =========================================================
