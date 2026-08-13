@@ -3272,7 +3272,10 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* ---------- TALENT ROSTER FULL-PAGE OVERLAY (opened from "View All Talent") ---------- */
-.talent-roster-overlay .wrap{ max-width: 1720px; padding: 0 32px 80px; }
+/* Top padding reserves room for .mk-back + .tr-talents-wrap, both fixed at
+   the same top:22px row (see "FULL TALENT ROSTER — header breathing room"
+   below) — content starts clear of that row instead of running under it. */
+.talent-roster-overlay .wrap{ max-width: 1720px; padding: 108px 32px 80px; }
 .tr-header{
   text-align: center;
   margin: 0 0 26px;
@@ -4025,21 +4028,17 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* =========================================================
-   FULL TALENT ROSTER — header breathing room
-   The title was sitting right on top of the back button, cramped
-   against the top edge. Push it down further and let it read as
-   a real page title instead of a compact label.
+   FULL TALENT ROSTER — back button + cast pill share one row
+   .mk-back ("Back to Roster") used to be pulled out of its default fixed
+   positioning into normal document flow here, so it wouldn't overlap the
+   title — but that also put it out of step with the "Talents (N)" pill
+   (.tr-talents-wrap), which floats fixed top-right: one button pinned to
+   the viewport, the other scrolling away with the page, sitting at a
+   different height than its counterpart. Left as fixed (its default —
+   see .mk-back), it now mirrors the Talents pill exactly, same row, same
+   top offset, opposite corners. The title clears both via .wrap's own
+   top padding instead (see ".talent-roster-overlay .wrap" above).
 ========================================================= */
-/* .mk-back is position:fixed by default (meant for the single-talent
-   media kit's full-bleed hero, where the button needs to float over
-   the photo while you scroll). That fixed positioning was leaking into
-   this page too, pinning the button over the grid as you scrolled past
-   it. Put it back in normal flow here so it scrolls away with the
-   header like any other in-page button. */
-.talent-roster-overlay .mk-back{
-  position: static;
-  margin: 120px 0 30px;
-}
 .talent-roster-overlay .tr-header{
   margin: 40px 0 48px;
 }
@@ -4051,7 +4050,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 @media (max-width: 680px){
-  .talent-roster-overlay .mk-back{ margin: 90px 0 24px; }
+  .talent-roster-overlay .wrap{ padding-top: 80px; }
   .talent-roster-overlay .tr-header{ margin: 24px 0 36px; }
   .tr-header .featured-italic,
   .tr-header .profiles-bold{ font-size: clamp(32px, 9vw, 48px); }
@@ -5077,6 +5076,9 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   z-index: 260;
 }
 .tr-talents-wrap .nav-talents-dropdown{ right: 0; }
-@media (max-width: 640px){
+/* Same breakpoint as .mk-back's mobile override (max-width:480px, see
+   above) so both pills in this row shrink together instead of one
+   changing size a viewport width before the other. */
+@media (max-width: 480px){
   .tr-talents-wrap{ top: 14px; right: 14px; }
 }
