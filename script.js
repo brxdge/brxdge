@@ -1318,6 +1318,166 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && talentRosterOverlay.classList.contains('show')) closeTalentRosterOverlay();
 });
 
+/* ---------------- COMPANY BACKGROUND (horizontal-scroll story) ----------------
+   Opened from the About section's "See Our Background" button. On wide
+   viewports (matching CSS's 900px fallback breakpoint) scrolling the
+   overlay drives .bg-track's translateX instead of the overlay scrolling
+   vertically — see the big comment above ".background-overlay" in
+   style.css for the full mechanics this is implementing. Below 900px the
+   engine never starts and the CSS fallback (plain vertical stack) is all
+   that's needed, so this only has to know how to turn itself on and off. */
+const backgroundOverlay = document.getElementById('backgroundOverlay');
+const bgScrollPad = document.getElementById('bgScrollPad');
+const bgTrack = document.getElementById('bgTrack');
+const bgScrollCue = document.getElementById('bgScrollCue');
+const bgProgressDots = Array.from(document.querySelectorAll('[data-bg-dot]'));
+const BG_DESKTOP_QUERY = '(min-width: 900px)';
+
+let bgEngineActive = false;
+let bgRafId = null;
+let bgMobileObserver = null;
+// Left-edge offset (px) of each of the 4 main panels within the track,
+// recomputed on every measure — lets a progress-dot click jump straight to
+// that panel instead of the dots only ever reflecting scroll passively.
+let bgPanelOffsets = [0, 0, 0, 0];
+
+function bgMeasure(){
+  if(!bgTrack || !bgScrollPad) return 0;
+  const maxTranslate = Math.max(0, bgTrack.scrollWidth - window.innerWidth);
+  bgScrollPad.style.height = (window.innerHeight + maxTranslate) + 'px';
+  bgPanelOffsets = Array.from(document.querySelectorAll('[data-bg-panel]')).map(el => el.offsetLeft);
+  return maxTranslate;
+}
+
+function bgUpdate(){
+  bgRafId = null;
+  if(!bgEngineActive || !backgroundOverlay.classList.contains('show')) return;
+  const maxTranslate = Math.max(0, bgTrack.scrollWidth - window.innerWidth);
+  const padRect = bgScrollPad.getBoundingClientRect();
+  const scrolled = Math.min(Math.max(-padRect.top, 0), maxTranslate);
+  bgTrack.style.transform = `translateX(-${scrolled}px)`;
+
+  // Reveal panels/connectors once they've actually scrolled into view —
+  // checked against real rendered position (post-transform) rather than a
+  // fixed scroll-progress number, so it stays correct no matter how wide
+  // any individual panel or connector ends up being.
+  document.querySelectorAll('.bg-panel, .bg-connector').forEach(el => {
+    const r = el.getBoundingClientRect();
+    const visible = r.right > window.innerWidth * 0.15 && r.left < window.innerWidth * 0.85;
+    el.classList.toggle('in-view', visible);
+  });
+
+  // Progress dots — active = the last main panel whose offset the current
+  // scroll position has already reached (with a little lead-in so a dot
+  // lights up just before its panel is fully centered, not only after).
+  let activeIdx = 0;
+  for(let i = 0; i < bgPanelOffsets.length; i++){
+    if(scrolled >= bgPanelOffsets[i] - window.innerWidth * 0.3) activeIdx = i;
+  }
+  bgProgressDots.forEach((dot, i) => dot.classList.toggle('active', i === activeIdx));
+
+  if(bgScrollCue) bgScrollCue.classList.toggle('hide', scrolled > 40);
+}
+
+function bgOnScroll(){
+  if(bgRafId) return;
+  bgRafId = requestAnimationFrame(bgUpdate);
+}
+
+function bgStartEngine(){
+  if(bgEngineActive) return;
+  bgEngineActive = true;
+  bgMeasure();
+  backgroundOverlay.addEventListener('scroll', bgOnScroll, { passive: true });
+  bgOnScroll();
+}
+
+function bgStopEngine(){
+  if(!bgEngineActive) return;
+  bgEngineActive = false;
+  backgroundOverlay.removeEventListener('scroll', bgOnScroll);
+  if(bgRafId){ cancelAnimationFrame(bgRafId); bgRafId = null; }
+  if(bgTrack) bgTrack.style.transform = '';
+  if(bgScrollPad) bgScrollPad.style.height = '';
+}
+
+// Mobile/narrow fallback — CSS already stacks everything vertically; this
+// just re-arms the same fade-up entrance treatment via IntersectionObserver
+// instead of the desktop engine's scroll-progress checks.
+function bgStartMobileReveal(){
+  if(bgMobileObserver) return;
+  const targets = document.querySelectorAll('.bg-panel-content, .bg-connector');
+  targets.forEach(el => el.classList.add('bg-mobile-pending'));
+  bgMobileObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(!entry.isIntersecting) return;
+      entry.target.classList.remove('bg-mobile-pending');
+      entry.target.classList.add('in-view');
+      bgMobileObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.2 });
+  targets.forEach(el => bgMobileObserver.observe(el));
+}
+
+function bgStopMobileReveal(){
+  if(!bgMobileObserver) return;
+  bgMobileObserver.disconnect();
+  bgMobileObserver = null;
+  document.querySelectorAll('.bg-mobile-pending').forEach(el => el.classList.remove('bg-mobile-pending'));
+}
+
+function bgSyncEngineForViewport(){
+  if(!backgroundOverlay.classList.contains('show')) return;
+  if(window.matchMedia(BG_DESKTOP_QUERY).matches){
+    bgStopMobileReveal();
+    bgStartEngine();
+  } else {
+    bgStopEngine();
+    bgStartMobileReveal();
+  }
+}
+
+function openBackground(){
+  backgroundOverlay.classList.add('show');
+  backgroundOverlay.scrollTop = 0;
+  setBodyScrollLocked('hidden');
+  bgProgressDots.forEach((dot, i) => dot.classList.toggle('active', i === 0));
+  if(bgScrollCue) bgScrollCue.classList.remove('hide');
+  // Layout needs a frame to settle (overlay just went from display:none to
+  // block) before measuring widths, or bgMeasure() would read stale/zero sizes.
+  requestAnimationFrame(() => requestAnimationFrame(bgSyncEngineForViewport));
+}
+
+function closeBackground(){
+  backgroundOverlay.classList.remove('show');
+  bgStopEngine();
+  bgStopMobileReveal();
+  setBodyScrollLocked((mediakitOverlay && mediakitOverlay.classList.contains('show')) || (talentRosterOverlay && talentRosterOverlay.classList.contains('show')) ? 'hidden' : '');
+}
+
+const viewBackgroundBtn = document.getElementById('viewBackgroundBtn');
+if(viewBackgroundBtn) viewBackgroundBtn.addEventListener('click', openBackground);
+
+const bgBackBtn = document.getElementById('bgBack');
+if(bgBackBtn) bgBackBtn.addEventListener('click', closeBackground);
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && backgroundOverlay && backgroundOverlay.classList.contains('show')) closeBackground();
+});
+
+bgProgressDots.forEach((dot, i) => {
+  dot.addEventListener('click', () => {
+    if(!bgEngineActive) return;
+    backgroundOverlay.scrollTo({ top: bgPanelOffsets[i] || 0, behavior: 'smooth' });
+  });
+});
+
+window.addEventListener('resize', () => {
+  if(!backgroundOverlay.classList.contains('show')) return;
+  bgSyncEngineForViewport();
+  if(bgEngineActive) bgMeasure();
+});
+
 // Gender chips inside the overlay (All / Female / Male / ...), built from
 // whatever genders actually exist on the roster, so switching between them
 // never has to leave the full-page view.
