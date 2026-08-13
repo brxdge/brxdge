@@ -5027,10 +5027,13 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 
 /* CAST WIDGET — additional placements. The trigger + dropdown markup and
    base look are shared with the top-nav version (.nav-talents-* classes,
-   see the "NAV TALENTS" block above); these just adjust positioning for
-   the two extra contexts. */
+   see the "NAV TALENTS" block above); the roster overlay's floating icon
+   just adjusts positioning for that context. */
 
-/* Media kit — sits inline next to "Get in Touch", centered as one row. */
+/* Media kit — "Add to Cast" toggle sits inline next to "Get in Touch",
+   centered as one row. Same add/remove behavior as a talent card's
+   .tcf-addcast (data-cast-toggle, shared castIds state), just sized and
+   labeled to match this context instead of the dense card-footer pill. */
 .mk-cta-row{
   display: flex;
   align-items: center;
@@ -5038,12 +5041,30 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   gap: 10px;
   flex-wrap: wrap;
 }
-.mk-cta-row .mk-talents-wrap .nav-talents-dropdown{ right: 0; }
+.mk-addcast{
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--panel-line);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 100px;
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.mk-addcast:hover{ border-color: var(--coral); color: var(--coral); }
+.mk-addcast .cast-icon-check{ display: none; }
+.mk-addcast.added{ background: var(--coral); border-color: var(--coral); color: #fff; }
+.mk-addcast.added:hover{ color: #fff; opacity: 0.9; }
+.mk-addcast.added .cast-icon-plus{ display: none; }
+.mk-addcast.added .cast-icon-check{ display: inline-flex; }
 @media (max-width: 480px){
   .mk-cta-row{ flex-direction: column; width: 100%; }
-  .mk-cta-row .mk-cta{ width: 100%; justify-content: center; }
-  .mk-cta-row .mk-talents-wrap.show{ width: 100%; }
-  .mk-cta-row .mk-talents-wrap.show .nav-talents-btn{ width: 100%; justify-content: center; }
+  .mk-cta-row .mk-cta,
+  .mk-cta-row .mk-addcast{ width: 100%; justify-content: center; }
 }
 
 /* Full talent-roster overlay — floats fixed top-right (mirrors .mk-back's
