@@ -563,6 +563,20 @@ function escapeHtml(str){
   return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Locks/unlocks background scroll behind full-screen overlays (media kit,
+// full talent roster, campaign brief, contact popup, etc). Setting
+// overflow:hidden on <body> alone looked right but didn't actually stop
+// the page from scrolling: in standards mode the document's own scrollbar
+// belongs to <html> (document.documentElement), not <body>, since neither
+// has an explicit height — so the underlying page kept its own working
+// scrollbar right alongside the overlay's, which is what showed up as "two
+// scrollbars" when opening the full roster or a media kit. Both elements
+// need to be locked together for the background to actually stop scrolling.
+function setBodyScrollLocked(value){
+  document.documentElement.style.overflow = value;
+  document.body.style.overflow = value;
+}
+
 // Social profile links and post links are also admin-entered free text, and
 // they end up inside an href rather than as page text — escapeHtml alone
 // stops someone breaking out of the attribute, but it wouldn't stop the
@@ -1288,7 +1302,7 @@ function openTalentRosterOverlay(gender){
   talentRosterOverlay.classList.add('show');
   talentRosterOverlay.classList.remove('tr-in'); // restart entrance choreography each time it opens
   talentRosterOverlay.scrollTop = 0;
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     talentRosterOverlay.classList.add('tr-in');
   }));
@@ -1296,7 +1310,7 @@ function openTalentRosterOverlay(gender){
 
 function closeTalentRosterOverlay(){
   talentRosterOverlay.classList.remove('show');
-  document.body.style.overflow = mediakitOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 document.getElementById('trBack').addEventListener('click', closeTalentRosterOverlay);
@@ -1585,7 +1599,7 @@ document.getElementById('mkBack').addEventListener('click', closeMediakit);
 
 function closeMediakit(opts){
   mediakitOverlay.classList.remove('show');
-  document.body.style.overflow = talentRosterOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(talentRosterOverlay.classList.contains('show') ? 'hidden' : '');
   // Re-enable the roster overlay's own scroll now that the media kit
   // covering it is gone — see the matching suspend in openMediakit().
   talentRosterOverlay.style.overflow = '';
@@ -1719,7 +1733,7 @@ async function openBlogPost(postSummary, opts){
     overlay.classList.add('show');
     overlay.scrollTop = 0;
   }
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
 }
 
 function renderBlogPostContent(post){
@@ -1771,7 +1785,7 @@ function renderBlogPostContent(post){
 function closeBlogPost(opts){
   const overlay = document.getElementById('blogOverlay');
   if(overlay) overlay.classList.remove('show');
-  document.body.style.overflow = (mediakitOverlay && mediakitOverlay.classList.contains('show')) || (talentRosterOverlay && talentRosterOverlay.classList.contains('show')) ? 'hidden' : '';
+  setBodyScrollLocked((mediakitOverlay && mediakitOverlay.classList.contains('show')) || (talentRosterOverlay && talentRosterOverlay.classList.contains('show')) ? 'hidden' : '');
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
@@ -2428,7 +2442,7 @@ function openMediakit(id, opts){
   `;
   mediakitOverlay.classList.add('show');
   mediakitOverlay.scrollTop = 0;
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
   // openMediakit() can be triggered from inside the "View All Talent"
   // roster overlay (clicking a card there) — that overlay is deliberately
   // left .show'd underneath so "Back to Roster" doesn't need to re-render
@@ -2553,13 +2567,13 @@ document.addEventListener('keydown', (e) => {
 function openVideoModal(embedUrl){
   videoModalFrame.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   videoModal.classList.add('show');
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
 }
 
 function closeVideoModal(){
   videoModal.classList.remove('show');
   videoModalFrame.innerHTML = ''; // stop playback
-  document.body.style.overflow = mediakitOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 /* ---------------- QR SHARE MODAL ---------------- */
@@ -2579,12 +2593,12 @@ function openQrModal(name, url){
   qrModalUrl.textContent = url;
   qrModalImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=12&data=${encodeURIComponent(url)}`;
   qrModal.classList.add('show');
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
 }
 
 function closeQrModal(){
   qrModal.classList.remove('show');
-  document.body.style.overflow = mediakitOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 /* ---------------- STATISTICS MODAL (TikTok / YouTube performance numbers) ---------------- */
@@ -2620,12 +2634,12 @@ function openStatsModal(t, social){
   `).join('');
 
   statsModal.classList.add('show');
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
 }
 
 function closeStatsModal(){
   statsModal.classList.remove('show');
-  document.body.style.overflow = mediakitOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 /* ---------------- GALLERY LIGHTBOX (enlarged photo viewer) ---------------- */
@@ -2760,7 +2774,7 @@ function openGalleryLightbox(talent, startIndex){
 
   updateGalleryStage();
   galleryLightbox.classList.add('show');
-  document.body.style.overflow = 'hidden';
+  setBodyScrollLocked('hidden');
 }
 
 function setGalleryIndex(i){
@@ -2782,7 +2796,7 @@ function updateGalleryStage(){
 function closeGalleryLightbox(){
   galleryLightbox.classList.remove('show');
   // Keep scroll locked if the media kit is still open behind the lightbox
-  document.body.style.overflow = mediakitOverlay.classList.contains('show') ? 'hidden' : '';
+  setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 document.addEventListener('keydown', (e) => {
