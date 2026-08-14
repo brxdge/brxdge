@@ -2485,6 +2485,35 @@ mediakitOverlay.addEventListener('scroll', () => {
   });
 });
 
+// ---------------- MEDIA KIT: ICON SET ----------------
+// Small inline-SVG line icons for the Snapshot / Audience / Booking
+// sections — stroke-based like the share/theme-toggle icons already used
+// elsewhere in the media kit, so the new iconography reads as native to
+// the site instead of a bolted-on icon library.
+const MK_ICONS = {
+  niche: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12.59 2.59a2 2 0 0 0-1.42-.59H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l9 9a2 2 0 0 0 2.82 0l7.17-7.17a2 2 0 0 0 0-2.82l-9-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor"/></svg>',
+  platforms: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>',
+  audience: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 8.5a3 3 0 1 1 0-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 14c2.8.3 5 2.8 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  content: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 9.5h5M2.5 14.5h5M16 9.5h5M16 14.5h5" stroke="currentColor" stroke-width="1.8"/></svg>',
+  gender: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 8.5a3 3 0 1 1 0-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 14c2.8.3 5 2.8 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  age: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  locations: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>',
+  interests: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  megaphone: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 11v2a2 2 0 0 0 2 2h1l1 5h2l-1-5h2l7 4V6l-7 4H6a2 2 0 0 0-2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  target: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>',
+  calendar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+// Available-For group names are a fixed taxonomy (talent-wizard.js's
+// AVAILABLE_FOR_GROUPS), so they can be mapped to specific icons; any
+// custom/overflow group ("Also Available For") falls back to a plain plus.
+const MK_BOOKING_GROUP_ICONS = {
+  'Sponsored Content': MK_ICONS.megaphone,
+  'Campaigns': MK_ICONS.target,
+  'Events': MK_ICONS.calendar,
+};
+
 // ---------------- MEDIA KIT: CREATOR SNAPSHOT ----------------
 // "Immediately below the hero" at-a-glance card — lets a brand manager
 // tell in a few seconds whether this creator fits their campaign, without
@@ -2499,10 +2528,10 @@ function renderSnapshotSection(t){
   const audienceChips = [t.audienceAgeRange, t.location, t.gender].filter(Boolean);
   const contentChips = t.contentFormats || [];
   const cols = [
-    { label: 'Niche', items: niches },
-    { label: 'Platforms', items: platforms },
-    { label: 'Audience', items: audienceChips },
-    { label: 'Content', items: contentChips },
+    { label: 'Niche', icon: MK_ICONS.niche, items: niches },
+    { label: 'Platforms', icon: MK_ICONS.platforms, items: platforms },
+    { label: 'Audience', icon: MK_ICONS.audience, items: audienceChips },
+    { label: 'Content', icon: MK_ICONS.content, items: contentChips },
   ].filter(c => c.items.length);
   if(!cols.length) return '';
   return `
@@ -2512,7 +2541,7 @@ function renderSnapshotSection(t){
       <div class="mk-snap-grid">
         ${cols.map(c => `
           <div class="mk-snap-col">
-            <span class="mk-snap-label">${escapeHtml(c.label)}</span>
+            <span class="mk-snap-label">${c.icon}${escapeHtml(c.label)}</span>
             <div class="mk-snap-chips">${c.items.map(i => `<span class="mk-snap-chip">${escapeHtml(i)}</span>`).join('')}</div>
           </div>
         `).join('')}
@@ -2538,6 +2567,13 @@ function mkBarRow(label, pct){
   `;
 }
 
+// Renders each populated data block (gender / age / locations / interests)
+// as its own icon-labeled block, stacked vertically. Previously gender+age
+// sat in an internal 2-col grid with locations/interests as separate
+// full-width sections below — that only worked when the whole Audience
+// section had the full page width to itself. Now that it lives in one half
+// of the Snapshot+Audience two-column row, a single vertical stack reads
+// far cleaner at that narrower width.
 function renderAudienceSection(t){
   const male = Number(t.audienceGenderMale) || 0;
   const female = Number(t.audienceGenderFemale) || 0;
@@ -2548,40 +2584,52 @@ function renderAudienceSection(t){
   if(!hasGender && !ageRows.length && !locRows.length && !interestRows.length) return '';
 
   const genderTotal = male + female;
+  const blocks = [];
+  if(hasGender){
+    blocks.push(`
+      <div class="mk-aud-block">
+        <span class="mk-aud-block-label">${MK_ICONS.gender}Gender</span>
+        <div class="mk-gender-stat-row">
+          ${male ? `<div class="mk-gender-stat"><span class="mk-gender-stat-num">${escapeHtml(String(t.audienceGenderMale))}<i>%</i></span><span class="mk-gender-stat-lbl"><i class="mk-gender-dot mk-gender-dot--male"></i>Male</span></div>` : ''}
+          ${female ? `<div class="mk-gender-stat"><span class="mk-gender-stat-num">${escapeHtml(String(t.audienceGenderFemale))}<i>%</i></span><span class="mk-gender-stat-lbl"><i class="mk-gender-dot mk-gender-dot--female"></i>Female</span></div>` : ''}
+        </div>
+        <div class="mk-gender-split">
+          ${male ? `<div class="mk-gender-seg mk-gender-male" style="width:${genderTotal ? (male / genderTotal * 100) : 50}%"></div>` : ''}
+          ${female ? `<div class="mk-gender-seg mk-gender-female" style="width:${genderTotal ? (female / genderTotal * 100) : 50}%"></div>` : ''}
+        </div>
+      </div>
+    `);
+  }
+  if(ageRows.length){
+    blocks.push(`<div class="mk-aud-block"><span class="mk-aud-block-label">${MK_ICONS.age}Age</span>${ageRows.map(r => mkBarRow(r.range, r.pct)).join('')}</div>`);
+  }
+  if(locRows.length){
+    blocks.push(`<div class="mk-aud-block"><span class="mk-aud-block-label">${MK_ICONS.locations}Top Locations</span>${locRows.map(r => mkBarRow(r.location, r.pct)).join('')}</div>`);
+  }
+  if(interestRows.length){
+    blocks.push(`<div class="mk-aud-block"><span class="mk-aud-block-label">${MK_ICONS.interests}Top Interests</span>${interestRows.map(r => mkBarRow(r.interest, r.pct)).join('')}</div>`);
+  }
+
   return `
     <div class="mk-audience">
       <div class="mk-section-title">Audience</div>
-      <div class="mk-audience-grid">
-        ${hasGender ? `
-        <div class="mk-aud-block">
-          <span class="mk-aud-block-label">Gender</span>
-          <div class="mk-gender-split">
-            ${male ? `<div class="mk-gender-seg mk-gender-male" style="width:${genderTotal ? (male / genderTotal * 100) : 50}%"></div>` : ''}
-            ${female ? `<div class="mk-gender-seg mk-gender-female" style="width:${genderTotal ? (female / genderTotal * 100) : 50}%"></div>` : ''}
-          </div>
-          <div class="mk-gender-legend">
-            ${male ? `<span><i class="mk-gender-dot mk-gender-dot--male"></i>${escapeHtml(String(t.audienceGenderMale))}% Male</span>` : ''}
-            ${female ? `<span><i class="mk-gender-dot mk-gender-dot--female"></i>${escapeHtml(String(t.audienceGenderFemale))}% Female</span>` : ''}
-          </div>
-        </div>` : ''}
-        ${ageRows.length ? `
-        <div class="mk-aud-block">
-          <span class="mk-aud-block-label">Age</span>
-          ${ageRows.map(r => mkBarRow(r.range, r.pct)).join('')}
-        </div>` : ''}
-      </div>
-      ${locRows.length ? `
-      <div class="mk-aud-block mk-aud-locations">
-        <span class="mk-aud-block-label">Top Locations</span>
-        ${locRows.map(r => mkBarRow(r.location, r.pct)).join('')}
-      </div>` : ''}
-      ${interestRows.length ? `
-      <div class="mk-aud-interests">
-        <div class="mk-section-title">Top Audience Interests</div>
-        ${interestRows.map(r => mkBarRow(r.interest, r.pct)).join('')}
-      </div>` : ''}
+      <div class="mk-audience-blocks">${blocks.join('')}</div>
     </div>
   `;
+}
+
+// Combines Creator Snapshot + Audience Analytics into one two-column row on
+// desktop ("the screenshot section... one side for the Snapshot, and the
+// other one is for Audience") instead of two separately-centered narrow
+// sections stacked on top of each other. Falls back to a single centered
+// column (via .mk-glance-row--single) when only one side has data, and
+// stacks to one column below the tablet breakpoint (see CSS).
+function renderGlanceRow(t){
+  const snapshot = renderSnapshotSection(t);
+  const audience = renderAudienceSection(t);
+  if(!snapshot && !audience) return '';
+  const single = !snapshot || !audience;
+  return `<div class="mk-glance-row${single ? ' mk-glance-row--single' : ''}">${snapshot}${audience}</div>`;
 }
 
 // ---------------- MEDIA KIT: "WHY [NAME]?" ----------------
@@ -2596,6 +2644,7 @@ function renderWhySection(t){
       <div class="mk-why-grid">
         ${cards.map(c => `
           <div class="mk-why-card">
+            <span class="mk-why-badge">${MK_ICONS.check}</span>
             <h4>${escapeHtml(c.title)}</h4>
             ${c.description ? `<p>${escapeHtml(c.description)}</p>` : ''}
           </div>
@@ -2628,6 +2677,7 @@ function renderBookingSection(t){
       <div class="mk-avail-groups">
         ${groups.map(g => `
           <div class="mk-avail-group">
+            <span class="mk-avail-group-icon">${MK_BOOKING_GROUP_ICONS[g.group] || MK_ICONS.plus}</span>
             <span class="mk-avail-group-label">${escapeHtml(g.group)}</span>
             <div class="mk-avail-chips">${g.items.map(i => `<span class="mk-avail-chip">${escapeHtml(i)}</span>`).join('')}</div>
           </div>
@@ -2635,10 +2685,13 @@ function renderBookingSection(t){
       </div>` : ''}
       ${bookingOptions.length ? `
       <div class="mk-booking-options">
-        <span class="mk-avail-group-label">Booking Options</span>
+        <span class="mk-avail-group-label mk-booking-options-label">Booking Options</span>
         <div class="mk-booking-pills">${bookingOptions.map(o => `<span class="mk-booking-pill">${escapeHtml(o)}</span>`).join('')}</div>
       </div>` : ''}
-      <button type="button" class="btn btn-primary mk-pricing-cta" data-open-campaign-pricing>Request Campaign Pricing <span class="arrow">→</span></button>
+      <div class="mk-pricing-callout">
+        <p>Pricing is available on request — every booking starts with a short campaign brief.</p>
+        <button type="button" class="btn btn-primary mk-pricing-cta" data-open-campaign-pricing>Request Campaign Pricing <span class="arrow">→</span></button>
+      </div>
     </div>
   `;
 }
@@ -2797,8 +2850,7 @@ function openMediakit(id, opts){
       </div>
     </div>
     <div class="mk-main">
-      ${renderSnapshotSection(t)}
-      ${renderAudienceSection(t)}
+      ${renderGlanceRow(t)}
 
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
       ${t.location ? `<p class="mk-meta-line"><span class="mk-meta-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
