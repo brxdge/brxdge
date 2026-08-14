@@ -1764,6 +1764,7 @@ function closeMediakit(opts){
   // covering it is gone — see the matching suspend in openMediakit().
   talentRosterOverlay.style.overflow = '';
   stopMediakitLinesParallax();
+  if(mkWhyAutoplayTimer){ clearInterval(mkWhyAutoplayTimer); mkWhyAutoplayTimer = null; }
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
@@ -2699,24 +2700,105 @@ function renderGlanceRow(t){
 
 // ---------------- MEDIA KIT: "WHY [NAME]?" ----------------
 // The sales pitch a brand manager shouldn't have to write themselves.
+// A 2-column auto-playing carousel — one reason (category/title +
+// description) paired with one gallery photo per slide, index-for-index
+// (reason 1 with photo 1, reason 2 with photo 2, ...). No filler: a
+// reason with no matching photo just shows an empty media side rather
+// than a placeholder box, and the whole section renders nothing at all
+// if there are no real reasons to show (same guard as before). See
+// initWhyCarousel() for the crossfade/autoplay wiring.
 function renderWhySection(t){
   const cards = (t.whyCards || []).filter(c => c.title && c.title.trim());
   if(!cards.length) return '';
   const firstName = escapeHtml((t.name || '').split(' ')[0] || 'This Talent');
+  const images = (t.gallery || []).filter(g => (g.mediaType || 'image') !== 'video');
   return `
     <div class="mk-why">
       <div class="mk-section-title">Why ${firstName}?</div>
-      <div class="mk-why-grid">
-        ${cards.map(c => `
-          <div class="mk-why-card">
-            <span class="mk-why-badge">${MK_ICONS.check}</span>
-            <h4>${escapeHtml(c.title)}</h4>
-            ${c.description ? `<p>${escapeHtml(c.description)}</p>` : ''}
-          </div>
-        `).join('')}
+      <div class="mk-why-carousel" id="mkWhyCarousel">
+        <div class="mk-why-slides">
+          ${cards.map((c, i) => `
+            <div class="mk-why-slide${i === 0 ? ' is-active' : ''}" data-why-index="${i}">
+              <div class="mk-why-text">
+                <span class="mk-why-badge">${MK_ICONS.check}</span>
+                <h4>${escapeHtml(c.title)}</h4>
+                ${c.description ? `<p>${escapeHtml(c.description)}</p>` : ''}
+              </div>
+              <div class="mk-why-media">
+                ${images[i] ? `<img src="${escapeHtml(images[i].url)}" alt="${escapeHtml(c.title)}" loading="lazy">` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        ${cards.length > 1 ? `
+        <div class="mk-why-dots">
+          ${cards.map((_, i) => `<button type="button" class="mk-why-dot${i === 0 ? ' active' : ''}" data-why-dot="${i}" aria-label="Show reason ${i + 1} of ${cards.length}"></button>`).join('')}
+        </div>
+        ` : ''}
       </div>
     </div>
   `;
+}
+
+// Crossfade + autoplay for the carousel built by renderWhySection() above.
+// Slides are stacked (position:absolute) and swapped by toggling
+// .is-active, so the fade in/out is a plain CSS opacity transition rather
+// than a JS tween — "fade in, dissolve" happens for free from that
+// transition firing on both the outgoing and incoming slide at once.
+// Autoplay pauses on hover/focus and while the tab is hidden, and is
+// skipped entirely under prefers-reduced-motion (dots still work
+// manually). mkWhyAutoplayTimer/mkWhyVisibilityHandler are module-scoped
+// and explicitly torn down before every re-bind — same reasoning as
+// mkPlatformCarouselResize above: openMediakit() rebuilds #mkContent from
+// scratch per talent, so a naive setInterval here would otherwise keep
+// ticking against removed DOM forever, one extra leaked timer per talent
+// viewed in a session.
+const MK_WHY_AUTOPLAY_MS = 5000;
+let mkWhyAutoplayTimer = null;
+let mkWhyVisibilityHandler = null;
+
+function initWhyCarousel(content){
+  const root = content.querySelector('#mkWhyCarousel');
+  if(!root) return;
+  const slides = Array.from(root.querySelectorAll('.mk-why-slide'));
+  if(!slides.length) return;
+  const dots = Array.from(root.querySelectorAll('.mk-why-dot'));
+  let active = 0;
+
+  function goTo(i){
+    const next = ((i % slides.length) + slides.length) % slides.length;
+    if(next === active) return;
+    slides[active].classList.remove('is-active');
+    slides[next].classList.add('is-active');
+    if(dots[active]) dots[active].classList.remove('active');
+    if(dots[next]) dots[next].classList.add('active');
+    active = next;
+  }
+
+  dots.forEach((d, i) => d.addEventListener('click', () => { goTo(i); resetAutoplay(); }));
+
+  function stopAutoplay(){
+    if(mkWhyAutoplayTimer){ clearInterval(mkWhyAutoplayTimer); mkWhyAutoplayTimer = null; }
+  }
+  function startAutoplay(){
+    stopAutoplay();
+    if(slides.length < 2) return;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if(document.hidden) return;
+    mkWhyAutoplayTimer = setInterval(() => goTo(active + 1), MK_WHY_AUTOPLAY_MS);
+  }
+  function resetAutoplay(){ startAutoplay(); }
+
+  root.addEventListener('mouseenter', stopAutoplay);
+  root.addEventListener('mouseleave', startAutoplay);
+  root.addEventListener('focusin', stopAutoplay);
+  root.addEventListener('focusout', startAutoplay);
+
+  if(mkWhyVisibilityHandler) document.removeEventListener('visibilitychange', mkWhyVisibilityHandler);
+  mkWhyVisibilityHandler = () => { if(document.hidden) stopAutoplay(); else startAutoplay(); };
+  document.addEventListener('visibilitychange', mkWhyVisibilityHandler);
+
+  startAutoplay();
 }
 
 // ---------------- MEDIA KIT: "WHAT THEY CAN BOOK" ----------------
@@ -3169,6 +3251,7 @@ function openMediakit(id, opts){
   });
 
   initPlatformCarousel(content);
+  initWhyCarousel(content);
 
   const contactBtn = content.querySelector('[data-open-contact]');
   if(contactBtn) contactBtn.addEventListener('click', () => openContactModal(t.name));
