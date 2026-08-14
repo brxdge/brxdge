@@ -68,9 +68,14 @@
      add it once there's a real address to put there; a fabricated one
      would do more harm than good. -->
 
+<!-- Was two separate fonts.googleapis.com stylesheet requests (each its own
+     round trip) and only preconnected to fonts.googleapis.com — the actual
+     font FILES load from the separate fonts.gstatic.com origin, which was
+     still paying a full fresh DNS+TCP+TLS handshake with no preconnect.
+     Combined into one stylesheet request and added the missing preconnect. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=4">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
