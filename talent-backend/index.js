@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
@@ -55,6 +56,13 @@ const EMAIL_TO = process.env.EMAIL_TO;
 
 // --- MIDDLEWARE ---
 app.use(cors());
+// Nothing on the wire was being gzipped before this — style.css and
+// script.js alone are several hundred KB of plain text each, and every
+// /api/roster response sends the whole talent roster as uncompressed JSON.
+// Text compresses extremely well (usually 70-80% smaller), so this is the
+// single biggest lever for how long a first visit takes to load. Must sit
+// before any route/static handler so it can compress everything they send.
+app.use(compression());
 app.use(express.json()); // Essential for receiving JSON from your frontend
 
 // --- FILE STORAGE SETUP (uploads still live on disk — only the talent
@@ -203,11 +211,34 @@ app.get('/', (req, res, next) => {
 // Serve the frontend (brxdge.html, style.css, script.js, and the assets/
 // folder with card images) from the project root, one level up from this
 // talent-backend folder.
-app.use(express.static(path.join(__dirname, '..')));
+//
+// Every static asset here was being served with Express's default caching
+// (weak, effectively "ask the server every time"), so a repeat visitor
+// re-downloaded the same ~500KB of CSS/JS on every single page load. Two
+// different policies fixed that:
+//  - HTML files (index.html, admin.html) always revalidate. They're the
+//    entry points that reference every other asset via a `?v=N` query
+//    string bumped on each deploy — if the HTML itself were cached hard,
+//    a redeploy's new script.js?v=7 would never get fetched until that
+//    cached HTML expired. Revalidating is cheap (a 304, not a re-download).
+//  - Everything else (script.js, style.css, images, fonts) is either
+//    version-busted via that same `?v=N` query string or a content-stable
+//    upload, so it's safe to cache hard for a year.
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+const staticCacheHeaders = (res, filePath) => {
+  if (/\.html$/i.test(filePath)) {
+    res.setHeader('Cache-Control', 'no-cache');
+  } else {
+    res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR_SECONDS}, immutable`);
+  }
+};
+app.use(express.static(path.join(__dirname, '..'), { setHeaders: staticCacheHeaders }));
 
 // Serve uploaded images — same directory multer writes to above, so this
-// automatically follows the Volume when one is attached.
-app.use('/uploads', express.static(uploadDir));
+// automatically follows the Volume when one is attached. Filenames are
+// Date.now()-based (see `storage` above), so a given URL's content never
+// changes — safe for the same hard year-long cache as the static assets.
+app.use('/uploads', express.static(uploadDir, { setHeaders: staticCacheHeaders }));
 
 // Image Upload Endpoint — requires a signed-in manager
 app.post('/upload', requireAuth, upload.single('talentImage'), (req, res) => {
