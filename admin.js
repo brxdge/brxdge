@@ -306,280 +306,44 @@ async function deleteTalent(id){
   }
 }
 
+// The old version of this function was a single long flat form built and
+// wired up right here — name, niche, gender, availability, photos, gallery,
+// socials, all in one scroll. It's now a shared, phase-by-phase wizard
+// (talent-wizard.js, loaded by admin.html right before this file) so the
+// admin dashboard and the public site's manager-facing "+ Add Talent"
+// button use the exact same step-by-step form instead of two copies that
+// only covered a subset of what a talent can actually have and would
+// silently drift apart every time one got a field the other didn't.
 function openTalentModal(id){
   const existing = id ? rosterData.find(t => t.id === id) : null;
-  const socials = existing ? (existing.socials || []) : [];
-
-  document.getElementById('talentModal').innerHTML = `
-    <button class="modal-close" data-close>&times;</button>
-    <h3>${existing ? 'Edit Talent' : 'Add Talent'}</h3>
-    <p class="sub">${existing ? existing.name : 'Create a new media kit profile.'}</p>
-    <form id="talentForm">
-      <div class="field-row">
-        <div class="field"><label>Name</label><input type="text" id="tName" value="${escapeHtml(existing?.name)}" required></div>
-        <div class="field"><label>Niche / Category</label><input type="text" id="tNiche" value="${escapeHtml(existing?.niche)}" placeholder="e.g. Comedy"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Gender</label>
-          <select id="tGender">
-            <option value="">—</option>
-            <option value="Male" ${existing?.gender==='Male'?'selected':''}>Male</option>
-            <option value="Female" ${existing?.gender==='Female'?'selected':''}>Female</option>
-          </select>
-        </div>
-        <div class="field"><label>Location</label><input type="text" id="tLocation" value="${escapeHtml(existing?.location)}" placeholder="e.g. Toronto, ON"></div>
-      </div>
-      <div class="field">
-        <label>Available For</label>
-        <input type="text" id="tAvailableFor" value="${escapeHtml((existing?.availableFor || []).join(', '))}" placeholder="e.g. Brand Deals, Appearances, Collaborations">
-        <p class="field-hint" style="margin:4px 0 0; font-size:12px; color:var(--muted);">Comma-separated — shown as tags on the talent's card and used for the "Availability" filter.</p>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Profile Photo</label><input type="file" id="tPhotoFile" accept="image/*"></div>
-        <div class="field"><label>Cover Photo (media kit header)</label><input type="file" id="tCoverFile" accept="image/*"></div>
-      </div>
-      <div class="field"><label>Bio</label><textarea id="tBio" rows="2">${escapeHtml(existing?.bio)}</textarea></div>
-      <div class="field"><label>Gallery Photos</label>
-        <div class="gallery-thumbs" id="galleryThumbs"></div>
-        <input type="file" id="tGalleryFiles" accept="image/*" multiple>
-      </div>
-
-      <div class="field">
-        <label>Social Platforms</label>
-        <div id="socialsList"></div>
-        <button type="button" class="btn btn-ghost btn-sm" id="addSocialBtn" style="margin-top:8px;">+ Add Platform</button>
-      </div>
-
-      <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
-        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
-      </div>
-    </form>
-  `;
-
-  const socialsList = document.getElementById('socialsList');
-  const PLATFORMS = ['Instagram','TikTok','YouTube','Twitter / X','Facebook','Snapchat','Twitch','LinkedIn','Pinterest','Threads','Other'];
-
-  function addSocialRow(s){
-    const wrap = document.createElement('div');
-    wrap.className = 'social-entry';
-    let posts = (s && s.posts) ? s.posts : [];
-
-    const row = document.createElement('div');
-    row.className = 'social-row';
-    row.innerHTML = `
-      <select class="s-platform">
-        ${PLATFORMS.map(p => `<option value="${p}" ${s?.platform===p?'selected':''}>${p}</option>`).join('')}
-      </select>
-      <input type="text" class="s-followers" placeholder="Followers e.g. 1.2M" value="${escapeHtml(s?.followers)}">
-      <input type="url" class="s-url" placeholder="Profile URL" value="${escapeHtml(s?.url)}">
-      <button type="button" class="row-remove">&times;</button>
-    `;
-    row.querySelector('.row-remove').addEventListener('click', () => wrap.remove());
-    wrap.appendChild(row);
-
-    const extra = document.createElement('div');
-    extra.className = 'social-extra';
-    wrap.appendChild(extra);
-
-    const existingStats = (s && s.stats) || {};
-    function statsFieldsHTML(){
-      return `
-        <p class="extra-hint" style="margin-top:12px;">Stats shown on the "View statistics" button (optional):</p>
-        <div class="stats-fields">
-          <input type="text" class="stat-avgviews" placeholder="Avg. views per video e.g. 850K" value="${escapeHtml(existingStats.avgViews)}">
-          <input type="text" class="stat-avglikes" placeholder="Avg. likes per video e.g. 62K" value="${escapeHtml(existingStats.avgLikes)}">
-          <input type="text" class="stat-engagement" placeholder="Engagement rate e.g. 7.2%" value="${escapeHtml(existingStats.engagementRate)}">
-          <input type="text" class="stat-growth" placeholder="Growth, last 30 days e.g. +4.1%" value="${escapeHtml(existingStats.growth)}">
-        </div>
-      `;
-    }
-
-    function renderPostThumbs(){
-      const thumbsEl = extra.querySelector('.post-thumbs');
-      if(!thumbsEl) return;
-      thumbsEl.innerHTML = posts.map(p =>
-        `<a class="post-thumb" href="${p.link}" target="_blank" rel="noopener" title="${escapeHtml(p.title)}"><img src="${p.thumbnail}" alt=""></a>`
-      ).join('');
-    }
-
-    function renderExtra(){
-      const platform = row.querySelector('.s-platform').value;
-      extra.innerHTML = '';
-
-      if(platform === 'YouTube'){
-        extra.innerHTML = `
-          <button type="button" class="fetch-btn" data-action="fetch-yt">↻ Fetch latest 4 videos</button>
-          <div class="post-thumbs"></div>
-          ${statsFieldsHTML()}
-        `;
-        extra.querySelector('[data-action="fetch-yt"]').addEventListener('click', async (e) => {
-          const channelUrl = row.querySelector('.s-url').value.trim();
-          if(!channelUrl){ showToast('Enter the YouTube channel URL first'); return; }
-          const btn = e.currentTarget;
-          const originalLabel = btn.textContent;
-          btn.disabled = true; btn.textContent = 'Fetching…';
-          try {
-            // The endpoint returns { posts, stats }, not a bare array — this
-            // used to assign that whole wrapper object to `posts` directly,
-            // which looked fine here but crashed the server on Save (it
-            // expects posts to be an array to iterate over). Unwrap it.
-            const result = await api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
-            posts = result.posts || [];
-            renderPostThumbs();
-            // Auto-fill the stat fields from real YouTube data, same as the
-            // backend comment intends — but only if empty, so this never
-            // overwrites numbers you've already typed in by hand.
-            if (result.stats) {
-              const avgViewsEl = extra.querySelector('.stat-avgviews');
-              const avgLikesEl = extra.querySelector('.stat-avglikes');
-              const engagementEl = extra.querySelector('.stat-engagement');
-              if (avgViewsEl && !avgViewsEl.value.trim()) avgViewsEl.value = result.stats.avgViews;
-              if (avgLikesEl && !avgLikesEl.value.trim()) avgLikesEl.value = result.stats.avgLikes;
-              if (engagementEl && !engagementEl.value.trim()) engagementEl.value = result.stats.engagementRate;
-            }
-            showToast('Latest videos fetched');
-          } catch(err){
-            showToast('Could not fetch latest videos — check the channel URL');
-          } finally {
-            btn.disabled = false; btn.textContent = originalLabel;
-          }
-        });
-        renderPostThumbs();
-
-      } else if(platform === 'TikTok'){
-        extra.innerHTML = `
-          <p class="extra-hint">TikTok doesn't allow auto-fetching a profile's latest posts — paste up to 4 specific video links to preview instead:</p>
-          <input type="url" class="tt-video-input" placeholder="TikTok video URL 1" value="${escapeHtml(posts[0]?.sourceUrl)}">
-          <input type="url" class="tt-video-input" placeholder="TikTok video URL 2" value="${escapeHtml(posts[1]?.sourceUrl)}">
-          <input type="url" class="tt-video-input" placeholder="TikTok video URL 3" value="${escapeHtml(posts[2]?.sourceUrl)}">
-          <input type="url" class="tt-video-input" placeholder="TikTok video URL 4" value="${escapeHtml(posts[3]?.sourceUrl)}">
-          <button type="button" class="fetch-btn" data-action="fetch-tt">↻ Preview these videos</button>
-          <div class="post-thumbs"></div>
-          ${statsFieldsHTML()}
-        `;
-        extra.querySelector('[data-action="fetch-tt"]').addEventListener('click', async (e) => {
-          const urls = Array.from(extra.querySelectorAll('.tt-video-input')).map(i => i.value.trim()).filter(Boolean);
-          if(!urls.length){ showToast('Paste at least one TikTok video URL'); return; }
-          const btn = e.currentTarget;
-          const originalLabel = btn.textContent;
-          btn.disabled = true; btn.textContent = 'Fetching…';
-          try {
-            const fetched = [];
-            for(const url of urls){
-              const info = await api('/api/tiktok-oembed?url=' + encodeURIComponent(url));
-              fetched.push({ thumbnail: info.thumbnail_url, title: info.title || '', link: url, sourceUrl: url });
-            }
-            posts = fetched;
-            renderPostThumbs();
-            showToast('Video previews fetched');
-          } catch(err){
-            showToast('Could not preview one or more videos — check the links');
-          } finally {
-            btn.disabled = false; btn.textContent = originalLabel;
-          }
-        });
-        renderPostThumbs();
-
-      } else {
-        posts = [];
-      }
-    }
-
-    row.querySelector('.s-platform').addEventListener('change', renderExtra);
-    renderExtra();
-
-    wrap.getData = () => ({
-      platform: row.querySelector('.s-platform').value,
-      followers: row.querySelector('.s-followers').value.trim(),
-      url: row.querySelector('.s-url').value.trim(),
-      posts,
-      stats: extra.querySelector('.stat-avgviews') ? {
-        avgViews: extra.querySelector('.stat-avgviews').value.trim(),
-        avgLikes: extra.querySelector('.stat-avglikes').value.trim(),
-        engagementRate: extra.querySelector('.stat-engagement').value.trim(),
-        growth: extra.querySelector('.stat-growth').value.trim(),
-      } : undefined,
-    });
-
-    socialsList.appendChild(wrap);
-  }
-  if(socials.length){ socials.forEach(addSocialRow); } else { addSocialRow(null); }
-  document.getElementById('addSocialBtn').addEventListener('click', () => addSocialRow(null));
-
-  // Existing gallery photos — shown as thumbnails you can remove; new
-  // uploads (from the file input below) get appended to this on save.
-  let galleryUrls = [...(existing?.gallery || [])];
-  const galleryThumbs = document.getElementById('galleryThumbs');
-  function renderGalleryThumbs(){
-    galleryThumbs.innerHTML = galleryUrls.map((url, i) => `
-      <div class="gallery-thumb">
-        <img src="${url}" onerror="this.style.background='#eee'">
-        <button type="button" class="thumb-remove" data-i="${i}">&times;</button>
-      </div>
-    `).join('');
-    galleryThumbs.querySelectorAll('.thumb-remove').forEach(btn => {
-      btn.addEventListener('click', () => {
-        galleryUrls.splice(Number(btn.dataset.i), 1);
-        renderGalleryThumbs();
-      });
-    });
-  }
-  renderGalleryThumbs();
-
   const overlay = document.getElementById('talentModalOverlay');
+  const modalEl = document.getElementById('talentModal');
+
+  function close(){
+    overlay.classList.remove('show');
+    modalEl.innerHTML = '';
+  }
+
   overlay.classList.add('show');
-  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
 
-  document.getElementById('talentForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      let photoUrl = existing?.photo || '';
-      let coverUrl = existing?.coverPhoto || '';
-      const photoFile = document.getElementById('tPhotoFile').files[0];
-      const coverFile = document.getElementById('tCoverFile').files[0];
-      if(photoFile) photoUrl = await uploadImage(photoFile);
-      if(coverFile) coverUrl = await uploadImage(coverFile);
-
-      const newGalleryFiles = Array.from(document.getElementById('tGalleryFiles').files);
-      if(newGalleryFiles.length){
-        const uploaded = await Promise.all(newGalleryFiles.map(f => uploadImage(f)));
-        galleryUrls = galleryUrls.concat(uploaded);
-      }
-
-      const socialsOut = Array.from(socialsList.querySelectorAll('.social-entry')).map(wrap => wrap.getData());
-
-      const entry = {
-        id: existing ? existing.id : ('t' + Date.now()),
-        name: document.getElementById('tName').value.trim(),
-        niche: document.getElementById('tNiche').value.trim(),
-        gender: document.getElementById('tGender').value,
-        location: document.getElementById('tLocation').value.trim(),
-        availableFor: document.getElementById('tAvailableFor').value
-          .split(',').map(s => s.trim()).filter(Boolean),
-        photo: photoUrl,
-        coverPhoto: coverUrl,
-        bio: document.getElementById('tBio').value.trim(),
-        gallery: galleryUrls,
-        socials: socialsOut,
-      };
-
-      if(existing){
-        rosterData = rosterData.map(t => t.id === existing.id ? entry : t);
+  openTalentWizard({
+    container: modalEl,
+    existing,
+    uploadImage,
+    fetchYouTube: (channelUrl, count) => api('/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=' + count),
+    fetchTikTok: (videoUrl) => api('/api/tiktok-oembed?url=' + encodeURIComponent(videoUrl)),
+    onCancel: close,
+    onSave: async (entry, isEditing) => {
+      if(isEditing){
+        rosterData = rosterData.map(t => t.id === entry.id ? entry : t);
       } else {
         rosterData.push(entry);
       }
       await api('/api/roster', { method: 'POST', body: JSON.stringify(rosterData) });
-      overlay.classList.remove('show');
-      showToast(existing ? 'Talent updated' : 'Talent added');
+      close();
+      showToast(isEditing ? 'Talent updated' : 'Talent added');
       renderTalentPage();
-    } catch(err){
-      showToast(err.message);
-    } finally {
-      submitBtn.disabled = false;
-    }
+    },
   });
 }
 
