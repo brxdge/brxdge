@@ -1985,7 +1985,7 @@ function buildCampaignCard(c){
     <img class="campaign-card-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(c.brandName)}" loading="lazy">
     <div class="campaign-card-body">
       <div class="campaign-card-head">
-        ${c.brandLogo ? `<img class="campaign-card-logo" src="${escapeHtml(c.brandLogo)}" alt="${escapeHtml(c.brandName)} logo">` : ''}
+        ${c.brandLogo ? `<img class="campaign-card-logo" src="${escapeHtml(c.brandLogo)}" alt="${escapeHtml(c.brandName)} logo" loading="lazy">` : ''}
         <span class="campaign-card-brand">${escapeHtml(c.brandName)}${c.creatorName ? ` × ${escapeHtml(c.creatorName)}` : ''}</span>
       </div>
       ${c.objective ? `<p class="campaign-card-objective">${escapeHtml(c.objective)}</p>` : ''}
@@ -2097,7 +2097,7 @@ function renderCastRows(container){
     const reach = formatFollowers(totalReach(t.socials));
     return `
     <div class="cast-row">
-      <img class="cast-row-avatar" src="${escapeHtml(t.photo || '')}" alt="" onerror="this.style.visibility='hidden'">
+      <img class="cast-row-avatar" src="${escapeHtml(t.photo || '')}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
       <div class="cast-row-info">
         <button type="button" class="cast-row-name" data-view-talent="${t.id}">${escapeHtml(t.name)}</button>
         <span class="cast-row-meta">${escapeHtml(t.niche || 'Creator')} · ${reach} reach</span>
@@ -2757,7 +2757,7 @@ function renderTestimonialsSection(t){
             <p class="mk-testimonial-quote">“${escapeHtml(q.quote)}”</p>
             ${(q.author || q.role) ? `
             <div class="mk-testimonial-attrib">
-              ${q.logo ? `<img class="mk-testimonial-logo" src="${escapeHtml(q.logo)}" alt="">` : ''}
+              ${q.logo ? `<img class="mk-testimonial-logo" src="${escapeHtml(q.logo)}" alt="" loading="lazy">` : ''}
               <div>
                 ${q.author ? `<span class="mk-testimonial-author">${escapeHtml(q.author)}</span>` : ''}
                 ${q.role ? `<span class="mk-testimonial-role">${escapeHtml(q.role)}</span>` : ''}
@@ -3747,7 +3747,7 @@ function openGalleryLightbox(talent, startIndex){
   glName.textContent = talent.name;
 
   glThumbs.innerHTML = glImages.map((url, i) =>
-    `<img class="gl-thumb${i === glIndex ? ' active' : ''}" src="${url}" alt="" data-index="${i}">`
+    `<img class="gl-thumb${i === glIndex ? ' active' : ''}" src="${url}" alt="" loading="lazy" data-index="${i}">`
   ).join('');
   glThumbs.querySelectorAll('.gl-thumb').forEach(thumb => {
     thumb.addEventListener('click', () => setGalleryIndex(Number(thumb.dataset.index)));
@@ -4165,7 +4165,7 @@ document.querySelectorAll('.reveal').forEach((section) => {
 
   grid.innerHTML = managers.map((m, i) => `
     <div class="manager-card stagger-item" data-bg-index="${i}">
-      <img src="${escapeHtml(m.photo || '')}" alt="${escapeHtml(m.name || '')}">
+      <img src="${escapeHtml(m.photo || '')}" alt="${escapeHtml(m.name || '')}" loading="lazy">
       <h3>${escapeHtml(m.name || '')}</h3>
       <span class="role">${escapeHtml(m.role || '')}</span>
       <p class="bio">${escapeHtml(m.bio || '')}</p>
