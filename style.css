@@ -3628,6 +3628,86 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* =========================================================
+   MEDIA KIT AMBIENT WAVE-LINE BACKGROUND
+   Same cursor-parallax technique as .brand-lines-bg on the landing page
+   (near/far layers, currentColor strokes, rAF-throttled CSS var writes
+   eased by `transition: transform`) — see startMediakitLinesParallax()/
+   stopMediakitLinesParallax() in script.js — but its own element and its
+   own listeners, kept fully separate from that homepage effect so this
+   can never regress it. Sits above the ambient glow blobs just above
+   (those are z-index:-1; this defaults to auto, which stacks above them
+   and below #mkContent) and pinned to the viewport rather than the much
+   taller scrolling content — position:fixed, same reason those glow
+   blobs use it: .mediakit-overlay is its own overflow-y:auto scroll
+   container, so position:absolute here would scroll away with the page
+   instead of staying put.
+========================================================= */
+.mk-lines-bg{
+  /* position:fixed (not absolute) — .mediakit-overlay is its own scroll
+     container (overflow-y:auto), and an absolutely positioned child of a
+     scroll container scrolls away with its content same as anything else
+     in flow. Only position:fixed truly stays pinned to the viewport
+     regardless of that inner scroll, which is why the ambient glow blobs
+     above (.mediakit-overlay::before/::after) use the same fixed
+     positioning for the same reason. */
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--text);
+}
+.mk-wave-layer{
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.mk-wave-layer--near{
+  transform: translate3d(var(--mk-bg-mx, 0px), calc(var(--mk-bg-my, 0px) + var(--mk-bg-sy, 0px)), 0);
+}
+.mk-wave-layer--far{
+  transform: translate3d(calc(var(--mk-bg-mx, 0px) * 0.45), calc(var(--mk-bg-my, 0px) * 0.45 + var(--mk-bg-sy, 0px) * 0.45), 0);
+  filter: blur(1.6px);
+}
+.mk-wave-line{
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0.07;
+  animation: mkWavePulse 7s ease-in-out infinite;
+}
+.mk-wave-line:nth-of-type(1){ animation-delay: 0s;    }
+.mk-wave-line:nth-of-type(2){ animation-delay: 0.5s;  }
+.mk-wave-line:nth-of-type(3){ animation-delay: 1s;    }
+.mk-wave-line:nth-of-type(4){ animation-delay: 1.5s;  }
+.mk-wave-line:nth-of-type(5){ animation-delay: 2s;    }
+.mk-wave-line:nth-of-type(6){ animation-delay: 2.5s;  }
+.mk-wave-line:nth-of-type(7){ animation-delay: 3s;    }
+.mk-wave-line:nth-of-type(8){ animation-delay: 3.5s;  }
+.mk-wave-line:nth-of-type(9){ animation-delay: 4s;    }
+@keyframes mkWavePulse{
+  0%, 100%{ opacity: 0.07; }
+  50%{ opacity: 0.17; }
+}
+.mk-wave-layer--far .mk-wave-line{
+  stroke-width: 0.75;
+  opacity: 0.035;
+  animation-name: mkWavePulseFar;
+}
+@keyframes mkWavePulseFar{
+  0%, 100%{ opacity: 0.035; }
+  50%{ opacity: 0.09; }
+}
+@media (prefers-reduced-motion: reduce){
+  .mk-wave-line{ animation: none !important; }
+  .mk-wave-layer{ transform: none !important; transition: none !important; }
+}
+@media (hover: none){
+  /* No cursor to parallax with on touch — leave the lines a hair quieter
+     as pure static texture instead of sitting at full ambient opacity. */
+  .mk-lines-bg{ opacity: 0.8; }
+}
+
+/* =========================================================
    ROSTER ENHANCEMENT — wider stage, bigger cards, brand tile,
    and the "View All Talent" gender-filter flow.
    (Appended last so it wins the cascade over earlier roster rules.)
