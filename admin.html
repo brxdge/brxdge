@@ -138,6 +138,136 @@ a{ color:inherit; }
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
 .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
+/* ---------- TALENT WIZARD (talent-wizard.js) ---------- */
+#talentModal{ max-width:640px; padding:0; }
+.tw-wizard{ display:flex; flex-direction:column; max-height:88vh; }
+.tw-close{
+  position:absolute; top:18px; right:18px; width:30px; height:30px; border-radius:50%;
+  border:none; background:var(--border); font-size:18px; line-height:1; color:var(--text); z-index:2;
+}
+.tw-head{ padding:28px 28px 0; }
+.tw-head h3{ margin:0 0 4px; font-size:19px; }
+.tw-sub{ color:var(--muted); font-size:13.5px; margin:0 0 18px; }
+.tw-progress{ display:flex; gap:4px; padding:0 28px 18px; overflow-x:auto; }
+.tw-progress-step{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; min-width:64px; }
+.tw-progress-dot{
+  width:26px; height:26px; border-radius:50%; background:var(--border); color:var(--muted);
+  display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700;
+  transition:background 0.15s ease, color 0.15s ease;
+}
+.tw-progress-step.tw-active .tw-progress-dot{ background:var(--accent); color:#fff; }
+.tw-progress-step.tw-done .tw-progress-dot{ background:#DCFCE7; color:#166534; }
+.tw-progress-label{ font-size:10px; color:var(--muted); text-align:center; line-height:1.25; }
+.tw-progress-step.tw-active .tw-progress-label{ color:var(--text); font-weight:600; }
+.tw-body{ padding:4px 28px 24px; overflow-y:auto; flex:1; }
+.tw-step-intro{ color:var(--muted); font-size:13.5px; margin:0 0 18px; line-height:1.55; }
+.tw-nav{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:16px 28px; border-top:1px solid var(--border);
+}
+.tw-nav-right{ display:flex; gap:10px; }
+.tw-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px 18px; border-radius:10px; border:none; font-weight:600; font-size:14px; width:auto;
+  transition:transform 0.15s ease, opacity 0.15s ease; cursor:pointer;
+}
+.tw-btn:active{ transform:scale(0.98); }
+.tw-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+.tw-btn-primary{ background:var(--accent); color:#fff; }
+.tw-btn-primary:hover{ opacity:0.92; }
+.tw-btn-ghost{ background:var(--border); color:var(--text); }
+.tw-btn-ghost:hover{ background:#dcdfe6; }
+
+.tw-field{ margin-bottom:16px; }
+.tw-field label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:6px; }
+.tw-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.tw-field-row .tw-field{ margin-bottom:0; }
+.tw-field input, .tw-field textarea, .tw-field select,
+.tw-field-row input, .tw-field-row select,
+.tw-custom-input{
+  width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px;
+  font-size:14.5px; color:var(--text); background:#fff; outline:none;
+  transition:border-color 0.15s ease; box-sizing:border-box;
+}
+.tw-field input:focus, .tw-field textarea:focus, .tw-field select:focus,
+.tw-field-row input:focus, .tw-custom-input:focus{ border-color:var(--accent); }
+.tw-invalid{ border-color:#DC2626 !important; }
+.tw-hint{ font-size:12px; color:var(--muted); margin:6px 0 0; }
+.tw-optional{ font-weight:400; text-transform:none; }
+.tw-photo-preview{ width:64px; height:64px; border-radius:10px; object-fit:cover; margin-top:8px; display:block; background:#f1f2f5; }
+
+.tw-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.tw-chip{
+  display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:100px;
+  background:#F1F2F5; font-size:12.5px; font-weight:600; cursor:pointer; user-select:none;
+}
+.tw-chip input{ margin:0; accent-color:var(--accent); }
+.tw-chip-static{
+  display:inline-flex; align-items:center; padding:6px 12px; border-radius:100px;
+  background:#EEF2FF; color:var(--accent); font-size:12.5px; font-weight:600; margin:0 6px 6px 0;
+}
+.tw-chip-static.tw-removable{ cursor:pointer; background:#F1F2F5; color:var(--text); }
+.tw-readonly-chips{ display:flex; flex-wrap:wrap; }
+.tw-group-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); margin:14px 0 8px; }
+.tw-group-label:first-child{ margin-top:0; }
+
+.tw-rows{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+.tw-row{ display:grid; grid-template-columns:1fr 90px auto; gap:8px; align-items:center; }
+.tw-row input{
+  padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13.5px; outline:none;
+}
+.tw-row-remove{
+  width:30px; height:30px; border-radius:8px; border:none; background:#FEE2E2; color:#B91C1C;
+  font-size:16px; line-height:1; flex-shrink:0; cursor:pointer;
+}
+.tw-add-row{
+  padding:8px 14px; border-radius:8px; border:1.5px solid var(--accent); background:#fff; color:var(--accent);
+  font-size:13px; font-weight:600; cursor:pointer;
+}
+.tw-add-row:hover{ background:#EEF2FF; }
+
+.tw-why-row{
+  display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; gap:8px 10px;
+  border:1px solid var(--border); border-radius:10px; padding:12px;
+}
+.tw-why-title{ grid-column:1; grid-row:1; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13.5px; font-weight:600; }
+.tw-why-desc{ grid-column:1; grid-row:2; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit; }
+.tw-why-row .tw-row-remove{ grid-column:2; grid-row:1; }
+
+.tw-social-row{ border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:0; }
+.tw-social-row .tw-field-row{ grid-template-columns:120px 1fr 1fr auto; margin-bottom:0; align-items:center; }
+.tw-social-extra:empty{ display:none; }
+.tw-post-thumbs{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.tw-post-thumb{ width:56px; height:56px; border-radius:8px; overflow:hidden; display:block; }
+.tw-post-thumb img{ width:100%; height:100%; object-fit:cover; display:block; background:#f1f2f5; }
+.tw-fetch-btn{
+  padding:8px 14px; border-radius:8px; border:1.5px solid var(--accent); background:#fff; color:var(--accent);
+  font-size:13px; font-weight:600; margin-top:4px; cursor:pointer;
+}
+.tw-fetch-btn:hover{ background:#EEF2FF; }
+.tw-tt-video{ width:100%; padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; outline:none; margin-bottom:6px; display:block; box-sizing:border-box; }
+
+.tw-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; }
+.tw-gallery-card{ border:1px solid var(--border); border-radius:10px; padding:8px; position:relative; }
+.tw-gallery-thumb{ width:100%; aspect-ratio:1/1; border-radius:8px; overflow:hidden; background:#f1f2f5; margin-bottom:8px; }
+.tw-gallery-thumb img, .tw-gallery-thumb video{ width:100%; height:100%; object-fit:cover; display:block; }
+.tw-gallery-placeholder{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; }
+.tw-gallery-cat{ width:100%; padding:7px 8px; border:1.5px solid var(--border); border-radius:7px; font-size:12px; }
+.tw-gallery-card .tw-row-remove{ position:absolute; top:12px; right:12px; width:22px; height:22px; font-size:13px; }
+
+.tw-testi-row{ border:1px solid var(--border); border-radius:10px; padding:12px; position:relative; }
+.tw-testi-quote{ width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13.5px; font-family:inherit; resize:vertical; box-sizing:border-box; margin-bottom:8px; }
+.tw-testi-row .tw-field-row{ margin-bottom:0; }
+.tw-testi-row .tw-row-remove{ position:absolute; top:10px; right:10px; }
+
+@media (max-width: 640px){
+  .tw-field-row{ grid-template-columns:1fr; }
+  .tw-social-row .tw-field-row{ grid-template-columns:1fr; }
+  .tw-row{ grid-template-columns:1fr; }
+  .tw-why-row{ grid-template-columns:1fr; }
+  .tw-why-row .tw-row-remove{ grid-column:1; justify-self:end; }
+}
+
 .btn-sm{ padding:7px 13px; font-size:12.5px; }
 
 /* ---------- TALENT GRID ---------- */
@@ -392,6 +522,7 @@ a{ color:inherit; }
 </div>
 
 <script src="config.js"></script>
+<script src="talent-wizard.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>
