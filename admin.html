@@ -523,7 +523,13 @@ a{ color:inherit; }
 </div>
 
 <script src="config.js"></script>
-<script src="talent-wizard.js"></script>
-<script src="admin.js"></script>
+<!-- Versioned (?v=N) like index.html's script tags — the backend now
+     serves static JS/CSS with a 1-year immutable Cache-Control header, so
+     without a version query string here, a browser that already loaded
+     these files would keep serving the old cached copy forever after any
+     future update. Bump the number whenever talent-wizard.js or admin.js
+     changes and gets redeployed. -->
+<script src="talent-wizard.js?v=1"></script>
+<script src="admin.js?v=1"></script>
 </body>
 </html>
