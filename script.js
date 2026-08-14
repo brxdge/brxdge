@@ -3044,6 +3044,29 @@ function openMediakit(id, opts){
       </section>
       <div class="mk-hero-avatar" id="mkHeroAvatar" aria-hidden="true">
         <img src="${escapeHtml(talentPhotoUrl(t))}" alt="${escapeHtml(t.name)}">
+        <!-- Moved here from the old standalone .mk-share pill below the bio
+             (see git history) — same 4 buttons, same icons, same hover/
+             sun-moon-crossfade transitions, just attached directly to the
+             bottom edge of the photo itself instead of floating in their
+             own bordered/backgrounded bar. .mk-hero-avatar has
+             pointer-events:none (it's decorative/scroll-driven everywhere
+             else), so this row opts back in explicitly — see
+             .mk-avatar-actions in style.css. -->
+        <div class="mk-avatar-actions">
+          <button class="mk-avatar-action theme-toggle" data-mk-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode" type="button">
+            <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="mk-avatar-action" data-copy-link title="Copy link" aria-label="Copy link to this profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="mk-avatar-action" data-share-profile title="Share profile" aria-label="Share this profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="mk-avatar-action" data-show-qr title="Show QR code" aria-label="Show a QR code for this profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -3053,21 +3076,6 @@ function openMediakit(id, opts){
         <h2>${escapeHtml(t.name)}</h2>
         <div class="niche-tags">${talentCategories(t).map(c => `<span class="niche-tag">${escapeHtml(c)}</span>`).join('')}</div>
         ${t.bio ? `<p class="mk-title-tagline">${escapeHtml(t.bio.split('.')[0])}.</p>` : ''}
-      </div>
-      <div class="mk-share">
-        <button class="mk-share-btn theme-toggle" data-mk-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode" type="button">
-          <svg class="icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <svg class="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="mk-share-btn" data-copy-link title="Copy link" aria-label="Copy link to this profile">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-        <button class="mk-share-btn" data-share-profile title="Share profile" aria-label="Share this profile">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="mk-share-btn" data-show-qr title="Show QR code" aria-label="Show a QR code for this profile">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg>
-        </button>
       </div>
       <div class="mk-cta-row">
         <button class="btn btn-primary mk-cta" data-open-contact>Get in Touch</button>
