@@ -1763,10 +1763,75 @@ function closeMediakit(opts){
   // Re-enable the roster overlay's own scroll now that the media kit
   // covering it is gone — see the matching suspend in openMediakit().
   talentRosterOverlay.style.overflow = '';
+  stopMediakitLinesParallax();
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
   document.title = 'BRXDGE — Talent Management for Creators';
+}
+
+/* ---------------- MEDIA KIT AMBIENT WAVE BACKGROUND ----------------
+   Same cursor-parallax technique as the homepage's .brand-lines-bg
+   (initBackgroundParallax() near the top of this file) — a cheap
+   rAF-throttled CSS custom-property write, eased by a CSS transition
+   rather than a JS tween loop — but its own element and its own
+   listeners entirely, so it can never interact with (or risk
+   regressing) that homepage effect. Started when the media kit opens,
+   stopped when it closes (see closeMediakit() above and openMediakit()
+   below), so a visitor who never opens a media kit never pays for an
+   extra global mousemove listener, and re-opening a second talent's
+   kit doesn't stack a second one on top of the first. */
+const mkLinesBg = document.getElementById('mkLinesBg');
+let mkLinesActive = false;
+let mkLinesMouseHandler = null;
+let mkLinesScrollHandler = null;
+
+function startMediakitLinesParallax(){
+  if(!mkLinesBg || mkLinesActive) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const isTouch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+  mkLinesActive = true;
+
+  let pendingMX = 0, pendingMY = 0, pendingSY = 0, queued = false;
+  function flush(){
+    mkLinesBg.style.setProperty('--mk-bg-mx', pendingMX.toFixed(2) + 'px');
+    mkLinesBg.style.setProperty('--mk-bg-my', pendingMY.toFixed(2) + 'px');
+    mkLinesBg.style.setProperty('--mk-bg-sy', pendingSY.toFixed(2) + 'px');
+    queued = false;
+  }
+  function schedule(){
+    if(!queued){ queued = true; requestAnimationFrame(flush); }
+  }
+
+  if(!isTouch){
+    mkLinesMouseHandler = (e) => {
+      pendingMX = ((e.clientX / window.innerWidth) - 0.5) * 26;
+      pendingMY = ((e.clientY / window.innerHeight) - 0.5) * 20;
+      schedule();
+    };
+    window.addEventListener('mousemove', mkLinesMouseHandler, { passive: true });
+  }
+
+  // A little scroll-driven drift too (mirrors the homepage version's
+  // --bg-sy), so the lines feel woven into the page rather than pasted
+  // on top of it. Reads mediakitOverlay's own scroll position since
+  // that's the element that actually scrolls (see .mediakit-overlay{
+  // overflow-y:auto } in style.css) — not the window.
+  mkLinesScrollHandler = () => {
+    const y = mediakitOverlay.scrollTop || 0;
+    pendingSY = Math.max(-40, Math.min(40, y * 0.015));
+    schedule();
+  };
+  mediakitOverlay.addEventListener('scroll', mkLinesScrollHandler, { passive: true });
+}
+
+function stopMediakitLinesParallax(){
+  if(!mkLinesActive) return;
+  mkLinesActive = false;
+  if(mkLinesMouseHandler) window.removeEventListener('mousemove', mkLinesMouseHandler);
+  if(mkLinesScrollHandler) mediakitOverlay.removeEventListener('scroll', mkLinesScrollHandler);
+  mkLinesMouseHandler = null;
+  mkLinesScrollHandler = null;
 }
 
 // Handle the browser's Back/Forward buttons so they open/close the right
@@ -2856,6 +2921,8 @@ function initPlatformCarousel(content){
 function openMediakit(id, opts){
   const t = rosterData.find(x => x.id === id);
   if(!t) return;
+
+  startMediakitLinesParallax();
 
   if(!opts || opts.updateUrl !== false){
     history.pushState({ talentId: id }, '', '?talent=' + slugify(t.name));
