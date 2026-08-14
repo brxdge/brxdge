@@ -2718,7 +2718,7 @@ function renderWhySection(t){
       <div class="mk-why-carousel" id="mkWhyCarousel">
         <div class="mk-why-slides">
           ${cards.map((c, i) => `
-            <div class="mk-why-slide${i === 0 ? ' is-active' : ''}" data-why-index="${i}">
+            <div class="mk-why-slide${i === 0 ? ' is-active' : ''}${i % 2 === 1 ? ' mk-why-slide--reverse' : ''}" data-why-index="${i}">
               <div class="mk-why-text">
                 <span class="mk-why-badge">${MK_ICONS.check}</span>
                 <h4>${escapeHtml(c.title)}</h4>
