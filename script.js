@@ -2770,6 +2770,89 @@ function renderTestimonialsSection(t){
   `;
 }
 
+// Coverflow-style carousel for the media kit's "Platforms" section — one
+// card centered and in focus, neighbors peeking at reduced scale/opacity
+// on either side. Card spacing is measured from the rendered card width
+// (not hardcoded), so it stays proportional at any viewport size.
+// `mkPlatformCarouselResize` is kept at module scope and re-bound (not
+// stacked) on every call, mirroring the .mk-sticky-book-btn pattern above —
+// openMediakit() re-renders #mkContent from scratch on every talent switch,
+// so a naive addEventListener('resize', ...) here would leak one listener
+// per talent viewed in a session.
+let mkPlatformCarouselResize = null;
+function initPlatformCarousel(content){
+  const stage = content.querySelector('.mk-pc-stage');
+  const viewport = content.querySelector('#mkPcViewport');
+  if(!stage || !viewport) return;
+  const cards = Array.from(viewport.querySelectorAll('.mk-platform-card'));
+  if(!cards.length) return;
+  const prevBtn = content.querySelector('.mk-pc-prev');
+  const nextBtn = content.querySelector('.mk-pc-next');
+  const dots = Array.from(content.querySelectorAll('.mk-pc-dot'));
+  let active = 0;
+
+  function layout(){
+    const cardWidth = cards[0].offsetWidth || 300;
+    const spacing = Math.max(cardWidth * 0.62, 130);
+    cards.forEach((card, i) => {
+      const offset = i - active;
+      const abs = Math.abs(offset);
+      const visible = abs <= 3;
+      const scale = offset === 0 ? 1 : Math.max(0.74, 1 - abs * 0.12);
+      const ty = offset === 0 ? 0 : 14;
+      const opacity = offset === 0 ? 1 : Math.max(0.25, 1 - abs * 0.3);
+      const blurPx = offset === 0 ? 0 : Math.min(abs * 1.4, 4);
+      card.style.transform = `translate(-50%, -50%) translateX(${offset * spacing}px) translateY(${ty}px) scale(${scale})`;
+      card.style.opacity = visible ? String(opacity) : '0';
+      card.style.filter = blurPx ? `blur(${blurPx}px)` : '';
+      card.style.zIndex = String(10 - abs);
+      card.style.pointerEvents = visible ? '' : 'none';
+      card.classList.toggle('is-active', offset === 0);
+      card.querySelectorAll('a, button').forEach(el => { el.tabIndex = offset === 0 ? 0 : -1; });
+    });
+    dots.forEach((d, i) => d.classList.toggle('active', i === active));
+    if(prevBtn) prevBtn.disabled = active === 0;
+    if(nextBtn) nextBtn.disabled = active === cards.length - 1;
+  }
+
+  function goTo(i){
+    active = Math.max(0, Math.min(cards.length - 1, i));
+    layout();
+  }
+
+  if(prevBtn) prevBtn.addEventListener('click', () => goTo(active - 1));
+  if(nextBtn) nextBtn.addEventListener('click', () => goTo(active + 1));
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+  cards.forEach((card, i) => {
+    card.addEventListener('click', () => { if(i !== active) goTo(i); });
+  });
+
+  stage.setAttribute('tabindex', '0');
+  stage.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); goTo(active - 1); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); goTo(active + 1); }
+  });
+
+  let touchStartX = null;
+  viewport.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  viewport.addEventListener('touchend', (e) => {
+    if(touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if(Math.abs(dx) > 40) goTo(active + (dx < 0 ? 1 : -1));
+    touchStartX = null;
+  }, { passive: true });
+
+  if(mkPlatformCarouselResize) window.removeEventListener('resize', mkPlatformCarouselResize);
+  let resizeTimer = null;
+  mkPlatformCarouselResize = () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layout, 120);
+  };
+  window.addEventListener('resize', mkPlatformCarouselResize);
+
+  layout();
+}
+
 function openMediakit(id, opts){
   const t = rosterData.find(x => x.id === id);
   if(!t) return;
@@ -2857,23 +2940,42 @@ function openMediakit(id, opts){
       <p class="mk-bio">${escapeHtml(t.bio)}</p>
 
       <div class="mk-section-title">Platforms</div>
-      <div class="mk-platforms">
-        ${(t.socials||[]).map((s, i) => `
-          <div class="mk-platform-card" style="--p-accent:${platformBrandColor(s.platform)}">
-            <div class="row1">
-              <div class="p-icon">${platformIconColor(s.platform)}</div>
-              <div class="p-name">${escapeHtml(s.platform)}</div>
-            </div>
-            <div class="mk-metrics">
-              <div class="m"><span class="v">${escapeHtml(s.followers || '—')}</span><span class="k"> Followers</span></div>
-            </div>
-            <div class="mk-platform-actions">
-              ${safeUrl(s.url) ? `<a class="visit" href="${escapeHtml(safeUrl(s.url))}" target="_blank" rel="noopener">Visit profile <span class="arrow">→</span></a>` : ''}
-              ${(s.platform === 'YouTube' || s.platform === 'TikTok') ? `<button type="button" class="view-stats" data-social-index="${i}">View statistics</button>` : ''}
-            </div>
+      ${(t.socials||[]).length ? `
+      <div class="mk-platform-carousel" id="mkPlatformCarousel">
+        ${(t.socials||[]).length > 1 ? `
+        <div class="mk-pc-dots">
+          ${(t.socials||[]).map((_, i) => `<button type="button" class="mk-pc-dot${i === 0 ? ' active' : ''}" data-pc-dot="${i}" aria-label="Show ${escapeHtml((t.socials||[])[i].platform || 'platform')}"></button>`).join('')}
+        </div>
+        ` : ''}
+        <div class="mk-pc-stage">
+          <div class="mk-pc-viewport" id="mkPcViewport">
+            ${(t.socials||[]).map((s, i) => `
+              <div class="mk-platform-card" data-pc-index="${i}" style="--p-accent:${platformBrandColor(s.platform)}">
+                <div class="row1">
+                  <div class="p-icon">${platformIconColor(s.platform)}</div>
+                  <div class="p-name">${escapeHtml(s.platform)}</div>
+                </div>
+                <div class="mk-metrics">
+                  <div class="m"><span class="v">${escapeHtml(s.followers || '—')}</span><span class="k"> Followers</span></div>
+                </div>
+                <div class="mk-platform-actions">
+                  ${safeUrl(s.url) ? `<a class="visit" href="${escapeHtml(safeUrl(s.url))}" target="_blank" rel="noopener">Visit profile <span class="arrow">→</span></a>` : ''}
+                  ${(s.platform === 'YouTube' || s.platform === 'TikTok') ? `<button type="button" class="view-stats" data-social-index="${i}">View statistics</button>` : ''}
+                </div>
+              </div>
+            `).join('')}
           </div>
-        `).join('') || '<p style="color:var(--muted); font-size:14px;">No platforms added yet.</p>'}
+          ${(t.socials||[]).length > 1 ? `
+          <button type="button" class="mk-pc-nav mk-pc-prev" aria-label="Previous platform">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="mk-pc-nav mk-pc-next" aria-label="Next platform">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          ` : ''}
+        </div>
       </div>
+      ` : '<p style="color:var(--muted); font-size:14px;">No platforms added yet.</p>'}
 
       ${renderWhySection(t)}
       ${renderBookingSection(t)}
@@ -2998,6 +3100,8 @@ function openMediakit(id, opts){
       if(social) openStatsModal(t, social);
     });
   });
+
+  initPlatformCarousel(content);
 
   const contactBtn = content.querySelector('[data-open-contact]');
   if(contactBtn) contactBtn.addEventListener('click', () => openContactModal(t.name));
