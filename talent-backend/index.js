@@ -481,16 +481,32 @@ app.delete('/api/admins/:username', requireAuth, (req, res) => {
 // --- ROSTER (now backed by SQLite instead of roster.json) ---
 
 // Rebuilds the exact same nested JSON shape the frontend has always
-// expected: [{ id, name, niche, gender, photo, coverPhoto, gallery: [...],
-// bio, socials: [{ platform, url, followers, posts: [...], stats? }] }]
+// expected, extended for the media kit revamp: [{ id, name, niche, gender,
+// photo, coverPhoto, gallery: [{url,category,mediaType}...], bio,
+// location, availableFor, contentFormats, bookingOptions, audienceAgeRange,
+// audienceGenderMale/Female, audienceAgeBreakdown, audienceTopLocations,
+// audienceInterests, whyCards, testimonials: [...],
+// socials: [{ platform, url, followers, posts: [...], stats? }] }]
 function getFullRoster() {
   const talents = db.prepare(`SELECT * FROM talents ORDER BY sortOrder ASC`).all();
-  const galleryStmt = db.prepare(`SELECT url FROM gallery_images WHERE talent_id = ? ORDER BY sortOrder ASC`);
+  const galleryStmt = db.prepare(`SELECT url, category, mediaType FROM gallery_images WHERE talent_id = ? ORDER BY sortOrder ASC`);
   const socialsStmt = db.prepare(`SELECT * FROM socials WHERE talent_id = ? ORDER BY sortOrder ASC`);
   const postsStmt = db.prepare(`SELECT thumbnail, title, link, sourceUrl FROM posts WHERE social_id = ? ORDER BY sortOrder ASC`);
+  const testimonialsStmt = db.prepare(`SELECT quote, author, role, logo FROM testimonials WHERE talent_id = ? ORDER BY sortOrder ASC`);
+
+  function parseJsonArray(raw) {
+    try {
+      const parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      return [];
+    }
+  }
 
   return talents.map(t => {
-    const gallery = galleryStmt.all(t.id).map(g => g.url);
+    const gallery = galleryStmt.all(t.id).map(g => ({
+      url: g.url, category: g.category || '', mediaType: g.mediaType || 'image',
+    }));
     const socials = socialsStmt.all(t.id).map(s => {
       const social = {
         platform: s.platform,
@@ -508,21 +524,35 @@ function getFullRoster() {
       }
       return social;
     });
-    let availableFor = [];
-    try { availableFor = JSON.parse(t.availableFor || '[]'); } catch (err) { /* leave empty */ }
     return {
       id: t.id, name: t.name, niche: t.niche, gender: t.gender,
       photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio,
-      location: t.location, availableFor, socials,
+      location: t.location,
+      availableFor: parseJsonArray(t.availableFor),
+      contentFormats: parseJsonArray(t.contentFormats),
+      bookingOptions: parseJsonArray(t.bookingOptions),
+      audienceAgeRange: t.audienceAgeRange || '',
+      audienceGenderMale: t.audienceGenderMale || '',
+      audienceGenderFemale: t.audienceGenderFemale || '',
+      audienceAgeBreakdown: parseJsonArray(t.audienceAgeBreakdown),
+      audienceTopLocations: parseJsonArray(t.audienceTopLocations),
+      audienceInterests: parseJsonArray(t.audienceInterests),
+      whyCards: parseJsonArray(t.whyCards),
+      testimonials: testimonialsStmt.all(t.id),
+      socials,
     };
   });
 }
 
 const insertTalent = db.prepare(`
-  INSERT INTO talents (id, name, niche, gender, photo, coverPhoto, bio, location, availableFor, sortOrder)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO talents (
+    id, name, niche, gender, photo, coverPhoto, bio, location, availableFor, sortOrder,
+    contentFormats, bookingOptions, audienceAgeRange, audienceGenderMale, audienceGenderFemale,
+    audienceAgeBreakdown, audienceTopLocations, audienceInterests, whyCards
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, sortOrder) VALUES (?, ?, ?)`);
+const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, category, mediaType, sortOrder) VALUES (?, ?, ?, ?, ?)`);
 const insertSocial = db.prepare(`
   INSERT INTO socials (talent_id, platform, url, followers, avgViews, avgLikes, engagementRate, growth, sortOrder)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -531,7 +561,11 @@ const insertPost = db.prepare(`
   INSERT INTO posts (social_id, thumbnail, title, link, sourceUrl, sortOrder)
   VALUES (?, ?, ?, ?, ?, ?)
 `);
-const deleteAllTalents = db.prepare(`DELETE FROM talents`); // cascades to socials/posts/gallery
+const insertTestimonial = db.prepare(`
+  INSERT INTO testimonials (talent_id, quote, author, role, logo, sortOrder)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+const deleteAllTalents = db.prepare(`DELETE FROM talents`); // cascades to socials/posts/gallery/testimonials
 
 const replaceRoster = db.transaction((roster) => {
   deleteAllTalents.run();
@@ -539,9 +573,23 @@ const replaceRoster = db.transaction((roster) => {
     insertTalent.run(
       t.id, t.name || '', t.niche || '', t.gender || '',
       t.photo || '', t.coverPhoto || '', t.bio || '', t.location || '',
-      JSON.stringify(Array.isArray(t.availableFor) ? t.availableFor : []), ti
+      JSON.stringify(Array.isArray(t.availableFor) ? t.availableFor : []), ti,
+      JSON.stringify(Array.isArray(t.contentFormats) ? t.contentFormats : []),
+      JSON.stringify(Array.isArray(t.bookingOptions) ? t.bookingOptions : []),
+      t.audienceAgeRange || '', t.audienceGenderMale || '', t.audienceGenderFemale || '',
+      JSON.stringify(Array.isArray(t.audienceAgeBreakdown) ? t.audienceAgeBreakdown : []),
+      JSON.stringify(Array.isArray(t.audienceTopLocations) ? t.audienceTopLocations : []),
+      JSON.stringify(Array.isArray(t.audienceInterests) ? t.audienceInterests : []),
+      JSON.stringify(Array.isArray(t.whyCards) ? t.whyCards : [])
     );
-    (t.gallery || []).forEach((url, gi) => insertGalleryImg.run(t.id, url, gi));
+    // Gallery items are normally {url, category, mediaType} objects — the
+    // plain-string fallback keeps this working if anything still sends the
+    // old flat gallery: [url, ...] shape.
+    (t.gallery || []).forEach((item, gi) => {
+      const g = typeof item === 'string' ? { url: item, category: '', mediaType: 'image' } : (item || {});
+      if (!g.url) return;
+      insertGalleryImg.run(t.id, g.url, g.category || '', g.mediaType || 'image', gi);
+    });
     (t.socials || []).forEach((s, si) => {
       const stats = s.stats || {};
       const info = insertSocial.run(
@@ -551,6 +599,10 @@ const replaceRoster = db.transaction((roster) => {
       (s.posts || []).forEach((p, pi) => insertPost.run(
         info.lastInsertRowid, p.thumbnail || '', p.title || '', p.link || '', p.sourceUrl || '', pi
       ));
+    });
+    (t.testimonials || []).forEach((q, qi) => {
+      if (!q || !q.quote) return;
+      insertTestimonial.run(t.id, q.quote || '', q.author || '', q.role || '', q.logo || '', qi);
     });
   });
 });
