@@ -1707,27 +1707,6 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     box-shadow: 0 14px 34px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.08) inset;
   }
 
-  /* Utility row — grouped into one pill with hairline dividers instead of
-     four separate floating circles, so it reads as a single designed
-     toolbar rather than a scatter of unrelated buttons. */
-  .mk-share{
-    margin-left: 0;
-    display: flex; align-items: stretch;
-    border: 1px solid var(--panel-line);
-    border-radius: 100px;
-    background: var(--panel);
-    overflow: hidden;
-  }
-  .mk-share-btn{
-    width: 44px; height: 40px;
-    border: none; border-right: 1px solid var(--panel-line);
-    background: transparent; color: var(--text);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: color 0.2s ease, background 0.2s ease;
-  }
-  .mk-share-btn:last-child{ border-right: none; }
-  .mk-share-btn:hover{ background: var(--ink-2); color: var(--coral); }
   .mk-bio{ margin:36px auto 0; max-width:680px; color:var(--muted); font-size:16px; text-align:center; }
   .mk-section-title{ font-family:'Montserrat', sans-serif; font-weight:900; font-size:22px; letter-spacing:-0.01em; text-transform:uppercase; color:var(--coral); margin:44px 0 18px; text-align:center; }
   .mk-hero-gallery-link{
@@ -2538,6 +2517,46 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     border: 5px solid #0C0C0C;
     box-shadow: 0 14px 34px rgba(0,0,0,0.45);
   }
+
+  /* Theme/copy-link/share/QR — used to be their own bordered pill floating
+     below the bio; now attached directly to the photo's bottom edge
+     instead, so they read as part of the avatar rather than a separate
+     UI element with its own background. .mk-hero-avatar carries
+     pointer-events:none (its scroll-driven grow-in is purely decorative
+     everywhere else it appears), so this row opts back in on its own and
+     inherits that same grow-in for free since it's a real child of the
+     avatar now. Individual dark-glass circles (not a shared pill/divider
+     bar) are still needed per button — sitting on top of an arbitrary
+     photo means they can't rely on the page's own panel/border colors for
+     legibility the way the old pill could. */
+  .mk-avatar-actions{
+    position: absolute; z-index: 6;
+    left: 50%; bottom: -2px;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px;
+    pointer-events: auto;
+  }
+  .mk-avatar-action{
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.85);
+    background: rgba(10,10,10,0.7);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  }
+  .mk-avatar-action:hover{
+    background: rgba(255,255,255,0.94); color: #14161A; border-color: #fff;
+    transform: translateY(-2px);
+  }
+  /* .theme-toggle's own base rule (width/height/border, near the top of
+     this file) would otherwise fight this size — .mk-avatar-action needs
+     to win since all 4 buttons must match. */
+  .mk-avatar-action.theme-toggle{ width: 30px; height: 30px; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(10,10,10,0.7); }
+  .mk-avatar-action.theme-toggle:hover{ background: rgba(255,255,255,0.94); border-color: #fff; }
 
   /* Static title bar right below the hero — name, niche, share buttons,
      CTA — always centered as a "profile card" beneath the avatar. */
