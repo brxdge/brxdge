@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1600,6 +1600,30 @@
     Back to Roster
   </button>
 
+  <!-- Theme/copy-link/share/QR — fixed top-right, mirroring #mkBack's
+       fixed top-left placement, so both float directly over the hero
+       photo instead of needing a bordered/backgrounded pill of their
+       own. Static markup (like #mkBack/#mkStickyBook below), re-wired
+       per talent in openMediakit() via clone-and-replace rather than
+       rebuilt — see .mk-hero-actions in style.css for the frosted-glass
+       look over the photo and its crossfade to a solid pill once
+       scrolled past the hero. -->
+  <div class="mk-hero-actions" id="mkHeroActions">
+    <button class="mk-hero-action theme-toggle" data-mk-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode" type="button" id="mkHeroThemeBtn">
+      <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="mk-hero-action" title="Copy link" aria-label="Copy link to this profile" id="mkHeroCopyBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="mk-hero-action" title="Share profile" aria-label="Share this profile" id="mkHeroShareBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="mk-hero-action" title="Show QR code" aria-label="Show a QR code for this profile" id="mkHeroQrBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg>
+    </button>
+  </div>
+
   <!-- Splash intro — 3D BRXDGE wordmark, shown briefly (~900ms) then
        fades to reveal the media kit underneath. See mk-splash CSS for
        the layered stage/glow/float/sheen animation. -->
@@ -1713,7 +1737,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=12"></script>
+<script src="script.js?v=13"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
