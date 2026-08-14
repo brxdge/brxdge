@@ -2531,7 +2531,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
      legibility the way the old pill could. */
   .mk-avatar-actions{
     position: absolute; z-index: 6;
-    left: 50%; bottom: -2px;
+    left: 50%; bottom: 6px;
     transform: translateX(-50%);
     display: flex; align-items: center; gap: 6px;
     pointer-events: auto;
@@ -2569,7 +2569,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     text-align: center;
     gap: 18px;
     flex-wrap: wrap;
-    padding: 136px 28px 32px;
+    padding: 168px 28px 32px;
     background: var(--ink);
   }
   .mk-title h2{ font-size: clamp(30px, 4.4vw, 46px); margin: 0; line-height: 1.05; letter-spacing: -0.01em; }
