@@ -2518,26 +2518,22 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     box-shadow: 0 14px 34px rgba(0,0,0,0.45);
   }
 
-  /* Theme/copy-link/share/QR — used to be their own bordered pill floating
-     below the bio; now attached directly to the photo's bottom edge
-     instead, so they read as part of the avatar rather than a separate
-     UI element with its own background. .mk-hero-avatar carries
-     pointer-events:none (its scroll-driven grow-in is purely decorative
-     everywhere else it appears), so this row opts back in on its own and
-     inherits that same grow-in for free since it's a real child of the
-     avatar now. Individual dark-glass circles (not a shared pill/divider
-     bar) are still needed per button — sitting on top of an arbitrary
-     photo means they can't rely on the page's own panel/border colors for
-     legibility the way the old pill could. */
-  .mk-avatar-actions{
-    position: absolute; z-index: 6;
-    left: 50%; bottom: 6px;
-    transform: translateX(-50%);
+  /* Theme/copy-link/share/QR — floats fixed top-right over the hero photo
+     itself (mirroring #mkBack's fixed top-left "Back to Roster"), rather
+     than living in their own bordered/backgrounded pill. Same frosted
+     dark-glass treatment as #mkBack uses over the hero, and the same
+     crossfade to a solid theme-matched pill once the visitor scrolls
+     past the hero (.mediakit-overlay.past-hero, below) — so it reads as
+     "attached to the photo" while it's on screen, then settles into a
+     normal control once the photo's gone. Static markup (see #mkHeroActions
+     in index.html), not part of the per-talent template, so it survives
+     talent switches — openMediakit() only re-wires its click handlers. */
+  .mk-hero-actions{
+    position: fixed; top: 22px; right: 22px; z-index: 260;
     display: flex; align-items: center; gap: 6px;
-    pointer-events: auto;
   }
-  .mk-avatar-action{
-    width: 30px; height: 30px;
+  .mk-hero-action{
+    width: 34px; height: 34px;
     border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.85);
     background: rgba(10,10,10,0.7);
@@ -2548,15 +2544,31 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
-  .mk-avatar-action:hover{
+  .mk-hero-action:hover{
     background: rgba(255,255,255,0.94); color: #14161A; border-color: #fff;
     transform: translateY(-2px);
   }
   /* .theme-toggle's own base rule (width/height/border, near the top of
-     this file) would otherwise fight this size — .mk-avatar-action needs
+     this file) would otherwise fight this size — .mk-hero-action needs
      to win since all 4 buttons must match. */
-  .mk-avatar-action.theme-toggle{ width: 30px; height: 30px; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(10,10,10,0.7); }
-  .mk-avatar-action.theme-toggle:hover{ background: rgba(255,255,255,0.94); border-color: #fff; }
+  .mk-hero-action.theme-toggle{ width: 34px; height: 34px; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(10,10,10,0.7); }
+  .mk-hero-action.theme-toggle:hover{ background: rgba(255,255,255,0.94); border-color: #fff; }
+  /* Same crossfade #mkBack gets once past the hero — see
+     updateHeroScrollProgress() in script.js for the .past-hero toggle. */
+  .mediakit-overlay.past-hero .mk-hero-action{
+    background: var(--panel);
+    border-color: var(--panel-line);
+    color: var(--text);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .mediakit-overlay.past-hero .mk-hero-action:hover{
+    background: var(--ink-2); color: var(--text); border-color: var(--panel-line);
+  }
+  @media (max-width: 480px){
+    .mk-hero-actions{ top: 14px; right: 14px; gap: 5px; }
+    .mk-hero-action, .mk-hero-action.theme-toggle{ width: 30px; height: 30px; }
+  }
 
   /* Static title bar right below the hero — name, niche, share buttons,
      CTA — always centered as a "profile card" beneath the avatar. */
@@ -2569,7 +2581,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     text-align: center;
     gap: 18px;
     flex-wrap: wrap;
-    padding: 168px 28px 32px;
+    padding: 136px 28px 32px;
     background: var(--ink);
   }
   .mk-title h2{ font-size: clamp(30px, 4.4vw, 46px); margin: 0; line-height: 1.05; letter-spacing: -0.01em; }
