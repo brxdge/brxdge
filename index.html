@@ -71,7 +71,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1215,70 +1215,11 @@
   </div>
 </div>
 
-<!-- ADD/EDIT TALENT MODAL -->
+<!-- ADD/EDIT TALENT MODAL — content is fully owned/rendered by the shared
+     phase-by-phase wizard (talent-wizard.js), the same one the admin
+     dashboard uses. See openTalentModal() in script.js. -->
 <div class="modal-overlay" id="talentOverlay">
-  <div class="modal">
-    <button class="modal-close" id="talentClose">&times;</button>
-    <h3 id="talentModalTitle">Add Talent</h3>
-    <p class="sub">This talent will appear on the public roster for everyone visiting the site.</p>
-    <form id="talentForm">
-      <input type="hidden" id="talentId">
-      
-      <!-- Hidden input to store the final image URL after upload -->
-      <input type="hidden" id="tPhoto">
-      <input type="hidden" id="tCoverPhoto">
-
-      <div class="field"><label for="tName">Name</label><input type="text" id="tName" required></div>
-      <div class="field"><label for="tNiche">Niche</label>
-        <select id="tNiche" required>
-          <option>Lifestyle</option><option>Gaming</option><option>Comedy</option>
-          <option>Food</option><option>Music</option><option>Fashion</option><option>Fitness</option>
-        </select>
-      </div>
-      <div class="field"><label for="tGender">Gender</label>
-        <select id="tGender">
-          <option value="">— Not set —</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Used by the "View All Talent" filter on the public roster.</p>
-      </div>
-
-      <!-- New Image Upload Field -->
-      <div class="field">
-        <label for="tImageUpload">Profile Picture</label>
-        <input type="file" id="tImageUpload" accept="image/*">
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Upload a new photo to replace the current one.</p>
-      </div>
-
-      <!-- Media kit cover photo — separate from the profile picture -->
-      <div class="field">
-        <label for="tCoverImageUpload">Cover Photo (media kit header)</label>
-        <input type="file" id="tCoverImageUpload" accept="image/*">
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Optional — shown at the top of this talent's media kit. Falls back to the profile picture if left blank.</p>
-      </div>
-
-      <!-- Gallery: multiple pictures for the talent's public profile -->
-      <div class="field">
-        <label for="tGalleryUpload">Upload Pictures (Gallery)</label>
-        <input type="file" id="tGalleryUpload" accept="image/*" multiple>
-        <p style="font-size:11px; color:var(--muted); margin-top:4px;">Add multiple photos — these appear on the talent's public profile.</p>
-        <div class="gallery-preview" id="galleryPreview"></div>
-      </div>
-
-      <div class="field"><label for="tBio">Short Bio</label><textarea id="tBio" required></textarea></div>
-
-      <div class="field">
-        <label>Social Platforms</label>
-        <div class="social-rows" id="socialRows"></div>
-        <button type="button" class="add-row-btn" id="addSocialRow" style="margin-top:8px;">+ Add another platform</button>
-      </div>
-
-      <div class="modal-actions">
-        <button type="submit" class="btn btn-primary">Save Talent</button>
-      </div>
-    </form>
-  </div>
+  <div class="modal tw-modal" id="talentModalBody"></div>
 </div>
 
 <!-- TALENT FILTER POPUP (opened from "View All Talent" on the roster) -->
@@ -1630,6 +1571,22 @@
   </div>
 
   <div id="mkContent"></div>
+
+  <!-- Sticky "Book" bar — fixed to the bottom of the viewport once the
+       visitor scrolls past the hero (.mediakit-overlay.past-hero, same
+       scroll-driven class used to crossfade #mkBack — see
+       updateHeroScrollProgress() in script.js). Keeps the booking CTA
+       reachable without ever having to scroll back up to find it. -->
+  <div class="mk-sticky-book" id="mkStickyBook">
+    <img class="mk-sticky-book-photo" id="mkStickyBookPhoto" src="" alt="">
+    <div class="mk-sticky-book-info">
+      <div class="mk-sticky-book-name" id="mkStickyBookName"></div>
+      <div class="mk-sticky-book-niche" id="mkStickyBookNiche"></div>
+    </div>
+    <button type="button" class="btn btn-primary mk-sticky-book-btn" id="mkStickyBookBtn">
+      <span id="mkStickyBookLabel">Book</span> <span class="arrow">→</span>
+    </button>
+  </div>
 </div>
 
 <!-- CASE STUDY / BLOG POST DETAIL VIEW — reuses the same fullscreen-panel
@@ -1712,7 +1669,8 @@
      loader, the entrance animations) can even start. See loadJsPdfLib()
      in script.js. -->
 <script src="config.js"></script>
-<script src="script.js?v=4"></script>
+<script src="talent-wizard.js?v=1"></script>
+<script src="script.js?v=6"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
