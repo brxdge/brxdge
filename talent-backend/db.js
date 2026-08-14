@@ -31,13 +31,37 @@ db.exec(`
     bio         TEXT,
     location      TEXT,
     availableFor  TEXT NOT NULL DEFAULT '[]',
-    sortOrder   INTEGER NOT NULL DEFAULT 0
+    sortOrder   INTEGER NOT NULL DEFAULT 0,
+    contentFormats      TEXT NOT NULL DEFAULT '[]',
+    bookingOptions      TEXT NOT NULL DEFAULT '[]',
+    audienceAgeRange    TEXT NOT NULL DEFAULT '',
+    audienceGenderMale  TEXT NOT NULL DEFAULT '',
+    audienceGenderFemale TEXT NOT NULL DEFAULT '',
+    audienceAgeBreakdown TEXT NOT NULL DEFAULT '[]',
+    audienceTopLocations TEXT NOT NULL DEFAULT '[]',
+    audienceInterests    TEXT NOT NULL DEFAULT '[]',
+    whyCards              TEXT NOT NULL DEFAULT '[]'
   );
 
   CREATE TABLE IF NOT EXISTS gallery_images (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     talent_id   TEXT NOT NULL REFERENCES talents(id) ON DELETE CASCADE,
     url         TEXT NOT NULL,
+    category    TEXT NOT NULL DEFAULT '',
+    mediaType   TEXT NOT NULL DEFAULT 'image',
+    sortOrder   INTEGER NOT NULL DEFAULT 0
+  );
+
+  -- Optional "client feedback" quotes shown on a talent's media kit —
+  -- entirely optional per talent (the section hides itself client-side
+  -- when a talent has none), same pattern as gallery_images/socials.
+  CREATE TABLE IF NOT EXISTS testimonials (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    talent_id   TEXT NOT NULL REFERENCES talents(id) ON DELETE CASCADE,
+    quote       TEXT NOT NULL,
+    author      TEXT,
+    role        TEXT,
+    logo        TEXT,
     sortOrder   INTEGER NOT NULL DEFAULT 0
   );
 
@@ -135,6 +159,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_gallery_talent ON gallery_images(talent_id);
   CREATE INDEX IF NOT EXISTS idx_socials_talent ON socials(talent_id);
   CREATE INDEX IF NOT EXISTS idx_posts_social ON posts(social_id);
+  CREATE INDEX IF NOT EXISTS idx_testimonials_talent ON testimonials(talent_id);
 `);
 
 // Lightweight "migration": if you already had a brxdge.db from before the
@@ -155,6 +180,40 @@ if (!talentColumns.includes('location')) {
 }
 if (!talentColumns.includes('availableFor')) {
   db.exec(`ALTER TABLE talents ADD COLUMN availableFor TEXT NOT NULL DEFAULT '[]'`);
+}
+
+// Media kit revamp: Creator Snapshot / Audience Analytics / "Why [Name]" /
+// Booking Options fields, added after `talents` already existed in
+// production — same "add the column if it's missing" migration as above,
+// so existing talents just get sensible empty defaults until edited.
+const talentRevampColumns = {
+  contentFormats:       `TEXT NOT NULL DEFAULT '[]'`,
+  bookingOptions:        `TEXT NOT NULL DEFAULT '[]'`,
+  audienceAgeRange:      `TEXT NOT NULL DEFAULT ''`,
+  audienceGenderMale:    `TEXT NOT NULL DEFAULT ''`,
+  audienceGenderFemale:  `TEXT NOT NULL DEFAULT ''`,
+  audienceAgeBreakdown:  `TEXT NOT NULL DEFAULT '[]'`,
+  audienceTopLocations:  `TEXT NOT NULL DEFAULT '[]'`,
+  audienceInterests:     `TEXT NOT NULL DEFAULT '[]'`,
+  whyCards:              `TEXT NOT NULL DEFAULT '[]'`,
+};
+for (const [col, def] of Object.entries(talentRevampColumns)) {
+  if (!talentColumns.includes(col)) {
+    db.exec(`ALTER TABLE talents ADD COLUMN ${col} ${def}`);
+  }
+}
+
+// Same idea for gallery_images: `category` (e.g. "Lifestyle", "UGC") and
+// `mediaType` ('image' | 'video') power the new filterable Content
+// Portfolio grid. Existing photos already in the database just become
+// uncategorized images (category:'', mediaType:'image') until re-tagged —
+// they still show up fine under the "ALL" tab.
+const galleryColumns = db.prepare(`PRAGMA table_info(gallery_images)`).all().map(c => c.name);
+if (!galleryColumns.includes('category')) {
+  db.exec(`ALTER TABLE gallery_images ADD COLUMN category TEXT NOT NULL DEFAULT ''`);
+}
+if (!galleryColumns.includes('mediaType')) {
+  db.exec(`ALTER TABLE gallery_images ADD COLUMN mediaType TEXT NOT NULL DEFAULT 'image'`);
 }
 
 // A small helper matching the shape better-sqlite3's db.transaction() gave
