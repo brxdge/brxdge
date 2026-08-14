@@ -2485,6 +2485,238 @@ mediakitOverlay.addEventListener('scroll', () => {
   });
 });
 
+// ---------------- MEDIA KIT: CREATOR SNAPSHOT ----------------
+// "Immediately below the hero" at-a-glance card — lets a brand manager
+// tell in a few seconds whether this creator fits their campaign, without
+// having to read the full bio or platform cards further down the page.
+function snapshotNiches(t){
+  return (t.niche || '').split(/[/,&]/).map(s => s.trim()).filter(Boolean);
+}
+
+function renderSnapshotSection(t){
+  const niches = snapshotNiches(t);
+  const platforms = [...new Set((t.socials || []).map(s => s.platform).filter(Boolean))];
+  const audienceChips = [t.audienceAgeRange, t.location, t.gender].filter(Boolean);
+  const contentChips = t.contentFormats || [];
+  const cols = [
+    { label: 'Niche', items: niches },
+    { label: 'Platforms', items: platforms },
+    { label: 'Audience', items: audienceChips },
+    { label: 'Content', items: contentChips },
+  ].filter(c => c.items.length);
+  if(!cols.length) return '';
+  return `
+    <div class="mk-snapshot">
+      <span class="mk-snapshot-eyebrow">${escapeHtml((t.name || '').split(' ')[0].toUpperCase())} AT A GLANCE</span>
+      <div class="mk-section-title">Creator Snapshot</div>
+      <div class="mk-snap-grid">
+        ${cols.map(c => `
+          <div class="mk-snap-col">
+            <span class="mk-snap-label">${escapeHtml(c.label)}</span>
+            <div class="mk-snap-chips">${c.items.map(i => `<span class="mk-snap-chip">${escapeHtml(i)}</span>`).join('')}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: AUDIENCE ANALYTICS ----------------
+// This is what turns "125K followers" into "reaches exactly the audience
+// we're trying to reach" — the single biggest upgrade a media kit can get.
+// Entirely optional per talent: the whole section (and each block inside
+// it) only renders once the wizard has real numbers to show.
+function mkBarRow(label, pct){
+  const num = Number(pct);
+  const clamped = Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : 0;
+  return `
+    <div class="mk-bar-row">
+      <span class="mk-bar-label">${escapeHtml(label)}</span>
+      <div class="mk-bar-track"><div class="mk-bar-fill" style="width:${clamped}%"></div></div>
+      <span class="mk-bar-pct">${escapeHtml(String(pct))}%</span>
+    </div>
+  `;
+}
+
+function renderAudienceSection(t){
+  const male = Number(t.audienceGenderMale) || 0;
+  const female = Number(t.audienceGenderFemale) || 0;
+  const hasGender = male > 0 || female > 0;
+  const ageRows = (t.audienceAgeBreakdown || []).filter(r => r.range && r.pct !== '' && r.pct != null);
+  const locRows = (t.audienceTopLocations || []).filter(r => r.location && r.pct !== '' && r.pct != null);
+  const interestRows = (t.audienceInterests || []).filter(r => r.interest && r.pct !== '' && r.pct != null);
+  if(!hasGender && !ageRows.length && !locRows.length && !interestRows.length) return '';
+
+  const genderTotal = male + female;
+  return `
+    <div class="mk-audience">
+      <div class="mk-section-title">Audience</div>
+      <div class="mk-audience-grid">
+        ${hasGender ? `
+        <div class="mk-aud-block">
+          <span class="mk-aud-block-label">Gender</span>
+          <div class="mk-gender-split">
+            ${male ? `<div class="mk-gender-seg mk-gender-male" style="width:${genderTotal ? (male / genderTotal * 100) : 50}%"></div>` : ''}
+            ${female ? `<div class="mk-gender-seg mk-gender-female" style="width:${genderTotal ? (female / genderTotal * 100) : 50}%"></div>` : ''}
+          </div>
+          <div class="mk-gender-legend">
+            ${male ? `<span><i class="mk-gender-dot mk-gender-dot--male"></i>${escapeHtml(String(t.audienceGenderMale))}% Male</span>` : ''}
+            ${female ? `<span><i class="mk-gender-dot mk-gender-dot--female"></i>${escapeHtml(String(t.audienceGenderFemale))}% Female</span>` : ''}
+          </div>
+        </div>` : ''}
+        ${ageRows.length ? `
+        <div class="mk-aud-block">
+          <span class="mk-aud-block-label">Age</span>
+          ${ageRows.map(r => mkBarRow(r.range, r.pct)).join('')}
+        </div>` : ''}
+      </div>
+      ${locRows.length ? `
+      <div class="mk-aud-block mk-aud-locations">
+        <span class="mk-aud-block-label">Top Locations</span>
+        ${locRows.map(r => mkBarRow(r.location, r.pct)).join('')}
+      </div>` : ''}
+      ${interestRows.length ? `
+      <div class="mk-aud-interests">
+        <div class="mk-section-title">Top Audience Interests</div>
+        ${interestRows.map(r => mkBarRow(r.interest, r.pct)).join('')}
+      </div>` : ''}
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: "WHY [NAME]?" ----------------
+// The sales pitch a brand manager shouldn't have to write themselves.
+function renderWhySection(t){
+  const cards = (t.whyCards || []).filter(c => c.title && c.title.trim());
+  if(!cards.length) return '';
+  const firstName = escapeHtml((t.name || '').split(' ')[0] || 'This Talent');
+  return `
+    <div class="mk-why">
+      <div class="mk-section-title">Why ${firstName}?</div>
+      <div class="mk-why-grid">
+        ${cards.map(c => `
+          <div class="mk-why-card">
+            <h4>${escapeHtml(c.title)}</h4>
+            ${c.description ? `<p>${escapeHtml(c.description)}</p>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: "WHAT THEY CAN BOOK" ----------------
+// Spells out exactly what's on offer instead of making a brand guess.
+// Prices stay off the page — the CTA is "Request Campaign Pricing".
+function renderBookingSection(t){
+  const availableFor = t.availableFor || [];
+  const bookingOptions = t.bookingOptions || [];
+  if(!availableFor.length && !bookingOptions.length) return '';
+  const taxonomy = window.TALENT_TAXONOMY || { AVAILABLE_FOR_GROUPS: [] };
+  const definedGroups = taxonomy.AVAILABLE_FOR_GROUPS || [];
+  const groups = definedGroups.map(g => ({
+    group: g.group,
+    items: availableFor.filter(a => g.items.includes(a)),
+  })).filter(g => g.items.length);
+  const customAvailable = availableFor.filter(a => !definedGroups.some(g => g.items.includes(a)));
+  if(customAvailable.length) groups.push({ group: 'Also Available For', items: customAvailable });
+
+  return `
+    <div class="mk-booking">
+      <div class="mk-section-title">What ${escapeHtml((t.name || '').split(' ')[0] || 'They')} Can Book</div>
+      ${groups.length ? `
+      <div class="mk-avail-groups">
+        ${groups.map(g => `
+          <div class="mk-avail-group">
+            <span class="mk-avail-group-label">${escapeHtml(g.group)}</span>
+            <div class="mk-avail-chips">${g.items.map(i => `<span class="mk-avail-chip">${escapeHtml(i)}</span>`).join('')}</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+      ${bookingOptions.length ? `
+      <div class="mk-booking-options">
+        <span class="mk-avail-group-label">Booking Options</span>
+        <div class="mk-booking-pills">${bookingOptions.map(o => `<span class="mk-booking-pill">${escapeHtml(o)}</span>`).join('')}</div>
+      </div>` : ''}
+      <button type="button" class="btn btn-primary mk-pricing-cta" data-open-campaign-pricing>Request Campaign Pricing <span class="arrow">→</span></button>
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: CONTENT PORTFOLIO ----------------
+// A categorized, filterable gallery instead of a flat pile of photos —
+// images and videos both work. Each item's category comes from the wizard's
+// Portfolio step; "ALL" always shows everything.
+function renderPortfolioSection(t){
+  const gallery = t.gallery || [];
+  if(!gallery.length) return '';
+  const categories = [...new Set(gallery.map(g => g.category).filter(Boolean))];
+  return `
+    <div class="mk-portfolio">
+      <div class="mk-section-title">Content Portfolio</div>
+      <div class="mk-portfolio-tabs" id="mkPortfolioTabs">
+        <button type="button" class="mk-portfolio-tab active" data-portfolio-filter="ALL">All</button>
+        ${categories.map(c => `<button type="button" class="mk-portfolio-tab" data-portfolio-filter="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}
+      </div>
+      <div class="mk-portfolio-grid" id="mkPortfolioGrid">
+        ${gallery.map((g, i) => `
+          <div class="mk-portfolio-item" data-portfolio-cat="${escapeHtml(g.category || '')}" data-portfolio-index="${i}">
+            ${g.mediaType === 'video'
+              ? `<video src="${escapeHtml(g.url)}" muted playsinline preload="metadata"></video><span class="mk-portfolio-play" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>`
+              : `<img src="${escapeHtml(g.url)}" alt="${escapeHtml(t.name)} photo" loading="lazy">`}
+            ${g.category ? `<span class="mk-portfolio-tag">${escapeHtml(g.category)}</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: CAMPAIGN PORTFOLIO ----------------
+// Reuses the site-wide Campaigns dataset (already loaded into
+// campaignsData by loadCampaigns()) rather than duplicating campaign data
+// per-talent — a talent's "previous campaigns" here are just whichever
+// entries in the admin's Campaigns page have this talent's name as
+// creatorName. The grid itself is populated after content.innerHTML is
+// set (see openMediakit()), reusing buildCampaignCard() so these cards
+// look identical to the ones on the public Campaigns section.
+function renderCampaignPortfolioSection(t){
+  const matches = campaignsData.filter(c => (c.creatorName || '').trim().toLowerCase() === (t.name || '').trim().toLowerCase());
+  if(!matches.length) return '';
+  return `
+    <div class="mk-campaigns">
+      <div class="mk-section-title">Campaign Portfolio</div>
+      <div class="mk-campaigns-grid" id="mkCampaignsGrid"></div>
+    </div>
+  `;
+}
+
+// ---------------- MEDIA KIT: CLIENT FEEDBACK (SOCIAL PROOF) ----------------
+function renderTestimonialsSection(t){
+  const quotes = (t.testimonials || []).filter(q => q.quote && q.quote.trim());
+  if(!quotes.length) return '';
+  return `
+    <div class="mk-testimonials">
+      <div class="mk-section-title">Client Feedback</div>
+      <div class="mk-testimonials-grid">
+        ${quotes.map(q => `
+          <div class="mk-testimonial-card">
+            <p class="mk-testimonial-quote">“${escapeHtml(q.quote)}”</p>
+            ${(q.author || q.role) ? `
+            <div class="mk-testimonial-attrib">
+              ${q.logo ? `<img class="mk-testimonial-logo" src="${escapeHtml(q.logo)}" alt="">` : ''}
+              <div>
+                ${q.author ? `<span class="mk-testimonial-author">${escapeHtml(q.author)}</span>` : ''}
+                ${q.role ? `<span class="mk-testimonial-role">${escapeHtml(q.role)}</span>` : ''}
+              </div>
+            </div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function openMediakit(id, opts){
   const t = rosterData.find(x => x.id === id);
   if(!t) return;
@@ -2513,7 +2745,7 @@ function openMediakit(id, opts){
         <div class="mk-hero-brand" id="mkHeroBrand" aria-hidden="true">
           <span class="mk-hero-brand-text">BRXDGE</span>
         </div>
-        ${(t.gallery && t.gallery.length) ? `
+        ${(t.gallery || []).some(g => (g.mediaType || 'image') !== 'video') ? `
         <a href="javascript:void(0)" class="mk-hero-gallery-link" id="mkHeroGalleryDownload">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>Download Gallery</span>
@@ -2558,13 +2790,18 @@ function openMediakit(id, opts){
           ${castCheckSvg}${castPlusSvg}
           <span>${castIds.includes(t.id) ? 'Added' : 'Add to Cast'}</span>
         </button>
+        <button type="button" class="mk-addcast mk-download-kit" id="mkDownloadKitBtn" data-download-mediakit>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Download Media Kit</span>
+        </button>
       </div>
     </div>
     <div class="mk-main">
+      ${renderSnapshotSection(t)}
+      ${renderAudienceSection(t)}
+
       <p class="reach-line">Combined social reach: <b>${reach}</b> across ${(t.socials||[]).length} platform${(t.socials||[]).length === 1 ? '' : 's'}</p>
       ${t.location ? `<p class="mk-meta-line"><span class="mk-meta-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
-      ${(t.audienceAge || t.audienceLocation) ? `<p class="mk-meta-line"><span class="mk-meta-label">Audience</span>${escapeHtml([t.audienceAge, t.audienceLocation].filter(Boolean).join(' • '))}</p>` : ''}
-      ${(t.availableFor && t.availableFor.length) ? `<p class="mk-meta-line"><span class="mk-meta-label">Available for</span>${escapeHtml(t.availableFor.join(' • '))}</p>` : ''}
       <p class="mk-bio">${escapeHtml(t.bio)}</p>
 
       <div class="mk-section-title">Platforms</div>
@@ -2586,12 +2823,11 @@ function openMediakit(id, opts){
         `).join('') || '<p style="color:var(--muted); font-size:14px;">No platforms added yet.</p>'}
       </div>
 
-      ${(t.gallery && t.gallery.length) ? `
-      <div class="mk-section-title">Gallery</div>
-      <div class="mk-gallery">
-        ${t.gallery.map((url, i) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(t.name)} photo" loading="lazy" data-gallery-index="${i}">`).join('')}
-      </div>
-      ` : ''}
+      ${renderWhySection(t)}
+      ${renderBookingSection(t)}
+      ${renderPortfolioSection(t)}
+      ${renderCampaignPortfolioSection(t)}
+      ${renderTestimonialsSection(t)}
 
       ${renderPostsSection('YouTube', t.socials)}
       ${renderPostsSection('TikTok', t.socials)}
@@ -2634,11 +2870,54 @@ function openMediakit(id, opts){
     splash.style.display = 'none';
   }, 1500);
 
-  content.querySelectorAll('.mk-gallery img').forEach(img => {
-    img.addEventListener('click', () => {
-      openGalleryLightbox(t, Number(img.dataset.galleryIndex));
+  // Content Portfolio — category tabs (client-side filter, no re-render)
+  // and per-item click: images open the lightbox, videos open the video
+  // modal with a native <video> player.
+  const portfolioTabs = content.querySelector('#mkPortfolioTabs');
+  const portfolioGrid = content.querySelector('#mkPortfolioGrid');
+  if(portfolioTabs && portfolioGrid){
+    portfolioTabs.querySelectorAll('[data-portfolio-filter]').forEach(tab => {
+      tab.addEventListener('click', () => {
+        portfolioTabs.querySelectorAll('[data-portfolio-filter]').forEach(b => b.classList.remove('active'));
+        tab.classList.add('active');
+        const filter = tab.dataset.portfolioFilter;
+        portfolioGrid.querySelectorAll('.mk-portfolio-item').forEach(item => {
+          item.style.display = (filter === 'ALL' || item.dataset.portfolioCat === filter) ? '' : 'none';
+        });
+      });
     });
-  });
+    portfolioGrid.querySelectorAll('.mk-portfolio-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const idx = Number(item.dataset.portfolioIndex);
+        const g = (t.gallery || [])[idx];
+        if(!g) return;
+        if(g.mediaType === 'video'){
+          openPortfolioVideo(g.url);
+        } else {
+          const imageItems = (t.gallery || []).filter(x => (x.mediaType || 'image') !== 'video');
+          const imgIdx = imageItems.indexOf(g);
+          openGalleryLightbox(t, imgIdx >= 0 ? imgIdx : 0);
+        }
+      });
+    });
+  }
+
+  // Campaign Portfolio — populated with real DOM nodes from
+  // buildCampaignCard() (same cards as the public Campaigns section)
+  // rather than duplicating that markup as a string here.
+  const campaignsGridEl = content.querySelector('#mkCampaignsGrid');
+  if(campaignsGridEl){
+    campaignsData
+      .filter(c => (c.creatorName || '').trim().toLowerCase() === (t.name || '').trim().toLowerCase())
+      .forEach(c => campaignsGridEl.appendChild(buildCampaignCard(c)));
+    // buildCampaignCard() marks each card .reveal-card (opacity:0 until an
+    // IntersectionObserver adds .in-view — see revealTalentCards()). These
+    // cards are appended straight into an overlay that's already on
+    // screen, so they'd never scroll into view to trigger that observer on
+    // their own; `immediate: true` reveals them right away instead, same
+    // as the talent roster overlay does for the same reason.
+    revealTalentCards(campaignsGridEl, { immediate: true });
+  }
 
   const galleryDownloadLink = content.querySelector('#mkHeroGalleryDownload');
   if(galleryDownloadLink){
@@ -2647,6 +2926,12 @@ function openMediakit(id, opts){
       downloadGalleryAlbum(t);
     });
   }
+
+  // "Download Media Kit" — the full 7-page PDF dossier (hero, about,
+  // audience, platforms, content, campaigns, booking), distinct from the
+  // simpler "Download Gallery" photo album above.
+  const downloadKitBtn = content.querySelector('[data-download-mediakit]');
+  if(downloadKitBtn) downloadKitBtn.addEventListener('click', () => downloadMediaKitPdf(t));
 
   content.querySelectorAll('.mk-post-card[data-embed-url]').forEach(card => {
     card.addEventListener('click', (e) => {
@@ -2682,6 +2967,44 @@ function openMediakit(id, opts){
   // template above; this only needs to wire the click.
   const mkAddCastBtn = content.querySelector('[data-cast-toggle]');
   if(mkAddCastBtn) mkAddCastBtn.addEventListener('click', () => toggleCast(mkAddCastBtn.dataset.castToggle));
+
+  // "Request Campaign Pricing →" (What They Can Book section) — adds this
+  // talent to the cast if they aren't already in it, then jumps straight
+  // into the campaign request flow instead of making the brand manager
+  // find "Add to Cast" first.
+  const pricingBtn = content.querySelector('[data-open-campaign-pricing]');
+  if(pricingBtn) pricingBtn.addEventListener('click', () => {
+    if(!castIds.includes(t.id)) toggleCast(t.id);
+    openCampaignBriefModal();
+  });
+
+  // Sticky "Book" bar — lives outside #mkContent (static markup in
+  // index.html, see .mk-sticky-book), so it's re-populated per talent here
+  // rather than re-rendered. Its own show/hide is pure CSS, gated on the
+  // same .mediakit-overlay.past-hero class updateHeroScrollProgress()
+  // already toggles for #mkBack — no extra scroll listener needed.
+  const stickyFirstName = (t.name || '').split(' ')[0] || 'Them';
+  const stickyPhoto = document.getElementById('mkStickyBookPhoto');
+  const stickyName = document.getElementById('mkStickyBookName');
+  const stickyNiche = document.getElementById('mkStickyBookNiche');
+  const stickyLabel = document.getElementById('mkStickyBookLabel');
+  const stickyBtn = document.getElementById('mkStickyBookBtn');
+  if(stickyPhoto) stickyPhoto.src = talentPhotoUrl(t);
+  if(stickyPhoto) stickyPhoto.alt = escapeHtml(t.name);
+  if(stickyName) stickyName.textContent = t.name || '';
+  if(stickyNiche) stickyNiche.textContent = talentCategories(t)[0] || t.niche || '';
+  if(stickyLabel) stickyLabel.textContent = `Book ${stickyFirstName}`;
+  if(stickyBtn){
+    // Replace instead of addEventListener — openMediakit() re-populates this
+    // same static element on every talent switch, and stacking listeners
+    // across opens would fire once per previous talent too.
+    const freshBtn = stickyBtn.cloneNode(true);
+    stickyBtn.replaceWith(freshBtn);
+    freshBtn.addEventListener('click', () => {
+      if(!castIds.includes(t.id)) toggleCast(t.id);
+      openCampaignBriefModal();
+    });
+  }
 }
 
 // The full, shareable URL for a talent's media kit (matches the ?talent=
@@ -2726,6 +3049,16 @@ document.addEventListener('keydown', (e) => {
 
 function openVideoModal(embedUrl){
   videoModalFrame.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  videoModal.classList.add('show');
+  setBodyScrollLocked('hidden');
+}
+
+// Content Portfolio videos are direct hosted video files (uploaded or a
+// pasted URL), not YouTube/TikTok embed links — a real <video> element
+// plays those correctly, where an <iframe> (openVideoModal's job, above)
+// would not.
+function openPortfolioVideo(url){
+  videoModalFrame.innerHTML = `<video src="${escapeHtml(url)}" controls autoplay playsinline></video>`;
   videoModal.classList.add('show');
   setBodyScrollLocked('hidden');
 }
@@ -2842,7 +3175,8 @@ function loadJsPdfLib(){
 // Bundles every photo in a talent's gallery into a single .zip and downloads
 // it — the "Gallery" link's whole job. Uses jsPDF, loaded on demand above.
 async function downloadGalleryAlbum(t){
-  if(!t.gallery || !t.gallery.length){
+  const images = (t.gallery || []).filter(g => (g.mediaType || 'image') !== 'video');
+  if(!images.length){
     showToast('No gallery photos to download');
     return;
   }
@@ -2875,8 +3209,8 @@ async function downloadGalleryAlbum(t){
     doc.text('Photo Gallery — BRXDGE', pageW / 2, pageH - 44, { align: 'center' });
 
     // One image per page, fit to the page with a margin, aspect preserved.
-    for (const url of t.gallery) {
-      const img = await loadImageForPdf(url);
+    for (const g of images) {
+      const img = await loadImageForPdf(g.url);
       doc.addPage();
       const margin = 28;
       const maxW = pageW - margin * 2;
@@ -2919,8 +3253,443 @@ function loadImageForPdf(url){
     }));
 }
 
+// ============================================================================
+// MEDIA KIT PDF — "Download Media Kit"
+// A full 7-page dossier (hero / about / audience / platforms / content /
+// campaigns / booking), separate from the simpler "Download Gallery" photo
+// album above. Built with plain jsPDF drawing calls (rects, text, thin
+// hairlines) rather than an html2canvas screenshot of the live page — the
+// site leans on backdrop-filter/gradients that don't capture reliably, and
+// vector-drawn text stays crisp and matches the "premium dossier" brief
+// (editorial, black/white, minimal data viz) far better than a rasterized
+// snapshot would. Reuses the exact same data + grouping logic as the public
+// media kit sections (renderAudienceSection, renderBookingSection, etc.) so
+// the PDF never drifts from what's shown on-site.
+// ============================================================================
+
+// Parses a "#RRGGBB" string into a jsPDF-ready [r,g,b] triple; anything else
+// (CSS var() fallbacks like platformBrandColor's, or missing colors) falls
+// back to a neutral gray so a bad/unknown color never throws mid-render.
+function pdfHex(hex, fallback){
+  if(typeof hex === 'string' && /^#[0-9a-f]{6}$/i.test(hex)){
+    return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  }
+  return fallback || [140, 140, 140];
+}
+
+// Shared chrome for every page after the cover: a thin top rule with the
+// BRXDGE wordmark + talent name, a big section title, and a page-number
+// footer — so any single page is still identifiable if the set gets
+// separated or printed loose. Returns the y-coordinate content should start
+// at, right below the title.
+function pdfPageChrome(doc, pageW, pageH, talentName, sectionTitle, pageNum, totalPages){
+  doc.setFillColor(10, 10, 10);
+  doc.rect(0, 0, pageW, pageH, 'F');
+  doc.setDrawColor(45, 45, 45);
+  doc.setLineWidth(0.6);
+  doc.line(40, 44, pageW - 40, 44);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(230, 230, 230);
+  doc.text('BRXDGE', 40, 32);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(150, 150, 150);
+  doc.text((talentName || '').toUpperCase(), pageW - 40, 32, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(245, 245, 245);
+  doc.text(sectionTitle, 40, 78);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(110, 110, 110);
+  doc.text(`${pageNum} / ${totalPages}`, pageW - 40, pageH - 26, { align: 'right' });
+  doc.text('BRXDGE Media Kit', 40, pageH - 26);
+  return 104;
+}
+
+// Wraps a list of strings into pill "chips", flowing to a new row once the
+// current one runs out of width. Returns the y just below the last row.
+function pdfDrawChipRow(doc, x, y, maxWidth, items){
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  let cx = x, cy = y;
+  const rowH = 22, gap = 8, padX = 10;
+  (items || []).forEach(item => {
+    const label = String(item);
+    const w = doc.getTextWidth(label) + padX * 2;
+    if(cx !== x && cx + w > x + maxWidth){ cx = x; cy += rowH + gap; }
+    doc.setDrawColor(70, 70, 70);
+    doc.setFillColor(26, 26, 26);
+    doc.roundedRect(cx, cy, w, rowH, 11, 11, 'FD');
+    doc.setTextColor(220, 220, 220);
+    doc.text(label, cx + padX, cy + 14.5);
+    cx += w + gap;
+  });
+  return cy + rowH;
+}
+
+// Minimal, monochrome bar-chart block — mirrors the on-site .mk-bar-row
+// treatment (flat label / track / percentage, no color-coding). Caps how
+// many rows it draws so a talent with an unusually long list (many
+// locations/interests) can't push a page past its bounds; the remainder is
+// summarized as "+N more" rather than silently dropped.
+function pdfDrawBarBlock(doc, x, y, maxWidth, label, rows, maxRows){
+  const capped = rows.slice(0, maxRows || rows.length);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(140, 140, 140);
+  doc.text(label, x, y);
+  y += 16;
+  const labelW = 110, gap = 10;
+  const trackX = x + labelW + gap;
+  const trackW = maxWidth - labelW - gap - 40;
+  capped.forEach(([name, pct]) => {
+    const num = Math.max(0, Math.min(100, Number(pct) || 0));
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(215, 215, 215);
+    doc.text(String(name), x, y + 7);
+    doc.setFillColor(40, 40, 40);
+    doc.rect(trackX, y, trackW, 7, 'F');
+    doc.setFillColor(215, 215, 215);
+    doc.rect(trackX, y, trackW * (num / 100), 7, 'F');
+    doc.setFontSize(9.5);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`${pct}%`, x + maxWidth, y + 7, { align: 'right' });
+    y += 22;
+  });
+  if(rows.length > capped.length){
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8.5);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`+${rows.length - capped.length} more`, x, y + 2);
+    y += 16;
+  }
+  return y;
+}
+
+async function downloadMediaKitPdf(t){
+  showToast('Preparing media kit PDF…');
+  try {
+    await loadJsPdfLib();
+  } catch(err){
+    showToast('Download tool failed to load — check your connection');
+    return;
+  }
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    const contentW = pageW - margin * 2;
+    const totalPages = 7;
+    const firstName = (t.name || '').split(' ')[0] || 'This talent';
+    const reach = formatFollowers(totalReach(t.socials));
+
+    // ---------------- PAGE 1 — HERO ----------------
+    doc.setFillColor(8, 8, 8);
+    doc.rect(0, 0, pageW, pageH, 'F');
+    let heroImg = null;
+    try { heroImg = await loadImageForPdf(talentCoverUrl(t)); } catch(err) { heroImg = null; }
+    if(heroImg){
+      const ratio = Math.max(pageW / heroImg.width, pageH / heroImg.height);
+      const w = heroImg.width * ratio, h = heroImg.height * ratio;
+      doc.addImage(heroImg.dataUrl, heroImg.format, (pageW - w) / 2, (pageH - h) / 2, w, h);
+      // Dark scrim behind the name/niche so they stay legible over any
+      // photo — GState (opacity) is core jsPDF, but fall back to a flat
+      // solid band if a given CDN build doesn't expose it.
+      try {
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity: 0.62 }));
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, pageH * 0.52, pageW, pageH * 0.48, 'F');
+        doc.restoreGraphicsState();
+      } catch(err) {
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, pageH * 0.58, pageW, pageH * 0.42, 'F');
+      }
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text('BRXDGE', margin, 50);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(200, 200, 200);
+    doc.text('MEDIA KIT', pageW - margin, 50, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(38);
+    doc.setTextColor(255, 255, 255);
+    doc.text(t.name || '', margin, pageH - 148);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(13);
+    doc.setTextColor(210, 210, 210);
+    doc.text((t.niche || '').toUpperCase(), margin, pageH - 122);
+    doc.setFontSize(11);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`${reach} combined reach across ${(t.socials || []).length} platform${(t.socials || []).length === 1 ? '' : 's'}`, margin, pageH - 60);
+    if(t.location){
+      doc.text(t.location, pageW - margin, pageH - 60, { align: 'right' });
+    }
+
+    // ---------------- PAGE 2 — ABOUT ----------------
+    doc.addPage();
+    let y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'About', 2, totalPages);
+    const niches = snapshotNiches(t);
+    if(niches.length){
+      y = pdfDrawChipRow(doc, margin, y, contentW, niches) + 26;
+    }
+    if(t.location){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('LOCATION', margin, y);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(220, 220, 220);
+      doc.text(t.location, margin, y + 16);
+      y += 40;
+    }
+    if(t.bio){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('BIO', margin, y);
+      y += 16;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(11.5); doc.setTextColor(225, 225, 225);
+      const lines = doc.splitTextToSize(t.bio, contentW);
+      doc.text(lines, margin, y);
+      y += lines.length * 15 + 26;
+    }
+    const platforms = [...new Set((t.socials || []).map(s => s.platform).filter(Boolean))];
+    if(platforms.length){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('PLATFORMS', margin, y); y += 16;
+      y = pdfDrawChipRow(doc, margin, y, contentW, platforms) + 24;
+    }
+    if((t.contentFormats || []).length){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('CONTENT FORMATS', margin, y); y += 16;
+      y = pdfDrawChipRow(doc, margin, y, contentW, t.contentFormats) + 24;
+    }
+
+    // ---------------- PAGE 3 — AUDIENCE DEMOGRAPHICS ----------------
+    doc.addPage();
+    y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'Audience Demographics', 3, totalPages);
+    const male = Number(t.audienceGenderMale) || 0;
+    const female = Number(t.audienceGenderFemale) || 0;
+    const ageRows = (t.audienceAgeBreakdown || []).filter(r => r.range && r.pct !== '' && r.pct != null);
+    const locRows = (t.audienceTopLocations || []).filter(r => r.location && r.pct !== '' && r.pct != null);
+    const interestRows = (t.audienceInterests || []).filter(r => r.interest && r.pct !== '' && r.pct != null);
+    if(!male && !female && !ageRows.length && !locRows.length && !interestRows.length){
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(12); doc.setTextColor(140, 140, 140);
+      doc.text('Audience analytics not yet available for this talent.', margin, y + 20);
+    } else {
+      if(male || female){
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+        doc.text('GENDER', margin, y); y += 14;
+        const total = (male + female) || 1;
+        doc.setFillColor(40, 40, 40);
+        doc.rect(margin, y, contentW, 10, 'F');
+        if(male){ doc.setFillColor(220, 220, 220); doc.rect(margin, y, contentW * (male / total), 10, 'F'); }
+        if(female){ doc.setFillColor(90, 90, 90); doc.rect(margin + contentW * (male / total), y, contentW * (female / total), 10, 'F'); }
+        y += 24;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(200, 200, 200);
+        doc.text(`${male}% Male   /   ${female}% Female`, margin, y);
+        y += 34;
+      }
+      if(ageRows.length){ y = pdfDrawBarBlock(doc, margin, y, contentW, 'AGE', ageRows.map(r => [r.range, r.pct]), 6) + 22; }
+      if(locRows.length){ y = pdfDrawBarBlock(doc, margin, y, contentW, 'TOP LOCATIONS', locRows.map(r => [r.location, r.pct]), 6) + 22; }
+      if(interestRows.length){ y = pdfDrawBarBlock(doc, margin, y, contentW, 'TOP AUDIENCE INTERESTS', interestRows.map(r => [r.interest, r.pct]), 8) + 22; }
+    }
+
+    // ---------------- PAGE 4 — PLATFORM STATISTICS ----------------
+    doc.addPage();
+    y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'Platform Statistics', 4, totalPages);
+    const socials = (t.socials || []);
+    if(!socials.length){
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(12); doc.setTextColor(140, 140, 140);
+      doc.text('No platforms added yet.', margin, y + 20);
+    } else {
+      const shownSocials = socials.slice(0, 10);
+      shownSocials.forEach((s, i) => {
+        const rowY = y + i * 50;
+        const [r, g, b] = pdfHex(platformBrandColor(s.platform));
+        doc.setFillColor(r, g, b);
+        doc.circle(margin + 4, rowY + 8, 4, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(235, 235, 235);
+        doc.text(s.platform || '', margin + 18, rowY + 12);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+        doc.text(s.followers || '—', pageW - margin, rowY + 6, { align: 'right' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(140, 140, 140);
+        doc.text('FOLLOWERS', pageW - margin, rowY + 18, { align: 'right' });
+        doc.setDrawColor(40, 40, 40); doc.setLineWidth(0.6);
+        doc.line(margin, rowY + 32, pageW - margin, rowY + 32);
+      });
+      const afterY = y + shownSocials.length * 50 + 16;
+      if(socials.length > shownSocials.length){
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+        doc.text(`+${socials.length - shownSocials.length} more platforms`, margin, afterY);
+      }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(200, 200, 200);
+      doc.text(`Combined reach: ${reach}`, margin, pageH - 60);
+    }
+
+    // ---------------- PAGE 5 — CONTENT EXAMPLES ----------------
+    doc.addPage();
+    y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'Content Examples', 5, totalPages);
+    const galleryAll = t.gallery || [];
+    const galleryItems = galleryAll.slice(0, 6);
+    if(!galleryItems.length){
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(12); doc.setTextColor(140, 140, 140);
+      doc.text('No content examples uploaded yet.', margin, y + 20);
+    } else {
+      const cols = 3;
+      const gap = 14;
+      const cellW = (contentW - gap * (cols - 1)) / cols;
+      const cellH = cellW * 1.15;
+      for (let i = 0; i < galleryItems.length; i++) {
+        const g = galleryItems[i];
+        const col = i % cols, row = Math.floor(i / cols);
+        const cx = margin + col * (cellW + gap);
+        const cy = y + row * (cellH + 32);
+        doc.setFillColor(24, 24, 24);
+        doc.rect(cx, cy, cellW, cellH, 'F');
+        if(g.mediaType === 'video'){
+          // Video frames can't be rendered into a static PDF — a play glyph
+          // marks it as a video example instead of leaving a blank tile.
+          doc.setDrawColor(90, 90, 90); doc.setLineWidth(1);
+          doc.circle(cx + cellW / 2, cy + cellH / 2, 18, 'S');
+          doc.setFillColor(200, 200, 200);
+          doc.triangle(cx + cellW / 2 - 5, cy + cellH / 2 - 8, cx + cellW / 2 - 5, cy + cellH / 2 + 8, cx + cellW / 2 + 9, cy + cellH / 2, 'F');
+        } else {
+          try {
+            const img = await loadImageForPdf(g.url);
+            const ratio = Math.min(cellW / img.width, cellH / img.height);
+            const iw = img.width * ratio, ih = img.height * ratio;
+            doc.addImage(img.dataUrl, img.format, cx + (cellW - iw) / 2, cy + (cellH - ih) / 2, iw, ih);
+          } catch(err) { /* leave the placeholder panel if the image fails to load */ }
+        }
+        if(g.category){
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(150, 150, 150);
+          doc.text(g.category.toUpperCase(), cx, cy + cellH + 16);
+        }
+      }
+      if(galleryAll.length > galleryItems.length){
+        const rows = Math.ceil(galleryItems.length / cols);
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+        doc.text(`+${galleryAll.length - galleryItems.length} more in the full Content Portfolio`, margin, y + rows * (cellH + 32) + 4);
+      }
+    }
+
+    // ---------------- PAGE 6 — PREVIOUS CAMPAIGNS ----------------
+    doc.addPage();
+    y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'Previous Campaigns', 6, totalPages);
+    const campaignMatches = campaignsData.filter(c => (c.creatorName || '').trim().toLowerCase() === (t.name || '').trim().toLowerCase());
+    if(!campaignMatches.length){
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(12); doc.setTextColor(140, 140, 140);
+      doc.text(`No campaign history yet — ${firstName} is available for your first.`, margin, y + 20);
+    } else {
+      const shownCampaigns = campaignMatches.slice(0, 4);
+      shownCampaigns.forEach((c, i) => {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(235, 235, 235);
+        doc.text(c.brandName || 'Campaign', margin, y);
+        const statText = [c.reach ? `${c.reach} reach` : '', c.engagement ? `${c.engagement} engagement` : ''].filter(Boolean).join('   ·   ');
+        if(statText){
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(150, 150, 150);
+          doc.text(statText, pageW - margin, y, { align: 'right' });
+        }
+        y += 18;
+        if(c.objective){
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(200, 200, 200);
+          const lines = doc.splitTextToSize(c.objective, contentW);
+          doc.text(lines, margin, y);
+          y += lines.length * 13 + 4;
+        }
+        if((c.deliverables || []).length){
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+          doc.text(c.deliverables.join('   •   '), margin, y);
+          y += 16;
+        }
+        if(c.results){
+          doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5); doc.setTextColor(170, 170, 170);
+          const lines = doc.splitTextToSize(`"${c.results}"`, contentW);
+          doc.text(lines, margin, y);
+          y += lines.length * 12 + 8;
+        }
+        y += 10;
+        if(i < shownCampaigns.length - 1){
+          doc.setDrawColor(40, 40, 40); doc.setLineWidth(0.6);
+          doc.line(margin, y, pageW - margin, y);
+          y += 22;
+        }
+      });
+      if(campaignMatches.length > shownCampaigns.length){
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
+        doc.text(`+${campaignMatches.length - shownCampaigns.length} more campaigns — full history available on request.`, margin, y + 6);
+      }
+    }
+
+    // ---------------- PAGE 7 — BOOKING & CONTACT ----------------
+    doc.addPage();
+    y = pdfPageChrome(doc, pageW, pageH, t.name || '', 'Booking & Contact', 7, totalPages);
+    const availableFor = t.availableFor || [];
+    const bookingOptions = t.bookingOptions || [];
+    const taxonomy = window.TALENT_TAXONOMY || { AVAILABLE_FOR_GROUPS: [] };
+    const definedGroups = taxonomy.AVAILABLE_FOR_GROUPS || [];
+    const bookGroups = definedGroups.map(g => ({
+      group: g.group,
+      items: availableFor.filter(a => g.items.includes(a)),
+    })).filter(g => g.items.length);
+    const customAvailable = availableFor.filter(a => !definedGroups.some(g => g.items.includes(a)));
+    if(customAvailable.length) bookGroups.push({ group: 'Also Available For', items: customAvailable });
+
+    if(bookGroups.length){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('AVAILABLE FOR', margin, y); y += 16;
+      bookGroups.forEach(g => {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(200, 200, 200);
+        doc.text(g.group, margin, y); y += 14;
+        y = pdfDrawChipRow(doc, margin, y, contentW, g.items) + 18;
+      });
+    }
+    if(bookingOptions.length){
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(140, 140, 140);
+      doc.text('BOOKING OPTIONS', margin, y); y += 16;
+      y = pdfDrawChipRow(doc, margin, y, contentW, bookingOptions) + 24;
+    }
+    if(!bookGroups.length && !bookingOptions.length){
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(11); doc.setTextColor(140, 140, 140);
+      doc.text('Booking details available on request.', margin, y); y += 30;
+    }
+
+    // Pricing is intentionally never published — every booking routes
+    // through a campaign brief instead of a static rate card, matching the
+    // "Request Campaign Pricing" CTA on the live media kit.
+    y = Math.max(y + 20, pageH - 190);
+    doc.setDrawColor(45, 45, 45); doc.setLineWidth(0.6);
+    doc.line(margin, y, pageW - margin, y);
+    y += 26;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(240, 240, 240);
+    doc.text(`Ready to book ${firstName}?`, margin, y); y += 20;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(190, 190, 190);
+    doc.text('Pricing is available on request — submit a campaign brief and the BRXDGE team will follow up within 1 business day.', margin, y, { maxWidth: contentW });
+    y += 34;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(220, 220, 220);
+    doc.text(getTalentShareUrl(t), margin, y);
+
+    doc.save(`${slugify(t.name)}-media-kit.pdf`);
+    showToast('Download started');
+  } catch(err) {
+    console.error(err);
+    showToast('Could not create the media kit PDF — try again');
+  }
+}
+
 function openGalleryLightbox(talent, startIndex){
-  glImages = talent.gallery || [];
+  // startIndex is expected to already be an index into the image-only
+  // subset (callers filter out video items before computing it) — glImages
+  // itself has always been a flat array of URL strings, kept that way here
+  // so the rest of this lightbox (updateGalleryStage, thumbs, etc.) didn't
+  // need to change when gallery items became {url,category,mediaType} objects.
+  glImages = (talent.gallery || []).filter(g => (g.mediaType || 'image') !== 'video').map(g => g.url);
   if(!glImages.length) return;
   glIndex = Math.min(Math.max(startIndex || 0, 0), glImages.length - 1);
   glName.textContent = talent.name;
@@ -2978,334 +3747,67 @@ glStage.addEventListener('touchend', (e) => {
   if(dx > 0 && glIndex > 0) setGalleryIndex(glIndex - 1);
 }, { passive: true });
 
-/* ---------------- ADD / EDIT TALENT MODAL ---------------- */
+/* ---------------- ADD / EDIT TALENT MODAL ----------------
+   This used to be its own full copy of the add/edit form — name, niche,
+   gender, photos, gallery, socials, all hand-built right here — completely
+   separate from (and missing several fields that existed only in) the
+   admin dashboard's copy of the same form. Both are now the shared
+   phase-by-phase wizard in talent-wizard.js (loaded by index.html right
+   before this file), so a manager adding/editing a talent from the public
+   site gets the exact same Creator Snapshot / Audience Analytics / Why /
+   Booking / Portfolio / Testimonials steps the admin dashboard has. */
 const talentOverlay = document.getElementById('talentOverlay');
-const talentForm = document.getElementById('talentForm');
-const socialRowsEl = document.getElementById('socialRows');
+const talentModalBody = document.getElementById('talentModalBody');
 document.getElementById('addTalentBtn').addEventListener('click', () => openTalentModal(null));
-document.getElementById('talentClose').addEventListener('click', () => talentOverlay.classList.remove('show'));
-document.getElementById('addSocialRow').addEventListener('click', () => addSocialRow());
 
-/* ---- Gallery (multiple pictures) state for the add/edit talent form ---- */
-const galleryUploadEl = document.getElementById('tGalleryUpload');
-const galleryPreviewEl = document.getElementById('galleryPreview');
-let galleryExistingUrls = [];   // photo URLs already saved on this talent (kept unless removed)
-let galleryPendingFiles = [];   // newly chosen File objects, not yet uploaded
-
-function renderGalleryPreview(){
-  galleryPreviewEl.innerHTML = '';
-
-  galleryExistingUrls.forEach((url, i) => {
-    const thumb = document.createElement('div');
-    thumb.className = 'gallery-thumb';
-    thumb.innerHTML = `<img src="${url}" alt="Gallery photo"><button type="button" class="remove-thumb" aria-label="Remove">&times;</button>`;
-    thumb.querySelector('.remove-thumb').addEventListener('click', () => {
-      galleryExistingUrls.splice(i, 1);
-      renderGalleryPreview();
-    });
-    galleryPreviewEl.appendChild(thumb);
-  });
-
-  galleryPendingFiles.forEach((file, i) => {
-    const thumb = document.createElement('div');
-    thumb.className = 'gallery-thumb';
-    const objectUrl = URL.createObjectURL(file);
-    thumb.innerHTML = `<img src="${objectUrl}" alt="New photo"><button type="button" class="remove-thumb" aria-label="Remove">&times;</button>`;
-    thumb.querySelector('.remove-thumb').addEventListener('click', () => {
-      galleryPendingFiles.splice(i, 1);
-      renderGalleryPreview();
-    });
-    galleryPreviewEl.appendChild(thumb);
-  });
+async function uploadTalentImage(file){
+  const formData = new FormData();
+  formData.append('talentImage', file);
+  const response = await fetch(API + '/upload', { method: 'POST', headers: managerToken ? { Authorization: `Bearer ${managerToken}` } : {}, body: formData });
+  if(!response.ok) throw new Error('Upload failed');
+  const data = await response.json();
+  return data.url;
 }
 
-galleryUploadEl.addEventListener('change', () => {
-  galleryPendingFiles = galleryPendingFiles.concat(Array.from(galleryUploadEl.files || []));
-  galleryUploadEl.value = ''; // allow re-selecting the same file / picking more later
-  renderGalleryPreview();
-});
-
-function addSocialRow(data){
-  const wrap = document.createElement('div');
-  wrap.className = 'social-entry';
-  wrap.dataset.posts = JSON.stringify(data && data.posts ? data.posts : []);
-
-  const row = document.createElement('div');
-  row.className = 'social-row';
-  row.innerHTML = `
-    <select class="s-platform">${PLATFORMS.map(p => `<option ${data && data.platform===p ? 'selected':''}>${p}</option>`).join('')}</select>
-    <input class="s-url" type="url" placeholder="Profile URL" value="${data ? data.url || '' : ''}">
-    <button type="button" class="remove-row" aria-label="Remove">&times;</button>
-  `;
-  const followersInput = document.createElement('input');
-  followersInput.className = 's-followers';
-  followersInput.type = 'text';
-  followersInput.placeholder = 'Followers e.g. 1.2M';
-  followersInput.value = data ? data.followers || '' : '';
-  followersInput.style.gridColumn = '1 / span 2';
-  row.insertBefore(followersInput, row.querySelector('.remove-row'));
-  row.querySelector('.remove-row').addEventListener('click', () => wrap.remove());
-  wrap.appendChild(row);
-
-  const extra = document.createElement('div');
-  extra.className = 'social-extra';
-  wrap.appendChild(extra);
-
-  const existingStats = (data && data.stats) || {};
-  function statsFieldsHTML(){
-    return `
-      <p class="extra-hint" style="margin-top:14px;">Stats shown on the "View statistics" button (optional):</p>
-      <div class="stats-fields">
-        <input type="text" class="stat-avgviews" placeholder="Avg. views per video e.g. 850K" value="${escapeHtml(existingStats.avgViews || '')}">
-        <input type="text" class="stat-avglikes" placeholder="Avg. likes per video e.g. 62K" value="${escapeHtml(existingStats.avgLikes || '')}">
-        <input type="text" class="stat-engagement" placeholder="Engagement rate e.g. 7.2%" value="${escapeHtml(existingStats.engagementRate || '')}">
-        <input type="text" class="stat-growth" placeholder="Growth, last 30 days e.g. +4.1%" value="${escapeHtml(existingStats.growth || '')}">
-      </div>
-    `;
-  }
-
-  function renderPostThumbs(){
-    const thumbsEl = extra.querySelector('.post-thumbs');
-    if(!thumbsEl) return;
-    const posts = JSON.parse(wrap.dataset.posts || '[]');
-    thumbsEl.innerHTML = posts.map(p =>
-      `<a class="post-thumb" href="${escapeHtml(safeUrl(p.link) || '#')}" target="_blank" rel="noopener" title="${escapeHtml(p.title || '')}"><img src="${escapeHtml(p.thumbnail)}" alt=""></a>`
-    ).join('');
-  }
-
-  function renderExtra(){
-    const platform = row.querySelector('.s-platform').value;
-    extra.innerHTML = '';
-
-    if(platform === 'YouTube'){
-      extra.innerHTML = `
-        <button type="button" class="fetch-btn" data-action="fetch-yt">↻ Fetch latest 4 videos</button>
-        <div class="post-thumbs"></div>
-        ${statsFieldsHTML()}
-      `;
-      extra.querySelector('[data-action="fetch-yt"]').addEventListener('click', async (e) => {
-        const channelUrl = row.querySelector('.s-url').value.trim();
-        if(!channelUrl){ showToast('Enter the YouTube channel URL first'); return; }
-        const btn = e.currentTarget;
-        const originalLabel = btn.textContent;
-        btn.disabled = true; btn.textContent = 'Fetching…';
-        try {
-          const res = await fetch(API + '/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=4');
-          if(!res.ok) throw new Error('Request failed');
-          const data = await res.json();
-          wrap.dataset.posts = JSON.stringify(data.posts || []);
-          if(data.stats) wrap.dataset.stats = JSON.stringify(data.stats);
-          renderPostThumbs();
-          showToast('Latest videos + stats fetched');
-        } catch(err){
-          console.error(err);
-          showToast('Could not fetch latest videos — check the channel URL');
-        } finally {
-          btn.disabled = false; btn.textContent = originalLabel;
-        }
-      });
-      renderPostThumbs();
-
-    } else if(platform === 'TikTok'){
-      const existingPosts = JSON.parse(wrap.dataset.posts || '[]');
-      extra.innerHTML = `
-        <p class="extra-hint">TikTok doesn't allow auto-fetching a profile's latest posts — paste up to 4 specific video links to preview instead:</p>
-        <input type="url" class="tt-video-input" placeholder="TikTok video URL 1" value="${existingPosts[0] ? existingPosts[0].sourceUrl || '' : ''}">
-        <input type="url" class="tt-video-input" placeholder="TikTok video URL 2" value="${existingPosts[1] ? existingPosts[1].sourceUrl || '' : ''}">
-        <input type="url" class="tt-video-input" placeholder="TikTok video URL 3" value="${existingPosts[2] ? existingPosts[2].sourceUrl || '' : ''}">
-        <input type="url" class="tt-video-input" placeholder="TikTok video URL 4" value="${existingPosts[3] ? existingPosts[3].sourceUrl || '' : ''}">
-        <button type="button" class="fetch-btn" data-action="fetch-tt">↻ Preview these videos</button>
-        <div class="post-thumbs"></div>
-        ${statsFieldsHTML()}
-      `;
-      extra.querySelector('[data-action="fetch-tt"]').addEventListener('click', async (e) => {
-        const urls = Array.from(extra.querySelectorAll('.tt-video-input')).map(i => i.value.trim()).filter(Boolean);
-        if(!urls.length){ showToast('Paste at least one TikTok video URL'); return; }
-        const btn = e.currentTarget;
-        const originalLabel = btn.textContent;
-        btn.disabled = true; btn.textContent = 'Fetching…';
-        try {
-          const posts = [];
-          for(const url of urls){
-            const res = await fetch(API + '/api/tiktok-oembed?url=' + encodeURIComponent(url));
-            if(!res.ok) throw new Error('Request failed');
-            const info = await res.json();
-            posts.push({ thumbnail: info.thumbnail_url, title: info.title || '', link: url, sourceUrl: url });
-          }
-          wrap.dataset.posts = JSON.stringify(posts);
-          renderPostThumbs();
-          showToast('Video previews fetched');
-        } catch(err){
-          console.error(err);
-          showToast('Could not preview one or more videos — check the links');
-        } finally {
-          btn.disabled = false; btn.textContent = originalLabel;
-        }
-      });
-      renderPostThumbs();
-
-    } else {
-      wrap.dataset.posts = '[]';
-    }
-  }
-
-  row.querySelector('.s-platform').addEventListener('change', renderExtra);
-  renderExtra();
-
-  socialRowsEl.appendChild(wrap);
-}
 function openTalentModal(id) {
   const existing = id ? rosterData.find(t => t.id === id) : null;
-  
-  // Set the title
-  document.getElementById('talentModalTitle').textContent = existing ? 'Edit Talent' : 'Add Talent';
-  
-  // CRITICAL: Set the hidden ID field so the submit function knows it's an update
-  document.getElementById('talentId').value = existing ? existing.id : '';
-  
-  document.getElementById('tName').value = existing ? existing.name : '';
-  document.getElementById('tNiche').value = existing ? existing.niche : 'Lifestyle';
-  document.getElementById('tGender').value = existing ? (existing.gender || '') : '';
-  document.getElementById('tPhoto').value = existing ? (existing.photo || '') : '';
-  document.getElementById('tCoverPhoto').value = existing ? (existing.coverPhoto || '') : '';
-  document.getElementById('tBio').value = existing ? existing.bio : '';
-
-  // Handle gallery (multiple pictures)
-  galleryExistingUrls = existing && existing.gallery ? existing.gallery.slice() : [];
-  galleryPendingFiles = [];
-  galleryUploadEl.value = '';
-  renderGalleryPreview();
-
-  // Handle social rows
-  socialRowsEl.innerHTML = '';
-  if(existing && existing.socials && existing.socials.length){
-    existing.socials.forEach(s => addSocialRow(s));
-  } else {
-    addSocialRow();
-  }
-  
   talentOverlay.classList.add('show');
-}
-talentForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
 
-  const fileInput = document.getElementById('tImageUpload');
-  let photoUrl = document.getElementById('tPhoto').value.trim();
-
-  const coverFileInput = document.getElementById('tCoverImageUpload');
-  let coverPhotoUrl = document.getElementById('tCoverPhoto').value.trim();
-
-  // 1. Handle Upload
-  if (fileInput.files && fileInput.files.length > 0) {
-    try {
-      const formData = new FormData();
-      formData.append('talentImage', fileInput.files[0]);
-      const response = await fetch(API + '/upload', { method: 'POST', headers: managerToken ? { Authorization: `Bearer ${managerToken}` } : {}, body: formData });
-      const data = await response.json();
-      photoUrl = data.url;
-    } catch (err) {
-      console.error(err);
-      showToast('Image upload failed, using existing/placeholder.');
-    }
+  function close(){
+    talentOverlay.classList.remove('show');
+    talentModalBody.innerHTML = '';
   }
 
-  // 1a. Handle the optional separate cover-photo upload
-  if (coverFileInput.files && coverFileInput.files.length > 0) {
-    try {
-      const formData = new FormData();
-      formData.append('talentImage', coverFileInput.files[0]);
-      const response = await fetch(API + '/upload', { method: 'POST', headers: managerToken ? { Authorization: `Bearer ${managerToken}` } : {}, body: formData });
-      const data = await response.json();
-      coverPhotoUrl = data.url;
-    } catch (err) {
-      console.error(err);
-      showToast('Cover photo upload failed, using existing/profile photo.');
-    }
-  }
-
-  // 1b. Upload any new gallery pictures, then merge with kept existing ones
-  let galleryUrls = galleryExistingUrls.slice();
-  if (galleryPendingFiles.length > 0) {
-    for (const file of galleryPendingFiles) {
-      try {
-        const formData = new FormData();
-        formData.append('talentImage', file);
-        const response = await fetch(API + '/upload', { method: 'POST', headers: managerToken ? { Authorization: `Bearer ${managerToken}` } : {}, body: formData });
-        const data = await response.json();
-        if (data && data.url) galleryUrls.push(data.url);
-      } catch (err) {
-        console.error(err);
-        showToast('One or more gallery photos failed to upload.');
+  openTalentWizard({
+    container: talentModalBody,
+    existing,
+    uploadImage: uploadTalentImage,
+    fetchYouTube: async (channelUrl, count) => {
+      const res = await fetch(API + '/api/youtube-latest?channelUrl=' + encodeURIComponent(channelUrl) + '&count=' + count);
+      if(!res.ok) throw new Error('Request failed');
+      return res.json();
+    },
+    fetchTikTok: async (videoUrl) => {
+      const res = await fetch(API + '/api/tiktok-oembed?url=' + encodeURIComponent(videoUrl));
+      if(!res.ok) throw new Error('Request failed');
+      return res.json();
+    },
+    onCancel: close,
+    onSave: async (entry, isEditing) => {
+      if(isEditing){
+        const index = rosterData.findIndex(t => t.id === entry.id);
+        if(index !== -1) rosterData[index] = entry; else rosterData.push(entry);
+      } else {
+        rosterData.push(entry);
       }
-    }
-  }
-
-  // 2. Identify if we are updating or adding
-  const id = document.getElementById('talentId').value;
-  
-  // Spread the existing record first — this modal doesn't have fields for
-  // everything a talent can carry (e.g. the media-kit categories/audience/
-  // availability set from the admin dashboard), so without this, saving a
-  // talent from here would silently wipe any of those fields back to blank.
-  const existingForSave = id ? rosterData.find(t => t.id === id) : null;
-  const entry = {
-    ...(existingForSave || {}),
-    id: id || ('t' + Date.now()),
-    name: document.getElementById('tName').value.trim(),
-    niche: document.getElementById('tNiche').value,
-    gender: document.getElementById('tGender').value,
-    photo: photoUrl,
-    coverPhoto: coverPhotoUrl,
-    gallery: galleryUrls,
-    bio: document.getElementById('tBio').value.trim(),
-    socials: Array.from(socialRowsEl.querySelectorAll('.social-entry')).map(wrap => {
-      const row = wrap.querySelector('.social-row');
-      const extra = wrap.querySelector('.social-extra');
-      const avgViewsEl = extra.querySelector('.stat-avgviews');
-      const stats = avgViewsEl ? {
-        avgViews: avgViewsEl.value.trim(),
-        avgLikes: extra.querySelector('.stat-avglikes').value.trim(),
-        engagementRate: extra.querySelector('.stat-engagement').value.trim(),
-        growth: extra.querySelector('.stat-growth').value.trim(),
-      } : null;
-      return {
-        platform: row.querySelector('.s-platform').value,
-        url: row.querySelector('.s-url').value.trim(),
-        followers: row.querySelector('.s-followers').value.trim(),
-        posts: JSON.parse(wrap.dataset.posts || '[]'),
-        ...(stats ? { stats } : {}),
-      };
-    }).filter(s => s.url || s.followers)
-  };
-
-  // 3. Update or Add correctly
-  if (id) {
-    const index = rosterData.findIndex(t => t.id === id);
-    if (index !== -1) {
-      rosterData[index] = entry; 
-      showToast('Talent updated');
-    }
-  } else {
-    rosterData.push(entry);
-    showToast('Talent added');
-  }
-
-  // 4. Save to server
-  await saveRoster();
-  
-  // 5. Cleanup Form
-  talentForm.reset();
-  document.getElementById('talentId').value = ''; // Important: Clears the ID for next time
-  socialRowsEl.innerHTML = ''; // Important: Clears the social rows so they don't duplicate
-  galleryExistingUrls = [];
-  galleryPendingFiles = [];
-  galleryPreviewEl.innerHTML = '';
-  talentOverlay.classList.remove('show');
-  
-  // 6. Refresh UI
-  renderRoster();
-  if (talentRosterOverlay.classList.contains('show')) renderTalentRosterGrid();
-});
+      await saveRoster();
+      close();
+      showToast(isEditing ? 'Talent updated' : 'Talent added');
+      renderRoster();
+      if (talentRosterOverlay.classList.contains('show')) renderTalentRosterGrid();
+    },
+  });
+}
 
 
 async function deleteTalent(id){
