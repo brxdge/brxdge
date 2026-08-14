@@ -1289,6 +1289,142 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .modal-actions{ display:flex; gap:10px; margin-top:6px; }
   .modal-actions .btn{ flex:1; justify-content:center; }
 
+  /* ---------- TALENT WIZARD (talent-wizard.js) — shared by the public
+     manager "+ Add Talent" button and the admin dashboard ---------- */
+  .modal.tw-modal{ max-width:640px; padding:0; }
+  .tw-wizard{ display:flex; flex-direction:column; max-height:88vh; }
+  .tw-close{
+    position:absolute; top:20px; right:20px; width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--panel-line); background:var(--ink-2); color:var(--muted);
+    font-size:18px; line-height:1; cursor:pointer; z-index:2;
+  }
+  .tw-head{ padding:32px 32px 0; }
+  .tw-head h3{ font-size:22px; margin:0 0 6px; }
+  .tw-sub{ color:var(--muted); font-size:14px; margin:0 0 20px; }
+  .tw-progress{ display:flex; gap:4px; padding:0 32px 20px; overflow-x:auto; }
+  .tw-progress-step{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; min-width:66px; }
+  .tw-progress-dot{
+    width:26px; height:26px; border-radius:50%; background:var(--ink-2); color:var(--muted);
+    border:1px solid var(--panel-line);
+    display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700;
+    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .tw-progress-step.tw-active .tw-progress-dot{
+    background:linear-gradient(135deg, var(--coral), var(--violet)); color:var(--on-accent); border-color:transparent;
+  }
+  .tw-progress-step.tw-done .tw-progress-dot{ background:var(--text); color:var(--ink); border-color:transparent; }
+  .tw-progress-label{ font-size:10px; color:var(--muted); text-align:center; line-height:1.25; }
+  .tw-progress-step.tw-active .tw-progress-label{ color:var(--text); font-weight:600; }
+  .tw-body{ padding:4px 32px 28px; overflow-y:auto; flex:1; }
+  .tw-step-intro{ color:var(--muted); font-size:13.5px; margin:0 0 20px; line-height:1.6; }
+  .tw-nav{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:18px 32px; border-top:1px solid var(--panel-line);
+  }
+  .tw-nav-right{ display:flex; gap:10px; }
+  .tw-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 20px; border-radius:100px; font-weight:600; font-size:14px; cursor:pointer;
+    border:none; transition:transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; width:auto;
+  }
+  .tw-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+  .tw-btn-primary{ background:linear-gradient(135deg, var(--coral), var(--violet)); color:var(--on-accent); box-shadow:0 10px 30px rgba(90,90,90,0.28); }
+  .tw-btn-ghost{ background:transparent; color:var(--text); border:1px solid var(--panel-line); }
+
+  .tw-field{ margin-bottom:18px; }
+  .tw-field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
+  .tw-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+  .tw-field-row .tw-field{ margin-bottom:0; }
+  .tw-field input, .tw-field textarea, .tw-field select,
+  .tw-field-row input, .tw-field-row select,
+  .tw-custom-input{
+    width:100%; padding:13px 16px; border-radius:12px; border:1px solid var(--panel-line);
+    background:var(--ink-2); color:var(--text); font-family:'Inter'; font-size:14.5px; box-sizing:border-box;
+    transition:border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .tw-field input:focus, .tw-field textarea:focus, .tw-field select:focus,
+  .tw-field-row input:focus, .tw-custom-input:focus{
+    outline:none; border-color:var(--coral); background:var(--panel); box-shadow:0 0 0 3px rgba(90,90,90,0.14);
+  }
+  .tw-invalid{ border-color:#c0392b !important; }
+  .tw-hint{ font-size:12px; color:var(--muted); margin:6px 0 0; line-height:1.5; }
+  .tw-optional{ font-weight:400; text-transform:none; }
+  .tw-photo-preview{ width:64px; height:64px; border-radius:10px; object-fit:cover; margin-top:8px; display:block; background:var(--avatar-bg); }
+
+  .tw-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .tw-chip{
+    display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:100px;
+    background:var(--ink-2); border:1px solid var(--panel-line); font-size:12.5px; font-weight:600; cursor:pointer; user-select:none;
+  }
+  .tw-chip input{ margin:0; accent-color:var(--coral); }
+  .tw-chip-static{
+    display:inline-flex; align-items:center; padding:6px 13px; border-radius:100px;
+    background:var(--ink-2); border:1px solid var(--panel-line); color:var(--text); font-size:12.5px; font-weight:600; margin:0 6px 6px 0;
+  }
+  .tw-chip-static.tw-removable{ cursor:pointer; }
+  .tw-readonly-chips{ display:flex; flex-wrap:wrap; }
+  .tw-group-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin:16px 0 9px; }
+  .tw-group-label:first-child{ margin-top:0; }
+
+  .tw-rows{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+  .tw-row{ display:grid; grid-template-columns:1fr 90px auto; gap:8px; align-items:center; }
+  .tw-row input{
+    padding:10px 12px; border:1px solid var(--panel-line); border-radius:10px; font-size:13.5px;
+    background:var(--ink-2); color:var(--text); outline:none;
+  }
+  .tw-row-remove{
+    width:30px; height:30px; border-radius:8px; border:1px solid var(--panel-line); background:transparent; color:var(--coral);
+    font-size:16px; line-height:1; flex-shrink:0; cursor:pointer;
+  }
+  .tw-add-row{
+    align-self:flex-start; background:none; border:1px dashed var(--panel-line); border-radius:10px;
+    padding:9px 14px; color:var(--coral); font-size:13px; font-weight:600; cursor:pointer;
+  }
+
+  .tw-why-row{
+    display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; gap:8px 10px;
+    border:1px solid var(--panel-line); border-radius:12px; padding:14px; background:var(--panel);
+  }
+  .tw-why-title{ grid-column:1; grid-row:1; padding:10px 12px; border:1px solid var(--panel-line); border-radius:9px; font-size:13.5px; font-weight:600; background:var(--ink-2); color:var(--text); }
+  .tw-why-desc{ grid-column:1; grid-row:2; padding:10px 12px; border:1px solid var(--panel-line); border-radius:9px; font-size:13px; resize:vertical; font-family:inherit; background:var(--ink-2); color:var(--text); }
+  .tw-why-row .tw-row-remove{ grid-column:2; grid-row:1; }
+
+  .tw-social-row{ border:1px solid var(--panel-line); border-radius:12px; padding:12px; background:var(--panel); }
+  .tw-social-row .tw-field-row{ grid-template-columns:120px 1fr 1fr auto; margin-bottom:0; align-items:center; }
+  .tw-social-extra:empty{ display:none; }
+  .tw-social-extra{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+  .tw-post-thumbs{ display:flex; flex-wrap:wrap; gap:6px; }
+  .tw-post-thumb{ width:56px; height:56px; border-radius:8px; overflow:hidden; display:block; border:1px solid var(--panel-line); }
+  .tw-post-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tw-fetch-btn{
+    align-self:flex-start; background:none; border:1px dashed var(--panel-line); border-radius:10px;
+    padding:8px 14px; color:var(--coral); font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .tw-fetch-btn:disabled{ opacity:0.6; cursor:default; }
+  .tw-tt-video{ width:100%; padding:9px 12px; border:1px solid var(--panel-line); border-radius:9px; font-size:13px; background:var(--ink-2); color:var(--text); outline:none; box-sizing:border-box; }
+
+  .tw-gallery-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(126px,1fr)); gap:14px; }
+  .tw-gallery-card{ border:1px solid var(--panel-line); border-radius:12px; padding:9px; position:relative; background:var(--panel); }
+  .tw-gallery-thumb{ width:100%; aspect-ratio:1/1; border-radius:9px; overflow:hidden; background:var(--avatar-bg); margin-bottom:9px; }
+  .tw-gallery-thumb img, .tw-gallery-thumb video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tw-gallery-placeholder{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; }
+  .tw-gallery-cat{ width:100%; padding:8px 9px; border:1px solid var(--panel-line); border-radius:8px; font-size:12px; background:var(--ink-2); color:var(--text); }
+  .tw-gallery-card .tw-row-remove{ position:absolute; top:13px; right:13px; width:24px; height:24px; font-size:13px; background:rgba(14,14,14,0.7); color:#fff; border:none; }
+
+  .tw-testi-row{ border:1px solid var(--panel-line); border-radius:12px; padding:14px; position:relative; background:var(--panel); }
+  .tw-testi-quote{ width:100%; padding:10px 12px; border:1px solid var(--panel-line); border-radius:9px; font-size:13.5px; font-family:inherit; resize:vertical; box-sizing:border-box; margin-bottom:9px; background:var(--ink-2); color:var(--text); }
+  .tw-testi-row .tw-field-row{ margin-bottom:0; }
+  .tw-testi-row .tw-row-remove{ position:absolute; top:12px; right:12px; }
+
+  @media (max-width:640px){
+    .tw-field-row{ grid-template-columns:1fr; }
+    .tw-social-row .tw-field-row{ grid-template-columns:1fr; }
+    .tw-row{ grid-template-columns:1fr; }
+    .tw-why-row{ grid-template-columns:1fr; }
+    .tw-why-row .tw-row-remove{ grid-column:1; justify-self:end; }
+    .tw-head, .tw-progress, .tw-body, .tw-nav{ padding-left:20px; padding-right:20px; }
+  }
+
   /* social link rows in the add/edit talent form */
   .social-entry{
     display:flex; flex-direction:column; gap:10px;
@@ -1704,6 +1840,133 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
   .mk-note{ margin-top:40px; font-size:12.5px; color:var(--muted); border-top:1px solid var(--panel-line); padding-top:18px; }
+
+  /* ---------- CREATOR SNAPSHOT — "immediately below the hero" at-a-glance
+     card. Deliberately visual (chip rows, not a table) so a brand manager
+     can tell in a few seconds whether this creator fits a campaign. ---------- */
+  .mk-snapshot{
+    margin:8px auto 0; max-width:920px;
+    border:1px solid var(--panel-line); border-radius:var(--radius-lg);
+    background:var(--panel); padding:36px 40px;
+  }
+  .mk-snapshot-eyebrow{
+    display:block; text-align:center; font-family:'Space Mono',monospace; font-size:11px;
+    letter-spacing:0.14em; color:var(--muted); text-transform:uppercase; margin-bottom:8px;
+  }
+  .mk-snapshot .mk-section-title{ margin:0 0 28px; }
+  .mk-snap-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:30px; }
+  .mk-snap-col{ display:flex; flex-direction:column; gap:11px; }
+  .mk-snap-label{ font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .mk-snap-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .mk-snap-chip{
+    display:inline-flex; align-items:center; padding:6px 13px; border-radius:100px;
+    background:var(--ink-2); border:1px solid var(--panel-line); font-size:12.5px; font-weight:600;
+  }
+
+  /* ---------- AUDIENCE ANALYTICS — the single biggest media-kit upgrade:
+     sells the AUDIENCE, not just the creator. Minimal monochrome bars
+     rather than colorful dashboard-style charts, on purpose. ---------- */
+  .mk-audience{ margin-top:56px; max-width:900px; margin-left:auto; margin-right:auto; }
+  .mk-audience-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:40px; margin-bottom:30px; }
+  .mk-aud-block{ display:flex; flex-direction:column; gap:14px; }
+  .mk-aud-block-label{ font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .mk-gender-split{ display:flex; height:10px; border-radius:100px; overflow:hidden; background:var(--ink-2); }
+  .mk-gender-seg{ height:100%; }
+  /* Two adjacent segments need to read as visibly different FROM EACH
+     OTHER, not just against the track — the previous coral→violet-vs-
+     panel-line pairing collapsed into near-identical grays in dark mode
+     (--coral #8A8A8A next to a ~20%-opacity panel-line read almost the
+     same). --text/--muted are the two tones furthest apart in this
+     monochrome palette in both themes, so they're used directly instead. */
+  .mk-gender-male{ background:var(--text); }
+  .mk-gender-female{ background:var(--muted); }
+  .mk-gender-legend{ display:flex; gap:20px; font-size:13px; color:var(--muted); }
+  .mk-gender-legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .mk-gender-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .mk-gender-dot--male{ background:var(--text); }
+  .mk-gender-dot--female{ background:var(--muted); }
+  .mk-bar-row{ display:grid; grid-template-columns:112px 1fr 44px; align-items:center; gap:12px; margin-bottom:11px; }
+  .mk-bar-row:last-child{ margin-bottom:0; }
+  .mk-bar-label{ font-size:13px; color:var(--text); font-weight:600; }
+  .mk-bar-track{ height:8px; border-radius:100px; background:var(--ink-2); overflow:hidden; }
+  .mk-bar-fill{ height:100%; background:linear-gradient(90deg, var(--coral), var(--violet)); border-radius:100px; }
+  .mk-bar-pct{ font-family:'Space Mono',monospace; font-size:12.5px; text-align:right; color:var(--muted); }
+  .mk-aud-interests{ margin-top:32px; }
+  .mk-aud-interests .mk-section-title{ margin:0 0 22px; }
+
+  /* ---------- WHY [NAME]? — the sales pitch, spelled out. ---------- */
+  .mk-why{ margin-top:56px; }
+  .mk-why-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:22px; }
+  .mk-why-card{
+    border:1px solid var(--panel-line); border-radius:var(--radius-md); background:var(--panel);
+    padding:28px 26px; transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .mk-why-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(0,0,0,0.12); border-color:var(--coral); }
+  .mk-why-card h4{ font-size:16.5px; font-weight:800; margin:0 0 10px; letter-spacing:-0.01em; }
+  .mk-why-card p{ font-size:13.5px; color:var(--muted); line-height:1.65; margin:0; }
+
+  /* ---------- WHAT THEY CAN BOOK — spelled out instead of guessed;
+     prices deliberately stay off the page. ---------- */
+  .mk-booking{ margin-top:56px; text-align:center; }
+  .mk-avail-groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:28px; margin-bottom:26px; text-align:left; }
+  .mk-avail-group-label{ display:block; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .mk-avail-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .mk-avail-chip{ display:inline-flex; align-items:center; padding:6px 13px; border-radius:100px; background:var(--ink-2); border:1px solid var(--panel-line); font-size:12.5px; font-weight:600; }
+  .mk-booking-options{ margin-bottom:30px; }
+  .mk-booking-pills{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:4px; }
+  .mk-booking-pill{
+    display:inline-flex; align-items:center; padding:8px 16px; border-radius:100px;
+    background:var(--text); color:var(--ink); font-size:12.5px; font-weight:700;
+  }
+  .mk-pricing-cta{ margin-top:4px; }
+
+  /* ---------- CONTENT PORTFOLIO — categorized, filterable, images + video. ---------- */
+  .mk-portfolio{ margin-top:56px; }
+  .mk-portfolio-tabs{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:28px; }
+  .mk-portfolio-tab{
+    padding:8px 18px; border-radius:100px; border:1px solid var(--panel-line); background:transparent;
+    color:var(--muted); font-family:inherit; font-size:12px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    cursor:pointer; transition:border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .mk-portfolio-tab:hover{ border-color:var(--coral); color:var(--text); }
+  .mk-portfolio-tab.active{ background:var(--text); color:var(--ink); border-color:var(--text); }
+  .mk-portfolio-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:18px; }
+  .mk-portfolio-item{
+    position:relative; aspect-ratio:1/1; border-radius:var(--radius-md); overflow:hidden; cursor:pointer;
+    border:1px solid var(--panel-line); background:var(--avatar-bg);
+  }
+  .mk-portfolio-item img, .mk-portfolio-item video{ width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.35s ease; }
+  .mk-portfolio-item:hover img, .mk-portfolio-item:hover video{ transform:scale(1.05); }
+  .mk-portfolio-play{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; pointer-events:none;
+  }
+  .mk-portfolio-play svg{ padding:14px; border-radius:50%; background:rgba(10,7,4,0.55); backdrop-filter:blur(3px); }
+  .mk-portfolio-tag{
+    position:absolute; bottom:10px; left:10px; padding:4px 11px; border-radius:100px;
+    background:rgba(10,7,4,0.65); color:#fff; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+    backdrop-filter:blur(3px);
+  }
+
+  /* ---------- CAMPAIGN PORTFOLIO — reuses .campaign-card from the public
+     Campaigns section (see buildCampaignCard() in script.js). ---------- */
+  .mk-campaigns{ margin-top:56px; }
+  .mk-campaigns-grid{ display:flex; flex-direction:column; gap:28px; }
+  .mk-campaigns .mk-campaigns-grid .campaign-card:hover{ transform:translateY(-3px); }
+
+  /* ---------- CLIENT FEEDBACK (social proof) — optional, hides entirely
+     when a talent has no testimonials. ---------- */
+  .mk-testimonials{ margin-top:56px; }
+  .mk-testimonials-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:22px; }
+  .mk-testimonial-card{
+    border:1px solid var(--panel-line); border-radius:var(--radius-md); background:var(--panel);
+    padding:28px 26px;
+  }
+  .mk-testimonial-quote{ font-size:16px; line-height:1.65; font-style:italic; color:var(--text); margin:0 0 18px; }
+  .mk-testimonial-attrib{ display:flex; align-items:center; gap:12px; }
+  .mk-testimonial-logo{ width:36px; height:36px; border-radius:8px; object-fit:contain; background:var(--ink-2); padding:4px; flex-shrink:0; }
+  .mk-testimonial-author{ display:block; font-weight:700; font-size:13.5px; }
+  .mk-testimonial-role{ display:block; font-size:12px; color:var(--muted); }
+
   /* ---------- MEDIA KIT: full-screen hero intro ----------
      First thing shown when a media kit opens — fills the entire
      viewport (100vh) with the talent's photo over a huge looping
@@ -1734,6 +1997,53 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     color: var(--text);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+
+  /* Sticky "Book" bar — pinned to the bottom of the media kit once the
+     visitor scrolls past the hero, so the booking CTA never requires
+     scrolling back up. Static markup (index.html), just re-populated per
+     talent in openMediakit() — its own show/hide is pure CSS, reusing the
+     same .mediakit-overlay.past-hero class updateHeroScrollProgress()
+     already toggles for #mkBack, so no extra scroll listener is needed.
+     Hidden by default (translated fully off-screen + not interactive) and
+     slides up once past-hero is set. */
+  .mk-sticky-book{
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 260;
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-top: 1px solid var(--panel-line);
+    box-shadow: 0 -12px 30px rgba(0,0,0,0.14);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.35s ease;
+  }
+  .mediakit-overlay.past-hero .mk-sticky-book{
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mk-sticky-book-photo{
+    width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+    border: 1px solid var(--panel-line); background: var(--avatar-bg);
+    flex-shrink: 0;
+  }
+  .mk-sticky-book-info{ flex: 1; min-width: 0; }
+  .mk-sticky-book-name{
+    font-weight: 700; font-size: 14.5px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mk-sticky-book-niche{
+    margin-top: 2px; font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mk-sticky-book-btn{
+    flex-shrink: 0; padding: 12px 22px; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
   }
 
   /* Splash intro — covers everything (even .mk-back) the instant a
@@ -5064,6 +5374,16 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .mk-cta-row{ flex-direction: column; width: 100%; }
   .mk-cta-row .mk-cta,
   .mk-cta-row .mk-addcast{ width: 100%; justify-content: center; }
+  .mk-snapshot{ padding:26px 22px; }
+  .mk-bar-row{ grid-template-columns:84px 1fr 36px; gap:8px; }
+  .mk-avail-groups{ grid-template-columns:1fr; }
+  .mk-booking{ text-align:left; }
+  .mk-booking-pills{ justify-content:flex-start; }
+  .mk-portfolio-grid{ grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:10px; }
+  .mk-sticky-book{ padding:10px 16px; gap:12px; }
+  .mk-sticky-book-photo{ width:36px; height:36px; }
+  .mk-sticky-book-niche{ display:none; }
+  .mk-sticky-book-btn{ padding:10px 16px; font-size:13px; }
 }
 
 /* Full talent-roster overlay — floats fixed top-right (mirrors .mk-back's
