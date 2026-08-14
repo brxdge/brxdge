@@ -1982,7 +1982,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .mk-why-carousel{ position:relative; }
   .mk-why-slides{
     position:relative;
-    min-height:400px;
+    min-height:800px;
     border:1px solid var(--panel-line); border-radius:var(--radius-lg); background:var(--panel);
     overflow:hidden;
   }
@@ -1996,18 +1996,33 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     opacity:1; visibility:visible; pointer-events:auto;
     transition:opacity 1s ease, visibility 0s linear 0s;
   }
+  /* Alternating layout — odd slides (2nd, 4th, ...) swap sides via
+     grid `order` rather than re-arranging the markup, so text/media stay
+     in the same source order (screen readers, tab order) regardless of
+     which side they render on. Set from script.js at render time
+     (i % 2 === 1), not detected here, since CSS has no "nth slide"
+     concept once slides are all stacked at position:absolute. */
+  .mk-why-slide--reverse .mk-why-text{ order:2; }
+  .mk-why-slide--reverse .mk-why-media{ order:1; }
   .mk-why-text{
     display:flex; flex-direction:column; justify-content:center;
-    padding:44px 48px;
+    padding:64px 60px;
   }
   .mk-why-badge{
     display:inline-flex; align-items:center; justify-content:center;
-    width:34px; height:34px; border-radius:50%; margin-bottom:18px;
+    width:40px; height:40px; border-radius:50%; margin-bottom:22px;
     background:var(--ink-2); border:1px solid var(--panel-line); color:var(--coral);
     flex-shrink:0;
   }
-  .mk-why-text h4{ font-size:22px; font-weight:800; margin:0 0 12px; letter-spacing:-0.01em; }
-  .mk-why-text p{ font-size:14.5px; color:var(--muted); line-height:1.7; margin:0; max-width:44ch; }
+  /* Matches the landing page's "THREE WAYS WE MOVE FORWARD" section
+     heading (#servicesHeading) — same family/weight/letter-spacing/size,
+     see h1,h2,h3 + .section-head h2 near the top of this file. */
+  .mk-why-text h4{
+    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size:clamp(30px, 4vw, 44px); font-weight:800; letter-spacing:-0.01em;
+    margin:0 0 18px; line-height:1.08;
+  }
+  .mk-why-text p{ font-size:15.5px; color:var(--muted); line-height:1.75; margin:0; max-width:44ch; }
   .mk-why-media{
     position:relative; overflow:hidden;
     background:var(--ink-2);
@@ -2029,10 +2044,16 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     .mk-why-slide.is-active{ transition:none; }
   }
   @media (max-width: 720px){
-    .mk-why-slides{ min-height:560px; }
+    /* Not a literal 2x of the mobile base here (that'd be ~1120px — taller
+       than most phone viewports just for one carousel slide). Scaled up
+       by a smaller factor instead so the card stays comfortably visible
+       without forcing a full extra scroll per slide. */
+    .mk-why-slides{ min-height:720px; }
     .mk-why-slide{ grid-template-columns:1fr; grid-template-rows:auto 1fr; }
-    .mk-why-text{ padding:28px 24px 20px; }
-    .mk-why-media{ min-height:200px; }
+    .mk-why-slide--reverse .mk-why-text{ order:1; }
+    .mk-why-slide--reverse .mk-why-media{ order:2; }
+    .mk-why-text{ padding:32px 26px 22px; }
+    .mk-why-media{ min-height:280px; }
   }
 
   /* ---------- WHAT THEY CAN BOOK — spelled out instead of guessed;
