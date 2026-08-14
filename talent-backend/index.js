@@ -118,6 +118,88 @@ app.post('/api/logout', (req, res) => {
 });
 
 // --- ROUTES ---
+
+// --- PER-TALENT OPEN GRAPH TAGS (individual media kit share previews) ---
+// Sharing a talent's media kit link (index.html?talent=<slug>) was always
+// showing the generic BRXDGE logo as the preview thumbnail, never that
+// talent's own photo. Reason: this is a client-side SPA — script.js reads
+// ?talent= and swaps in that talent's content, but only AFTER the page has
+// loaded and JS has run. Social unfurl bots (Facebook, iMessage, Slack,
+// Twitter/X, etc.) never execute JavaScript — they fetch the URL once and
+// read whatever is already sitting in the static <head>, which was always
+// the same fixed og:title/og:image no matter which talent's link was
+// shared. Fixing this for real requires rewriting those tags on the server,
+// before the file goes out, for exactly this one URL shape.
+//
+// This route matches only GET / with a ?talent= query string, looks that
+// slug up in the talents table (same slugify() logic script.js uses to
+// build the share link in the first place), and — if found — serves index.html
+// with the OG/Twitter/canonical/title tags swapped for that talent's own
+// name, photo, and bio. Every other request (no ?talent=, or an unknown
+// slug) falls through to the normal express.static handler below, unchanged.
+const INDEX_HTML_PATH = path.join(__dirname, '..', 'index.html');
+
+function slugify(str) {
+  return (str || '').toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function escapeHtmlAttr(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+app.get('/', (req, res, next) => {
+  const talentSlug = req.query.talent;
+  if (!talentSlug) return next(); // normal homepage request — serve index.html as-is
+
+  let talent;
+  try {
+    const talents = db.prepare(`SELECT name, niche, photo, bio FROM talents`).all();
+    talent = talents.find(t => slugify(t.name) === talentSlug);
+  } catch (err) {
+    console.error('per-talent OG lookup error:', err);
+  }
+  if (!talent) return next(); // unknown/stale slug — just serve the normal page
+
+  fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
+    if (err) {
+      console.error('per-talent OG: failed to read index.html:', err);
+      return next();
+    }
+
+    const siteUrl = `${req.protocol}://${req.get('host')}`;
+    const pageUrl = `${siteUrl}/?talent=${encodeURIComponent(talentSlug)}`;
+    const title = `${talent.name} — BRXDGE`;
+    const description = talent.bio
+      ? talent.bio.slice(0, 200)
+      : `${talent.name}'s media kit on BRXDGE${talent.niche ? ` — ${talent.niche} creator` : ''}.`;
+    // talent.photo is stored as the full absolute URL returned by the
+    // /upload endpoint, so it's already safe to drop straight into og:image.
+    // Falls back to the site logo if this talent has no photo uploaded yet.
+    const image = talent.photo || `${siteUrl}/brxdge.png`;
+
+    html = html
+      .replace(/<title>.*?<\/title>/, `<title>${escapeHtmlAttr(title)}</title>`)
+      .replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${escapeHtmlAttr(description)}">`)
+      .replace(/<link rel="canonical" href=".*?">/, `<link rel="canonical" href="${escapeHtmlAttr(pageUrl)}">`)
+      .replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${escapeHtmlAttr(title)}">`)
+      .replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${escapeHtmlAttr(description)}">`)
+      .replace(/<meta property="og:url" content=".*?">/, `<meta property="og:url" content="${escapeHtmlAttr(pageUrl)}">`)
+      .replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${escapeHtmlAttr(image)}">`)
+      .replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${escapeHtmlAttr(title)}">`)
+      .replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${escapeHtmlAttr(description)}">`)
+      .replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${escapeHtmlAttr(image)}">`);
+
+    res.set('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
 // Serve the frontend (brxdge.html, style.css, script.js, and the assets/
 // folder with card images) from the project root, one level up from this
 // talent-backend folder.
