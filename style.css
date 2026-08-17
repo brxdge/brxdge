@@ -5460,37 +5460,110 @@ html.dark-mode .creator-panel::before{
   line-height: 1.4;
 }
 
-/* Post detail — rendered inside #blogOverlay (.mediakit-overlay) */
+/* Post detail — rendered inside #blogOverlay (.mediakit-overlay). Used to be
+   a plain cover photo + a flat wall of pre-wrapped text with no visual
+   hierarchy — the sections below give it an editorial magazine treatment:
+   a proper hero (gradient scrim + badge overlaid on the photo instead of
+   floating separately above it), a distinct byline line, styled section
+   headings inside the body (see formatBlogBody() in script.js), and a
+   readable lede for the opening paragraph. */
 .blog-post{ max-width: 760px; margin: 0 auto; padding: 40px 0 110px; }
-.blog-post-cover{
-  width: 100%;
-  max-height: 420px;
-  object-fit: cover;
+
+.blog-post-hero{
+  position: relative;
   border-radius: var(--radius-lg, 28px);
+  overflow: hidden;
   margin-bottom: 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.22);
   background: var(--avatar-bg);
 }
-.blog-post-date{
-  font-family: 'Space Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--coral);
+.blog-post-cover{
   display: block;
-  margin-bottom: 14px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+/* Dark scrim confined to the lower third — legible badge over any photo,
+   in either theme, without dimming the image itself. */
+.blog-post-hero-scrim{
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,10,10,0.82) 0%, rgba(10,10,10,0.35) 42%, transparent 68%);
+  pointer-events: none;
+}
+.blog-post-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  color: var(--coral);
+  margin-bottom: 22px;
+}
+.blog-post-badge::before{
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.blog-post-badge--on-image{
+  position: absolute;
+  left: 22px;
+  bottom: 20px;
+  margin-bottom: 0;
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .blog-post h1{
   font-size: clamp(28px, 4.5vw, 44px);
   line-height: 1.15;
   letter-spacing: -0.01em;
-  margin: 0 0 18px;
+  margin: 0 0 10px;
 }
-.blog-post-meta{ color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+.blog-post-byline{ color: var(--muted); font-size: 14px; margin: 0 0 36px; }
 .blog-post-body{
   font-size: 16.5px;
   line-height: 1.8;
   color: var(--text);
-  white-space: pre-wrap;
+}
+.blog-post-body p{ margin: 0 0 22px; }
+.blog-post-body p:first-of-type{ font-size: 19px; line-height: 1.65; color: var(--text); }
+/* Section headings the admin types as a short standalone line (e.g. "The
+   Challenge") — promoted from plain text by formatBlogBody(). A small
+   accent tick instead of a bare heading keeps them from reading as a
+   second, competing title. */
+.blog-post-h3{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 44px 0 16px;
+}
+.blog-post-h3:first-child{ margin-top: 0; }
+.blog-post-h3::before{
+  content: '';
+  display: block;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(135deg, var(--coral), var(--violet));
+  flex-shrink: 0;
 }
 
 /* Before → After proof panel shown at the top of a case-study post */
@@ -5517,6 +5590,8 @@ html.dark-mode .creator-panel::before{
 @media (max-width: 640px){
   .blog-grid{ grid-template-columns: 1fr; gap: 20px; }
   .blog-post{ padding: 24px 0 70px; }
+  .blog-post-cover{ aspect-ratio: 4 / 3; }
+  .blog-post-badge--on-image{ left: 16px; bottom: 16px; }
   .blog-stat-panel{ grid-template-columns: repeat(2, 1fr); padding: 18px 20px; }
 }
 
