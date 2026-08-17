@@ -4707,48 +4707,37 @@ html.dark-mode .creator-panel::before{
   .creator-panel-handles > .btn{ margin-left: auto; margin-right: auto; }
 }
 
-/* ---------- FAQ (floating bottom-right widget — FAB + slide-up panel,
-   opened via #faqFab / closed via #faqPanelClose, outside click, or Escape;
-   see initFaqFab() in script.js). Sits at z-index 240/245, deliberately
-   just BELOW .mediakit-overlay's 250, so opening a media kit / roster
-   browse / background-picker overlay naturally covers the widget with no
-   extra JS state to keep in sync — and well below .modal-overlay's 400, so
-   the login/contact modals always win if both happen to be open. ---------- */
-.faq-fab{
-  position: fixed;
-  right: 28px;
-  bottom: 28px;
-  z-index: 245;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 56px;
-  padding: 0 22px 0 18px;
+/* ---------- FAQ (opened from a plain "FAQ" link in the footer nav row —
+   #faqTrigger — instead of an always-floating button; see initFaqPopup()
+   in script.js. The link is styled to match its sibling footer links
+   exactly, so it reads as ordinary footer navigation rather than a UI
+   element competing for attention, and nothing floats over the page
+   until it's actually clicked. Clicking it still opens the same slide-up
+   panel bottom-right (closed via #faqPanelClose, outside click, or
+   Escape) — footer sits at the bottom of the page anyway, so the panel
+   opening in the same corner reads as a natural, contextual reveal
+   rather than a random popup. Panel z-index 240, deliberately just BELOW
+   .mediakit-overlay's 250, so opening a media kit / roster browse /
+   background-picker overlay naturally covers it with no extra JS state
+   to keep in sync — and well below .modal-overlay's 400, so the login/
+   contact modals always win if both happen to be open. ---------- */
+.footer-faq-link{
+  font: inherit;
+  color: inherit;
+  background: none;
   border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--coral), var(--violet));
-  color: var(--on-accent);
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
-  box-shadow: 0 14px 34px rgba(0,0,0,0.24);
-  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, padding 0.3s ease, width 0.3s ease;
+  transition: color 0.2s ease;
 }
-.faq-fab:hover{ transform: translateY(-3px); box-shadow: 0 18px 40px rgba(0,0,0,0.28); }
-.faq-fab-icon{ flex-shrink: 0; }
-.faq-fab-icon-x{ display: none; }
-.faq-fab.open{ padding: 0; width: 56px; justify-content: center; }
-.faq-fab.open .faq-fab-icon-q{ display: none; }
-.faq-fab.open .faq-fab-icon-x{ display: block; }
-.faq-fab.open .faq-fab-label{ display: none; }
+.footer-faq-link:hover,
+.footer-faq-link:focus-visible{ color: var(--text); }
 
 .faq-panel{
   position: fixed;
   right: 28px;
-  bottom: 98px;
+  bottom: 28px;
   z-index: 240;
   width: 380px;
   max-width: calc(100vw - 40px);
@@ -4814,11 +4803,11 @@ html.dark-mode .creator-panel::before{
   padding: 0 22px 6px;
 }
 @media (max-width: 860px){
-  .faq-fab{ bottom: 84px; }
-  .faq-panel{ bottom: 154px; }
+  /* Clears the fixed mobile tab bar (see .mobile-tabbar) so the panel's
+     bottom edge doesn't sit underneath it. */
+  .faq-panel{ bottom: 84px; }
 }
 @media (max-width: 560px){
-  .faq-fab{ right: 18px; }
   .faq-panel{ right: 18px; left: 18px; width: auto; max-width: none; }
 }
 
@@ -4869,7 +4858,7 @@ html.dark-mode .creator-panel::before{
   .faq-answer{ transition: none; }
   .faq-chevron{ transition: none; }
   .faq-panel{ transition: none; }
-  .faq-fab{ transition: none; }
+  .footer-faq-link{ transition: none; }
 }
 
 @media (max-width: 720px){
