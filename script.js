@@ -1765,6 +1765,8 @@ function closeMediakit(opts){
   talentRosterOverlay.style.overflow = '';
   stopMediakitLinesParallax();
   if(mkWhyAutoplayTimer){ clearInterval(mkWhyAutoplayTimer); mkWhyAutoplayTimer = null; }
+  const heroActionsEl = document.getElementById('mkHeroActions');
+  if(heroActionsEl) heroActionsEl.classList.remove('open');
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
@@ -2511,6 +2513,46 @@ function initHeroParallax(heroIntro){
   heroIntro.addEventListener('mouseleave', onLeave);
 }
 
+// ---------------- MEDIA KIT HERO ACTIONS: collapsible fan menu ----------
+// Theme/copy-link/share/QR collapse behind a single toggle button (top
+// right, over the hero photo) instead of always showing all 4 — click
+// opens a quarter-circle "fan" of buttons out from the toggle (see
+// .mk-hero-actions/.mk-hero-action --tx/--ty in style.css for the actual
+// arc math). Static markup (#mkHeroActions in index.html, not part of
+// the per-talent template), so — same as initSplashTilt() below — this
+// only needs to attach its open/close listeners once at script load;
+// openMediakit()/closeMediakit() just re-wire the 4 buttons' click
+// handlers per talent and force the fan shut on every open/close.
+(function initHeroActionsToggle(){
+  const container = document.getElementById('mkHeroActions');
+  const toggle = document.getElementById('mkHeroActionsToggle');
+  if(!container || !toggle) return;
+
+  function setOpen(open){
+    container.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(!container.classList.contains('open'));
+  });
+
+  // Selecting any of the 4 fanned-out actions closes the menu again,
+  // rather than leaving it open until the visitor taps the toggle a
+  // second time.
+  container.addEventListener('click', (e) => {
+    if(e.target.closest('.mk-hero-action')) setOpen(false);
+  });
+
+  document.addEventListener('click', (e) => {
+    if(container.classList.contains('open') && !container.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && container.classList.contains('open')) setOpen(false);
+  });
+})();
+
 // ---------------- MEDIA KIT SPLASH: interactive 3D tilt ----------------
 // Desktop-only mouse-tracked tilt on the splash logo, same gating pattern
 // as attachTiltInteraction()/initHeroParallax() above. The splash element
@@ -3242,12 +3284,21 @@ function openMediakit(id, opts){
   if(contactBtn) contactBtn.addEventListener('click', () => openContactModal(t.name));
 
   // Theme/copy-link/share/QR buttons — static markup fixed over the hero
-  // photo (see #mkHeroActions in index.html), not part of this innerHTML
-  // template, so they persist across talent switches instead of being
-  // torn down and rebuilt. That means clone-and-replace instead of a
-  // plain addEventListener here too (same reasoning as #mkStickyBookBtn
-  // below) — otherwise every open would stack another listener bound to
-  // the previous talent's shareUrl.
+  // photo (see #mkHeroActions in index.html), collapsed behind a single
+  // toggle button and fanned out in a quarter-circle on click (see
+  // initHeroActionsToggle() + .mk-hero-actions in style.css). Not part of
+  // this innerHTML template, so it persists across talent switches —
+  // clone-and-replace instead of a plain addEventListener (same reasoning
+  // as #mkStickyBookBtn below), otherwise every open would stack another
+  // listener bound to the previous talent's shareUrl. Also collapse the
+  // fan back shut on every fresh open so switching talents never leaves
+  // it stuck open.
+  const heroActionsEl = document.getElementById('mkHeroActions');
+  if(heroActionsEl){
+    heroActionsEl.classList.remove('open');
+    const toggleEl = document.getElementById('mkHeroActionsToggle');
+    if(toggleEl) toggleEl.setAttribute('aria-expanded', 'false');
+  }
   const shareUrl = getTalentShareUrl(t);
   const themeBtnEl = document.getElementById('mkHeroThemeBtn');
   if(themeBtnEl){
