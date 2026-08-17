@@ -2518,21 +2518,25 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     box-shadow: 0 14px 34px rgba(0,0,0,0.45);
   }
 
-  /* Theme/copy-link/share/QR — floats fixed top-right over the hero photo
-     itself (mirroring #mkBack's fixed top-left "Back to Roster"), rather
-     than living in their own bordered/backgrounded pill. Same frosted
-     dark-glass treatment as #mkBack uses over the hero, and the same
-     crossfade to a solid theme-matched pill once the visitor scrolls
-     past the hero (.mediakit-overlay.past-hero, below) — so it reads as
-     "attached to the photo" while it's on screen, then settles into a
-     normal control once the photo's gone. Static markup (see #mkHeroActions
-     in index.html), not part of the per-talent template, so it survives
-     talent switches — openMediakit() only re-wires its click handlers. */
+  /* Theme/copy-link/share/QR — collapsed behind a single toggle button
+     fixed top-right over the hero photo (mirroring #mkBack's fixed
+     top-left "Back to Roster"), instead of always showing all 4 circles
+     at once. Clicking the toggle fans the 4 buttons out along a
+     quarter-circle arc (each button's resting offset is its own --tx/--ty
+     custom property, set inline in index.html — see initHeroActionsToggle()
+     in script.js for the .open class it toggles). Collapsed, every fanned
+     button sits stacked exactly on top of the toggle (translate(0,0)
+     scale(0)) so the reveal reads as bursting outward from one point
+     rather than sliding in from off-screen. */
   .mk-hero-actions{
     position: fixed; top: 22px; right: 22px; z-index: 260;
-    display: flex; align-items: center; gap: 6px;
+  }
+  .mk-hero-actions-fan{
+    position: absolute; top: 0; right: 0;
+    width: 34px; height: 34px;
   }
   .mk-hero-action{
+    position: absolute; top: 0; right: 0;
     width: 34px; height: 34px;
     border-radius: 50%;
     border: 1.5px solid rgba(255,255,255,0.85);
@@ -2542,32 +2546,82 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(0, 0) scale(0.3);
+    transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
   .mk-hero-action:hover{
     background: rgba(255,255,255,0.94); color: #14161A; border-color: #fff;
-    transform: translateY(-2px);
   }
   /* .theme-toggle's own base rule (width/height/border, near the top of
      this file) would otherwise fight this size — .mk-hero-action needs
      to win since all 4 buttons must match. */
   .mk-hero-action.theme-toggle{ width: 34px; height: 34px; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(10,10,10,0.7); }
   .mk-hero-action.theme-toggle:hover{ background: rgba(255,255,255,0.94); border-color: #fff; }
+  .mk-hero-actions.open .mk-hero-action{
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(var(--tx), var(--ty)) scale(1);
+  }
+  /* Staggered so the fan bursts open one button after another instead of
+     all 4 arriving in lockstep — closes back in the same cadence. */
+  .mk-hero-action:nth-child(1){ transition-delay: 0s; }
+  .mk-hero-action:nth-child(2){ transition-delay: 0.04s; }
+  .mk-hero-action:nth-child(3){ transition-delay: 0.08s; }
+  .mk-hero-action:nth-child(4){ transition-delay: 0.12s; }
+
+  .mk-hero-actions-toggle{
+    position: relative; z-index: 2;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.85);
+    background: rgba(10,10,10,0.7);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.25s ease;
+  }
+  .mk-hero-actions-toggle:hover{
+    background: rgba(255,255,255,0.94); color: #14161A; border-color: #fff;
+  }
+  .mk-hero-actions.open .mk-hero-actions-toggle{
+    transform: rotate(90deg);
+  }
+  /* Hamburger/close crossfade — same technique as .theme-toggle's own
+     sun/moon icons elsewhere on the page. */
+  .mk-hero-actions-toggle-icon{
+    position: absolute;
+    transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .mk-hero-actions-toggle-icon--close{ opacity: 0; transform: scale(0.5); }
+  .mk-hero-actions.open .mk-hero-actions-toggle-icon--menu{ opacity: 0; transform: scale(0.5); }
+  .mk-hero-actions.open .mk-hero-actions-toggle-icon--close{ opacity: 1; transform: scale(1); }
+
   /* Same crossfade #mkBack gets once past the hero — see
      updateHeroScrollProgress() in script.js for the .past-hero toggle. */
-  .mediakit-overlay.past-hero .mk-hero-action{
+  .mediakit-overlay.past-hero .mk-hero-action,
+  .mediakit-overlay.past-hero .mk-hero-actions-toggle{
     background: var(--panel);
     border-color: var(--panel-line);
     color: var(--text);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  .mediakit-overlay.past-hero .mk-hero-action:hover{
+  .mediakit-overlay.past-hero .mk-hero-action:hover,
+  .mediakit-overlay.past-hero .mk-hero-actions-toggle:hover{
     background: var(--ink-2); color: var(--text); border-color: var(--panel-line);
   }
   @media (max-width: 480px){
-    .mk-hero-actions{ top: 14px; right: 14px; gap: 5px; }
-    .mk-hero-action, .mk-hero-action.theme-toggle{ width: 30px; height: 30px; }
+    .mk-hero-actions{ top: 14px; right: 14px; }
+    .mk-hero-actions-fan{ width: 30px; height: 30px; }
+    .mk-hero-action, .mk-hero-action.theme-toggle, .mk-hero-actions-toggle{ width: 30px; height: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .mk-hero-action, .mk-hero-actions-toggle, .mk-hero-actions-toggle-icon{ transition: opacity 0.15s ease; }
+    .mk-hero-actions.open .mk-hero-actions-toggle{ transform: none; }
   }
 
   /* Static title bar right below the hero — name, niche, share buttons,
