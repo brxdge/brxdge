@@ -4315,6 +4315,34 @@ function scrollToSection(id){
   if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// Used by the "Build Your Campaign →" (For Brands) and "Apply for
+// Representation →" (For Creators) CTAs — scrolls to the existing contact
+// form AND pre-selects its Brand/Creator inquiry pill, rather than routing
+// either audience to a separate form. Reuses the pill's own click handler
+// (see the inquiryToggle wiring below) instead of duplicating the
+// active-state/placeholder-swap logic here.
+function scrollToContactAs(type){
+  scrollToSection('contact');
+  const pill = inquiryToggle && inquiryToggle.querySelector(`.inquiry-pill[data-type="${type}"]`);
+  if(pill && !pill.classList.contains('active')) pill.click();
+}
+
+// ---------------- FAQ ACCORDION ----------------
+// Independent items rather than a strict single-open accordion — opening
+// one doesn't close the others, since there's no reason two answers can't
+// be read side by side. Static markup, attached once at script load.
+(function initFaqAccordion(){
+  document.querySelectorAll('.faq-item').forEach((item) => {
+    const btn = item.querySelector('.faq-question');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const open = !item.classList.contains('open');
+      item.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+})();
+
 /* ---------------- INIT ---------------- */
 loadRoster();
 loadBlog();
