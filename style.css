@@ -4496,11 +4496,31 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   margin: 0 auto;
 }
 .brand-step{
+  position: relative;
   background: var(--panel);
   padding: 36px 26px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: background 0.3s ease;
+}
+.brand-step:hover{ background: var(--ink); }
+.brand-step-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--coral);
+  margin-bottom: 2px;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.brand-step:hover .brand-step-icon{
+  background: linear-gradient(135deg, var(--coral), var(--violet));
+  color: var(--on-accent);
+  transform: scale(1.08) rotate(-4deg);
 }
 .brand-step-num{
   font-family: 'Space Mono', monospace;
@@ -4523,6 +4543,32 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   font-size: 14.5px;
   line-height: 1.6;
 }
+/* Connecting arrow badge on the hairline divider between steps, so the row
+   reads as one continuous process instead of four unrelated tiles. Sits
+   inside the parent's overflow:hidden bounds (offset is well short of the
+   outer container edge), so it never gets clipped or pokes outside the
+   rounded corners. */
+.brand-step:not(:last-child)::after{
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235A5A5A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+  pointer-events: none;
+}
+html.dark-mode .brand-step:not(:last-child)::after{
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8A8A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E");
+}
 .for-brands-cta{
   display: flex;
   justify-content: center;
@@ -4530,15 +4576,18 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 @media (max-width: 900px){
   .brand-steps{ grid-template-columns: repeat(2, 1fr); }
+  .brand-step:not(:last-child)::after{ display: none; }
 }
 @media (max-width: 560px){
   .brand-steps{ grid-template-columns: 1fr; }
   .brand-step{ padding: 28px 22px; }
 }
 
-/* ---------- FOR CREATORS (secondary funnel, before the FAQ) ---------- */
+/* ---------- FOR CREATORS (secondary funnel, before Contact) ---------- */
 #forCreators{ padding-top: 10px; }
 .creator-panel{
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 56px;
@@ -4550,6 +4599,25 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   background: var(--panel);
   padding: 56px;
 }
+/* Soft decorative wash in the corner, echoing the icon-chip accent used in
+   the For Brands tiles above so the two paired sections read as one
+   visual family rather than two differently-styled blocks. */
+.creator-panel::before{
+  content: "";
+  position: absolute;
+  top: -130px;
+  right: -130px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(90,90,90,0.10), transparent 70%);
+  pointer-events: none;
+}
+html.dark-mode .creator-panel::before{
+  background: radial-gradient(circle, rgba(138,138,138,0.14), transparent 70%);
+}
+.creator-panel-copy,
+.creator-panel-handles{ position: relative; z-index: 1; min-width: 0; }
 .creator-panel-copy .featured-italic,
 .creator-panel-copy .profiles-bold{ display: block; text-align: left; }
 .creator-panel-copy .category-sub{ margin-top: 18px; max-width: 360px; }
@@ -4565,15 +4633,36 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   padding: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
+  gap: 6px 20px;
 }
 .creator-handles-list li{
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   font-size: 15px; color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  min-width: 0;
+  overflow-wrap: break-word;
+  transition: background 0.25s ease, transform 0.25s ease;
 }
-.creator-handles-list svg{
+.creator-handles-list li:hover{
+  background: var(--ink);
+  transform: translateX(3px);
+}
+.creator-handle-icon{
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--ink);
   color: var(--coral);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.creator-handles-list li:hover .creator-handle-icon{
+  background: linear-gradient(135deg, var(--coral), var(--violet));
+  color: var(--on-accent);
 }
 @media (max-width: 820px){
   .creator-panel{ grid-template-columns: 1fr; gap: 32px; padding: 40px 28px; text-align: center; }
@@ -4585,10 +4674,122 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .creator-panel-handles > .btn{ margin-left: auto; margin-right: auto; }
 }
 
-/* ---------- FAQ (directly before Contact) ---------- */
-#faq{ padding-top: 10px; }
+/* ---------- FAQ (floating bottom-right widget — FAB + slide-up panel,
+   opened via #faqFab / closed via #faqPanelClose, outside click, or Escape;
+   see initFaqFab() in script.js). Sits at z-index 240/245, deliberately
+   just BELOW .mediakit-overlay's 250, so opening a media kit / roster
+   browse / background-picker overlay naturally covers the widget with no
+   extra JS state to keep in sync — and well below .modal-overlay's 400, so
+   the login/contact modals always win if both happen to be open. ---------- */
+.faq-fab{
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 245;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 22px 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--coral), var(--violet));
+  color: var(--on-accent);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.24);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, padding 0.3s ease, width 0.3s ease;
+}
+.faq-fab:hover{ transform: translateY(-3px); box-shadow: 0 18px 40px rgba(0,0,0,0.28); }
+.faq-fab-icon{ flex-shrink: 0; }
+.faq-fab-icon-x{ display: none; }
+.faq-fab.open{ padding: 0; width: 56px; justify-content: center; }
+.faq-fab.open .faq-fab-icon-q{ display: none; }
+.faq-fab.open .faq-fab-icon-x{ display: block; }
+.faq-fab.open .faq-fab-label{ display: none; }
+
+.faq-panel{
+  position: fixed;
+  right: 28px;
+  bottom: 98px;
+  z-index: 240;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  max-height: min(560px, 70vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-2);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px) scale(0.96);
+  transform-origin: bottom right;
+  transition: opacity 0.28s cubic-bezier(0.16,1,0.3,1), transform 0.28s cubic-bezier(0.16,1,0.3,1), visibility 0.28s;
+}
+.faq-panel.open{
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+.faq-panel-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 22px 14px;
+  border-bottom: 1px solid var(--panel-line);
+}
+.faq-panel-eyebrow{
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 4px;
+}
+.faq-panel-head h3{
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+}
+.faq-panel-close{
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-line);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.faq-panel-close:hover{ background: var(--ink); color: var(--text); }
+.faq-panel-body{
+  overflow-y: auto;
+  padding: 0 22px 6px;
+}
+@media (max-width: 860px){
+  .faq-fab{ bottom: 84px; }
+  .faq-panel{ bottom: 154px; }
+}
+@media (max-width: 560px){
+  .faq-fab{ right: 18px; }
+  .faq-panel{ right: 18px; left: 18px; width: auto; max-width: none; }
+}
+
 .faq-list{
-  max-width: 780px;
   margin: 0 auto;
   border-top: 1px solid var(--panel-line);
 }
@@ -4597,11 +4798,11 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 .faq-question{
   width: 100%;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-  padding: 22px 4px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 2px;
   background: none; border: none;
   font-family: 'Montserrat', sans-serif;
-  font-size: 16.5px; font-weight: 700;
+  font-size: 15px; font-weight: 700;
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -4621,12 +4822,12 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   overflow: hidden;
   margin: 0;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1.7;
-  padding-right: 40px;
+  font-size: 14px;
+  line-height: 1.65;
+  padding-right: 4px;
 }
 .faq-item.open .faq-answer{ grid-template-rows: 1fr; }
-.faq-item.open .faq-answer p{ padding-bottom: 22px; }
+.faq-item.open .faq-answer p{ padding-bottom: 18px; }
 /* .faq-answer's grid-rows trick needs a min-height:0 child to actually
    collapse to 0 in Firefox/older Safari — belt-and-suspenders with the
    overflow:hidden above. */
@@ -4634,6 +4835,8 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 @media (prefers-reduced-motion: reduce){
   .faq-answer{ transition: none; }
   .faq-chevron{ transition: none; }
+  .faq-panel{ transition: none; }
+  .faq-fab{ transition: none; }
 }
 
 @media (max-width: 720px){
