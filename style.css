@@ -766,6 +766,32 @@
 }
 .featured-italic { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(40px, 11vw, 104px); display: block; line-height: 0.8; text-align: center; }
 
+/* Bolder, more "designed" eyebrow treatment — swaps the site's default
+   elegant italic-serif eyebrow for Bricolage Grotesque (already loaded for
+   .about-headline's "Built by creators, run for creators.", just unused
+   elsewhere). Its opsz axis gets noticeably more expressive/characterful
+   the bigger it's drawn, so it reads as a stylized display face rather
+   than a plain bold sans — same confident family as the headline it
+   echoes, but with more personality. Applied alongside .featured-italic
+   (for the shared display/layout rules) on the four flagship proof/
+   conversion eyebrows: "BUILT" (For Brands), "CASE STUDIES", "CAMPAIGN",
+   "ARE YOU A" (For Creators). Compound selector so it reliably wins over
+   .featured-italic's font-style regardless of source order.
+   Sized noticeably smaller than .featured-italic's default clamp — at
+   this weight Bricolage Grotesque reads much heavier than the thin italic
+   serif it replaces, so keeping the same size made the eyebrow and the
+   bold .profiles-bold headline below it look like two stacked headlines
+   instead of a small label over a big one. (#forCreators' eyebrow has its
+   own more specific override further down for its narrower column, which
+   still wins here.) */
+.featured-italic.featured-grotesque{
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  font-size: clamp(24px, 6vw, 58px);
+}
+
 .featured-italicc { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 64px; display: block; line-height: 0.8; text-align: center; }
 
 .featured-italiccc {
@@ -4620,6 +4646,13 @@ html.dark-mode .creator-panel::before{
 .creator-panel-handles{ position: relative; z-index: 1; min-width: 0; }
 .creator-panel-copy .featured-italic,
 .creator-panel-copy .profiles-bold{ display: block; text-align: left; }
+/* The site-wide .featured-italic/.profiles-bold sizes (clamp(...,13vw,126px))
+   are tuned for a full-width centered heading. Here the heading shares a
+   half-width column with the handles list, so left unscoped it overflows
+   into — and overlaps — the CTA button and right column at most viewport
+   widths. Scale it down to fit the column instead. */
+.creator-panel-copy .featured-italic{ font-size: clamp(28px, 4vw, 42px); }
+.creator-panel-copy .profiles-bold{ font-size: clamp(32px, 5.5vw, 54px); }
 .creator-panel-copy .category-sub{ margin-top: 18px; max-width: 360px; }
 .creator-handles-intro{
   font-family: 'Space Mono', monospace;
