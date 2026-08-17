@@ -1883,6 +1883,30 @@ function blogPostDate(p){
   } catch(err) { return ''; }
 }
 
+// Post bodies are typed into a single admin textarea as plain text, with
+// blank lines separating paragraphs — there's no markdown/rich-text editor
+// behind them. Rendering that as one flat pre-wrapped block (the old
+// behavior) meant a short standalone line like "The Challenge" looked
+// exactly like a body paragraph, with no visual structure at all. This
+// splits on blank lines and promotes any short, punctuation-free
+// standalone line to a section heading, so that same plain-text habit
+// (a short label line, then its paragraph) reads as real hierarchy
+// instead of a wall of undifferentiated text. Falls back gracefully to
+// plain paragraphs for bodies that don't follow that pattern. Every piece
+// of user-entered text is escaped before it touches innerHTML.
+function formatBlogBody(raw){
+  if(!raw) return '';
+  const blocks = raw.trim().split(/\n{2,}/);
+  return blocks.map(block => {
+    const trimmed = block.trim();
+    if(!trimmed) return '';
+    const isSingleLine = !trimmed.includes('\n');
+    const looksLikeHeading = isSingleLine && trimmed.length <= 60 && !/[.!?"')]$/.test(trimmed);
+    if(looksLikeHeading) return `<h3 class="blog-post-h3">${escapeHtml(trimmed)}</h3>`;
+    return `<p>${escapeHtml(trimmed).replace(/\n/g, ' ')}</p>`;
+  }).filter(Boolean).join('');
+}
+
 // Small stat chips shown on a case-study card — only the ones that
 // actually have a value are shown, so an article (or a partially filled
 // case study) never renders empty "→" chips.
@@ -1998,14 +2022,27 @@ function renderBlogPostContent(post){
     </div>
   ` : '';
 
+  // Type + talent go on a small pill badge — overlaid on the cover photo
+  // (editorial-style, over a gradient scrim so it stays legible on any
+  // image) when there is one, or standalone above the title when there
+  // isn't. The date and author move to one quiet byline line under the
+  // title instead of being crammed into the same badge as the type.
+  const badgeText = (isCaseStudy ? 'Case Study' : 'Article') + (post.talentName ? ' • ' + escapeHtml(post.talentName) : '');
+  const bylineText = [blogPostDate(post), post.author ? 'By ' + escapeHtml(post.author) : ''].filter(Boolean).join(' · ');
+
   container.innerHTML = `
     <article class="blog-post">
-      ${cover ? `<img class="blog-post-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}">` : ''}
-      <span class="blog-post-date">${isCaseStudy ? 'Case Study' : 'Article'}${post.talentName ? ' • ' + escapeHtml(post.talentName) : ''}${blogPostDate(post) ? ' • ' + blogPostDate(post) : ''}</span>
+      ${cover ? `
+      <div class="blog-post-hero">
+        <img class="blog-post-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}">
+        <div class="blog-post-hero-scrim" aria-hidden="true"></div>
+        <span class="blog-post-badge blog-post-badge--on-image">${badgeText}</span>
+      </div>
+      ` : `<span class="blog-post-badge">${badgeText}</span>`}
       <h1>${escapeHtml(post.title)}</h1>
-      ${post.author ? `<p class="blog-post-meta">By ${escapeHtml(post.author)}</p>` : ''}
+      ${bylineText ? `<p class="blog-post-byline">${bylineText}</p>` : ''}
       ${statPanel}
-      <div class="blog-post-body">${escapeHtml(post.body || post.excerpt || '')}</div>
+      <div class="blog-post-body">${formatBlogBody(post.body || post.excerpt || '')}</div>
     </article>
   `;
 }
