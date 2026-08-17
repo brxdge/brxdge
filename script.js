@@ -4343,35 +4343,38 @@ function scrollToContactAs(type){
   });
 })();
 
-// ---------------- FAQ FAB (floating bottom-right open/close) ----------------
-// The FAQ used to be an inline section right before Contact; it's now a
-// chat-widget-style popup so it doesn't cost scroll real estate. Opens via
-// the FAB, closes via its own close button, an outside click, or Escape.
-(function initFaqFab(){
-  const fab = document.getElementById('faqFab');
+// ---------------- FAQ POPUP (opened from the footer "FAQ" link) ----------------
+// The FAQ used to be an inline section right before Contact, then a popup
+// opened by an always-floating bottom-right button — that floating trigger
+// sat on screen over every section and read as distracting, so it's now a
+// plain link in the footer nav row (#faqTrigger) instead; nothing floats
+// until it's clicked. Closes via its own close button, an outside click,
+// or Escape — same as before.
+(function initFaqPopup(){
+  const trigger = document.getElementById('faqTrigger');
   const panel = document.getElementById('faqPanel');
   const closeBtn = document.getElementById('faqPanelClose');
-  if(!fab || !panel) return;
+  if(!trigger || !panel) return;
 
   function openPanel(){
     panel.classList.add('open');
-    fab.classList.add('open');
-    fab.setAttribute('aria-expanded', 'true');
+    trigger.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
   }
   function closePanel(){
     panel.classList.remove('open');
-    fab.classList.remove('open');
-    fab.setAttribute('aria-expanded', 'false');
+    trigger.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
   }
 
-  fab.addEventListener('click', () => {
+  trigger.addEventListener('click', () => {
     if(panel.classList.contains('open')) closePanel(); else openPanel();
   });
   if(closeBtn) closeBtn.addEventListener('click', closePanel);
 
   document.addEventListener('click', (e) => {
     if(!panel.classList.contains('open')) return;
-    if(panel.contains(e.target) || fab.contains(e.target)) return;
+    if(panel.contains(e.target) || trigger.contains(e.target)) return;
     closePanel();
   });
   document.addEventListener('keydown', (e) => {
