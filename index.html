@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -719,6 +719,51 @@
   </div>
 </section>
 
+<!-- FOR BRANDS — the business proposition, spelled out as a 4-step process
+     instead of leaving a brand visitor to infer it from the roster/contact
+     sections alone. Sits right before Categories/Roster so a brand reads
+     "how this works" immediately before actually browsing talent. The CTA
+     scrolls to the existing #contact form and pre-selects its "Brand"
+     inquiry pill (scrollToContactAs() in script.js) rather than duplicating
+     a second contact flow. -->
+<section id="forBrands" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="category-head">
+      <span class="featured-italic">BUILT</span>
+      <span class="profiles-bold">FOR BRANDS</span>
+      <p class="category-sub">From "who should we work with" to a campaign report in your inbox — four steps.</p>
+    </div>
+    <div class="brand-steps">
+      <div class="brand-step stagger-item">
+        <span class="brand-step-num">01</span>
+        <h3>Find the Right Talent</h3>
+        <p>Browse creators based on niche, platform, audience and reach.</p>
+      </div>
+      <div class="brand-step stagger-item">
+        <span class="brand-step-num">02</span>
+        <h3>Build Your Cast</h3>
+        <p>Select multiple creators and create a campaign roster.</p>
+      </div>
+      <div class="brand-step stagger-item">
+        <span class="brand-step-num">03</span>
+        <h3>Launch Your Campaign</h3>
+        <p>Send your brief directly to the BRXDGE team.</p>
+      </div>
+      <div class="brand-step stagger-item">
+        <span class="brand-step-num">04</span>
+        <h3>Measure the Results</h3>
+        <p>Receive campaign reporting and performance insights.</p>
+      </div>
+    </div>
+    <div class="for-brands-cta">
+      <button type="button" class="btn btn-primary" onclick="scrollToContactAs('Brand')">
+        <span class="btn-label">Build Your Campaign</span>
+        <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
 <!-- CATEGORIES (showcase only — not a filter) -->
 <section id="categories" class="reveal" data-reveal="up">
   <div class="wrap">
@@ -990,6 +1035,111 @@
             <circle cx="41" cy="19" r="3.5" stroke="currentColor" stroke-width="1.6"/>
           </svg>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR CREATORS — the site's second conversion funnel. The proof sections
+     above (case studies, campaigns, brand partners) are brand-facing, so
+     this is deliberately placed right after them as the pivot to "wait,
+     what does BRXDGE do for ME" before a creator visitor reaches the
+     footer. CTA reuses #contact + its "Creator" inquiry pill, same as
+     For Brands' CTA above reuses "Brand" — see scrollToContactAs() in
+     script.js. -->
+<section id="forCreators" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="creator-panel">
+      <div class="creator-panel-copy">
+        <span class="featured-italic">ARE YOU A</span>
+        <span class="profiles-bold">CREATOR?</span>
+        <p class="category-sub">Turn your audience into opportunities.</p>
+      </div>
+      <div class="creator-panel-handles">
+        <p class="creator-handles-intro">BRXDGE handles:</p>
+        <ul class="creator-handles-list">
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Brand negotiations</li>
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Campaign management</li>
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Contracts</li>
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Strategy</li>
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Partnerships</li>
+          <li class="stagger-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Growth</li>
+        </ul>
+        <button type="button" class="btn btn-primary" onclick="scrollToContactAs('Creator')">
+          <span class="btn-label">Apply for Representation</span>
+          <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ — sits directly before the contact form so common questions get
+     answered before someone has to type them into a message. Independent
+     accordion items (more than one can be open at once) rather than a
+     strict single-open accordion — see initFaqAccordion() in script.js. -->
+<section id="faq" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="category-head">
+      <span class="featured-italic">FREQUENTLY</span>
+      <span class="profiles-bold">ASKED QUESTIONS</span>
+    </div>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>How much does it cost to work with a creator?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Pricing depends on the creator, the platform mix, and what you need delivered — send us your brief and we'll come back with a straightforward quote.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Can I request multiple creators?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes — most campaigns run with a small cast rather than a single creator. Build your roster from the talent directory and send it over as one brief.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>What platforms do your creators use?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Instagram, TikTok, and YouTube, mostly — every talent profile lists exactly where their audience lives and how big it is.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you handle contracts?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes — every booking includes a contract between the brand and the creator, drafted and managed by the BRXDGE team from brief to signature.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you handle payments?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes — payment runs through BRXDGE, so you're invoiced once instead of coordinating payouts with each creator individually.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Can I request a specific creator?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Absolutely — browse the roster and tell us who you'd like to work with, or describe your campaign and we'll suggest a shortlist.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>How quickly will BRXDGE respond?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Real humans read every message — expect a reply within 1 business day.</p></div>
+      </div>
+      <div class="faq-item stagger-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you represent creators exclusively?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>It depends on the creator and the category — some are represented exclusively, others aren't. Ask us about a specific creator and we'll tell you directly.</p></div>
       </div>
     </div>
   </div>
@@ -1743,7 +1893,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=14"></script>
+<script src="script.js?v=15"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
