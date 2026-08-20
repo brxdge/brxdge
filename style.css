@@ -370,13 +370,14 @@
   /* ---------- ABOUT ---------- */
   .about-grid{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:70px; align-items:center; }
 
-  /* Logo card: the brand mark instead of a photo, on the same dark
-     card treatment used for the roster's brand tile. */
+  /* Logo card: the brand mark instead of a photo. Background is
+     intentionally transparent so the mark sits directly on the page
+     background instead of a dark plaque behind it. */
   .about-photo{ position:relative; }
   .about-logo-card{
     width:100%; aspect-ratio:4/5;
     border-radius:var(--radius-lg);
-    background:radial-gradient(circle at 50% 42%, #1C1C1C 0%, #0C0C0C 75%);
+    background:transparent;
     display:flex; align-items:center; justify-content:center;
     padding:40px;
   }
