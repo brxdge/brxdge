@@ -4345,98 +4345,127 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   line-height: 1.6;
 }
 
-/* Photo-forward tile grid — replaces the old hover-reveal row list (index
-   number + icon glyph + cursor-tracked preview + description one-liner).
-   Each tile carries its own photo, falls back gracefully to a --tone
-   gradient if that photo isn't uploaded yet, and needs no hover state to
-   read correctly, so it behaves the same on touch as it does with a
-   cursor. */
-.category-grid{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 22px;
-  margin-top: 12px;
+/* Hover/focus-reveal row list — same interaction theme as the original
+   build (tint wash + cursor-tracked floating photo preview, restored via
+   initCategoryPreviews() in script.js), upgraded per revision notes: no
+   index number, no icon glyph, no per-row description. The title now
+   carries the row alone, so it's set larger, and a small arrow slides in
+   on hover/focus as the "there's more here" cue the icon used to give. */
+.category-list{
+  max-width: 880px;
+  margin: 0 auto;
+  border-top: 1px solid var(--panel-line);
 }
 
-.category-tile{
+.category-row{
   position: relative;
-  aspect-ratio: 4 / 5;
-  border-radius: var(--radius-lg, 28px);
-  overflow: hidden;
-  border: 1px solid var(--panel-line);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 30px 6px;
+  border-bottom: 1px solid var(--panel-line);
   isolation: isolate;
-  outline: none;
-  cursor: pointer;
   --tone: var(--coral);
-  transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s ease;
+  --pop-x: 50%;
+  --pop-y: 50%;
+  transition: padding 0.4s cubic-bezier(.2,.8,.2,1);
+  outline: none;
 }
-.category-tile:hover,
-.category-tile:focus-visible{
-  transform: translateY(-6px);
-  box-shadow: 0 20px 44px rgba(0,0,0,0.22);
-}
-
-.category-tile-media{
+.category-row::before{
+  content: "";
   position: absolute;
   inset: 0;
+  background: radial-gradient(260px 160px at 0% 50%, var(--tone), transparent 72%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
   z-index: 0;
+}
+.category-row:hover,
+.category-row:focus-visible{
+  padding-left: 22px;
+  padding-right: 22px;
+  z-index: 5;
+}
+.category-row:hover::before,
+.category-row:focus-visible::before{ opacity: 0.1; }
+
+.category-row[data-tone="1"]{ --tone: #C8302C; }
+.category-row[data-tone="2"]{ --tone: #2F7D6B; }
+.category-row[data-tone="3"]{ --tone: #6C4FD1; }
+.category-row[data-tone="4"]{ --tone: #D18A2B; }
+.category-row[data-tone="5"]{ --tone: #2B7FC7; }
+.category-row[data-tone="6"]{ --tone: #C74B8F; }
+.category-row[data-tone="7"]{ --tone: #C9A227; }
+
+.category-row-title{
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(28px, 4.6vw, 46px);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+  transition: color 0.35s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+}
+.category-row:hover .category-row-title,
+.category-row:focus-visible .category-row-title{
+  color: var(--tone);
+  transform: translateX(8px);
+}
+
+.category-row-arrow{
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  color: var(--tone);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.2,.8,.2,1);
+}
+.category-row:hover .category-row-arrow,
+.category-row:focus-visible .category-row-arrow{
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Floating preview thumbnail — tracks the cursor via --pop-x/--pop-y, set per
+   row by initCategoryPreviews() in script.js (mousemove, hover:hover+pointer:fine
+   only). Each row's photo + gradient fallback are two stacked
+   background-image layers set inline (see index.html), so a missing photo
+   quietly falls back to the tone gradient instead of showing broken art. */
+.category-row-preview{
+  position: absolute;
+  z-index: 2;
+  top: var(--pop-y);
+  left: var(--pop-x);
+  width: 260px;
+  height: 180px;
+  margin: -90px 0 0 30px;
+  border-radius: 16px;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.85) rotate(-3deg);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+  box-shadow: 0 20px 44px rgba(0,0,0,0.34);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.category-row:hover .category-row-preview,
+.category-row:focus-visible .category-row-preview{
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+.category-row-preview-inner{
+  width: 100%;
+  height: 100%;
   background-color: var(--ink);
   background-size: cover, cover;
   background-position: center, center;
-  transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
 }
-.category-tile:hover .category-tile-media,
-.category-tile:focus-visible .category-tile-media{
-  transform: scale(1.06);
-}
-
-.category-tile-scrim{
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.18) 55%, transparent 82%);
-  pointer-events: none;
-}
-
-.category-tile-glow{
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: radial-gradient(160px 120px at 50% 100%, var(--tone), transparent 72%);
-  opacity: 0;
-  mix-blend-mode: screen;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-.category-tile:hover .category-tile-glow,
-.category-tile:focus-visible .category-tile-glow{ opacity: 0.6; }
-
-.category-tile-title{
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: 20px;
-  z-index: 2;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 800;
-  font-size: clamp(22px, 3vw, 28px);
-  letter-spacing: -0.01em;
-  color: #fff;
-  margin: 0;
-  transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
-}
-.category-tile:hover .category-tile-title,
-.category-tile:focus-visible .category-tile-title{
-  transform: translateY(-4px);
-}
-
-.category-tile[data-tone="1"]{ --tone: #C8302C; }
-.category-tile[data-tone="2"]{ --tone: #2F7D6B; }
-.category-tile[data-tone="3"]{ --tone: #6C4FD1; }
-.category-tile[data-tone="4"]{ --tone: #D18A2B; }
-.category-tile[data-tone="5"]{ --tone: #2B7FC7; }
-.category-tile[data-tone="6"]{ --tone: #C74B8F; }
-.category-tile[data-tone="7"]{ --tone: #C9A227; }
 
 /* ---------- FOR BRANDS (four-step process, before Categories/Roster) ---------- */
 .brand-steps{
@@ -4791,12 +4820,15 @@ html.dark-mode .creator-panel::before{
 }
 
 @media (max-width: 720px){
-  .category-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .category-tile-title{ font-size: clamp(19px, 5.5vw, 24px); left: 16px; right: 16px; bottom: 14px; }
+  .category-row{ gap: 14px; padding: 22px 4px; }
+  .category-row-title{ font-size: clamp(24px, 7vw, 32px); }
+  /* No cursor to follow on touch — the tint wash + arrow reveal on tap
+     (via :focus-visible/:hover, both still fire on tap) carry the effect
+     instead. */
+  .category-row-preview{ display: none; }
 }
 @media (max-width: 560px){
   .category-head{ margin-bottom: 40px; }
-  .category-grid{ grid-template-columns: 1fr 1fr; }
 }
 
 /* =========================================================
