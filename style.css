@@ -4359,10 +4359,9 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 
 .category-row{
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 30px 6px;
+  display: block;
+  text-align: center;
+  padding: 14px 6px;
   border-bottom: 1px solid var(--panel-line);
   isolation: isolate;
   --tone: var(--coral);
@@ -4375,7 +4374,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(260px 160px at 0% 50%, var(--tone), transparent 72%);
+  background: radial-gradient(320px 160px at 50% 50%, var(--tone), transparent 72%);
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
@@ -4383,8 +4382,8 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 .category-row:hover,
 .category-row:focus-visible{
-  padding-left: 22px;
-  padding-right: 22px;
+  padding-top: 18px;
+  padding-bottom: 18px;
   z-index: 5;
 }
 .category-row:hover::before,
@@ -4401,35 +4400,37 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 .category-row-title{
   position: relative;
   z-index: 1;
-  flex: 1;
-  min-width: 0;
+  display: block;
+  text-align: center;
+  text-transform: uppercase;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 800;
-  font-size: clamp(28px, 4.6vw, 46px);
+  font-size: clamp(34px, 7vw, 68px);
   letter-spacing: -0.01em;
+  line-height: 1;
   color: var(--text);
   margin: 0;
-  transition: color 0.35s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+  transition: color 0.35s ease;
 }
 .category-row:hover .category-row-title,
 .category-row:focus-visible .category-row-title{
   color: var(--tone);
-  transform: translateX(8px);
 }
 
 .category-row-arrow{
-  position: relative;
+  position: absolute;
   z-index: 1;
-  flex-shrink: 0;
+  top: 50%;
+  right: 20px;
   color: var(--tone);
   opacity: 0;
-  transform: translateX(-8px);
+  transform: translateY(-50%) translateX(-8px);
   transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.2,.8,.2,1);
 }
 .category-row:hover .category-row-arrow,
 .category-row:focus-visible .category-row-arrow{
   opacity: 1;
-  transform: translateX(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 /* Floating preview thumbnail — tracks the cursor via --pop-x/--pop-y, set per
@@ -4820,12 +4821,13 @@ html.dark-mode .creator-panel::before{
 }
 
 @media (max-width: 720px){
-  .category-row{ gap: 14px; padding: 22px 4px; }
-  .category-row-title{ font-size: clamp(24px, 7vw, 32px); }
-  /* No cursor to follow on touch — the tint wash + arrow reveal on tap
-     (via :focus-visible/:hover, both still fire on tap) carry the effect
-     instead. */
+  .category-row{ padding: 12px 4px; }
+  .category-row-title{ font-size: clamp(28px, 10vw, 40px); }
+  /* No cursor to follow on touch — the tint wash on tap (via
+     :focus-visible/:hover, both still fire on tap) carries the feedback
+     instead. Preview and arrow both assumed a cursor, so both sit out here. */
   .category-row-preview{ display: none; }
+  .category-row-arrow{ display: none; }
 }
 @media (max-width: 560px){
   .category-head{ margin-bottom: 40px; }
