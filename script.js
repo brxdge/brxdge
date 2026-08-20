@@ -200,6 +200,40 @@
 
 
 /* =========================================================
+   CATEGORY ROW HOVER PREVIEW ("What We Represent")
+   Floats a small preview thumbnail near the cursor as it moves over a
+   .category-row, via the --pop-x/--pop-y custom properties consumed in
+   CSS (see .category-row-preview). Skipped entirely on touch/imprecise
+   pointers — those rows fall back to the CSS default (--pop-x/--pop-y:
+   50%, i.e. centered) and rely on the tint wash + arrow reveal for the
+   hover/tap feedback instead, since there's no cursor to track.
+========================================================= */
+(function initCategoryPreviews() {
+  const rows = document.querySelectorAll('.category-row');
+  if (!rows.length) return;
+  if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  rows.forEach((row) => {
+    let raf = null;
+    let pendingX = 0, pendingY = 0;
+
+    function flush() {
+      row.style.setProperty('--pop-x', pendingX.toFixed(0) + 'px');
+      row.style.setProperty('--pop-y', pendingY.toFixed(0) + 'px');
+      raf = null;
+    }
+    function onMove(e) {
+      const rect = row.getBoundingClientRect();
+      pendingX = e.clientX - rect.left;
+      pendingY = e.clientY - rect.top;
+      if (!raf) raf = requestAnimationFrame(flush);
+    }
+    row.addEventListener('mousemove', onMove);
+  });
+})();
+
+
+/* =========================================================
    LOADER + BRAND INTRO (combined)
    The brand mark pops in above the percentage almost immediately,
    then the bold wordmark appears below the bar once loading is
