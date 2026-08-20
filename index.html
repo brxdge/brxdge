@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -778,68 +778,78 @@
       <span class="profiles-bold">REPRESENT</span>
       <p class="category-sub">The lanes our roster creates in — every talent we sign is building an audience in one of these worlds.</p>
     </div>
-    <!-- Photo-forward tile grid (previously a hover-reveal row list with a
-         per-row index number, icon glyph, cursor-tracked preview thumbnail,
-         and one-liner description — all removed per revision notes: no
-         numbers/icons, no description copy, and a layout that works the
-         same on touch as it does with a cursor instead of depending on
-         hover-only reveals. Each tile's photo + gradient fallback are two
-         stacked background-image layers (see .category-tile-media), so a
-         missing/not-yet-uploaded photo (e.g. assets/sports.jpg until it exists)
-         quietly falls back to the tone gradient instead of showing broken
-         art. Swap any assets/*.jpg path below once final photography is
-         ready — no other markup changes needed. -->
-    <div class="category-grid">
-      <div class="category-tile stagger-item" data-tone="1" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/comedy.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Comedy</h3>
+    <!-- Hover/focus-reveal row list — same interaction "theme" as the
+         original build (tint wash + cursor-tracked floating photo preview,
+         see .category-row-preview + initCategoryPreviews() in script.js),
+         upgraded per revision notes: no index number, no icon glyph, no
+         one-liner description under each row. With those removed, the row
+         title carries the full visual weight, so it's set larger/bolder,
+         and a small arrow (reusing the site's existing view-all-arrow
+         glyph) slides in on hover/focus as the "there's more here" cue that
+         the icon used to imply. Each preview thumbnail is two stacked
+         background-image layers — photo, then a --tone gradient underneath
+         — so a missing/not-yet-uploaded photo (assets/sports.jpg, for now)
+         quietly falls back to the gradient instead of showing broken art.
+         Swap any assets/*.jpg path below once final photography is ready —
+         no other markup changes needed. -->
+    <div class="category-list">
+      <div class="category-row stagger-item" data-tone="1" tabindex="0">
+        <h3 class="category-row-title">Comedy</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/comedy.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
-      <div class="category-tile stagger-item" data-tone="2" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/gamer.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Gaming</h3>
+      <div class="category-row stagger-item" data-tone="2" tabindex="0">
+        <h3 class="category-row-title">Gaming</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/gamer.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
-      <div class="category-tile stagger-item" data-tone="3" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/music.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Music</h3>
+      <div class="category-row stagger-item" data-tone="3" tabindex="0">
+        <h3 class="category-row-title">Music</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/music.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
-      <div class="category-tile stagger-item" data-tone="4" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/fitness.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Fitness</h3>
+      <div class="category-row stagger-item" data-tone="4" tabindex="0">
+        <h3 class="category-row-title">Fitness</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/fitness.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
-      <div class="category-tile stagger-item" data-tone="5" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/lifestyle.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Lifestyle</h3>
+      <div class="category-row stagger-item" data-tone="5" tabindex="0">
+        <h3 class="category-row-title">Lifestyle</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/lifestyle.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
-      <div class="category-tile stagger-item" data-tone="6" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/food.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Food</h3>
+      <div class="category-row stagger-item" data-tone="6" tabindex="0">
+        <h3 class="category-row-title">Food</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/food.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
 
       <!-- Sports: newly added per revision notes. No photo shot yet, so this
            renders on the --tone gradient fallback until assets/sports.jpg
            is uploaded — nothing else needs to change when it is. -->
-      <div class="category-tile stagger-item" data-tone="7" tabindex="0">
-        <div class="category-tile-media" style="background-image:url('assets/sports.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
-        <div class="category-tile-scrim" aria-hidden="true"></div>
-        <div class="category-tile-glow" aria-hidden="true"></div>
-        <h3 class="category-tile-title">Sports</h3>
+      <div class="category-row stagger-item" data-tone="7" tabindex="0">
+        <h3 class="category-row-title">Sports</h3>
+        <svg class="category-row-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="category-row-preview" aria-hidden="true">
+          <div class="category-row-preview-inner" style="background-image:url('assets/sports.jpg'), linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1872,7 +1882,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=22"></script>
+<script src="script.js?v=23"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
