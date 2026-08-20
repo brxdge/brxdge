@@ -4345,170 +4345,98 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   line-height: 1.6;
 }
 
-.category-list{
-  max-width: 880px;
-  margin: 0 auto;
-  border-top: 1px solid var(--panel-line);
-  counter-reset: category-index;
+/* Photo-forward tile grid — replaces the old hover-reveal row list (index
+   number + icon glyph + cursor-tracked preview + description one-liner).
+   Each tile carries its own photo, falls back gracefully to a --tone
+   gradient if that photo isn't uploaded yet, and needs no hover state to
+   read correctly, so it behaves the same on touch as it does with a
+   cursor. */
+.category-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+  margin-top: 12px;
 }
 
-.category-row{
+.category-tile{
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 26px 6px;
-  border-bottom: 1px solid var(--panel-line);
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-lg, 28px);
+  overflow: hidden;
+  border: 1px solid var(--panel-line);
   isolation: isolate;
-  --tone: var(--coral);
-  --pop-x: 50%;
-  --pop-y: 50%;
-  transition: padding 0.4s cubic-bezier(.2,.8,.2,1);
   outline: none;
+  cursor: pointer;
+  --tone: var(--coral);
+  transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s ease;
 }
-.category-row::before{
-  content: "";
+.category-tile:hover,
+.category-tile:focus-visible{
+  transform: translateY(-6px);
+  box-shadow: 0 20px 44px rgba(0,0,0,0.22);
+}
+
+.category-tile-media{
   position: absolute;
   inset: 0;
-  background: radial-gradient(260px 160px at 0% 50%, var(--tone), transparent 72%);
+  z-index: 0;
+  background-color: var(--ink);
+  background-size: cover, cover;
+  background-position: center, center;
+  transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.category-tile:hover .category-tile-media,
+.category-tile:focus-visible .category-tile-media{
+  transform: scale(1.06);
+}
+
+.category-tile-scrim{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.18) 55%, transparent 82%);
+  pointer-events: none;
+}
+
+.category-tile-glow{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(160px 120px at 50% 100%, var(--tone), transparent 72%);
   opacity: 0;
+  mix-blend-mode: screen;
   transition: opacity 0.4s ease;
   pointer-events: none;
-  z-index: 0;
 }
-.category-row:hover,
-.category-row:focus-visible{
-  padding-left: 22px;
-  padding-right: 22px;
-  z-index: 5;
-}
-.category-row:hover::before,
-.category-row:focus-visible::before{ opacity: 0.1; }
+.category-tile:hover .category-tile-glow,
+.category-tile:focus-visible .category-tile-glow{ opacity: 0.6; }
 
-.category-row[data-tone="1"]{ --tone: #C8302C; }
-.category-row[data-tone="2"]{ --tone: #2F7D6B; }
-.category-row[data-tone="3"]{ --tone: #6C4FD1; }
-.category-row[data-tone="4"]{ --tone: #D18A2B; }
-.category-row[data-tone="5"]{ --tone: #2B7FC7; }
-.category-row[data-tone="6"]{ --tone: #C74B8F; }
-
-.category-row-index{
-  position: relative;
-  z-index: 1;
-  font-family: 'Space Mono', monospace;
-  font-size: 13px;
-  color: var(--muted);
-  width: 40px;
-  flex-shrink: 0;
-}
-.category-row-index::before{
-  counter-increment: category-index;
-  content: "(" counter(category-index, decimal-leading-zero) ")";
-}
-
-.category-row-icon{
-  position: relative;
-  z-index: 1;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ink);
-  border: 1px solid var(--panel-line);
-  color: var(--text);
-  flex-shrink: 0;
-  transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.35s ease;
-}
-.category-row-icon svg{ width: 21px; height: 21px; }
-.category-row:hover .category-row-icon,
-.category-row:focus-visible .category-row-icon{
-  background: var(--tone);
-  border-color: var(--tone);
-  color: #fff;
-  transform: scale(1.08) rotate(-4deg);
-}
-
-.category-row-text{
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
-}
-.category-row-title{
+.category-tile-title{
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 20px;
+  z-index: 2;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 800;
-  font-size: clamp(24px, 3.6vw, 38px);
+  font-size: clamp(22px, 3vw, 28px);
   letter-spacing: -0.01em;
-  color: var(--text);
-  transition: color 0.35s ease, transform 0.4s cubic-bezier(.2,.8,.2,1);
+  color: #fff;
+  margin: 0;
+  transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
 }
-.category-row:hover .category-row-title,
-.category-row:focus-visible .category-row-title{
-  color: var(--tone);
-  transform: translateX(8px);
-}
-.category-row-desc{
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13.5px;
-  line-height: 1.55;
-  max-width: 420px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-.category-row:hover .category-row-desc,
-.category-row:focus-visible .category-row-desc{
-  opacity: 1;
-  transform: translateY(0);
+.category-tile:hover .category-tile-title,
+.category-tile:focus-visible .category-tile-title{
+  transform: translateY(-4px);
 }
 
-/* Floating preview thumbnail — tracks the cursor via --pop-x/--pop-y, set per
-   row by initCategoryPreviews() in script.js (mousemove, hover:hover+pointer:fine
-   only). Placeholder --tone gradient for now; swap the markup inside
-   .category-row-preview-inner for an <img>/<video> once real assets exist. */
-.category-row-preview{
-  position: absolute;
-  z-index: 2;
-  top: var(--pop-y);
-  left: var(--pop-x);
-  width: 260px;
-  height: 180px;
-  margin: -90px 0 0 30px;
-  border-radius: 16px;
-  overflow: hidden;
-  opacity: 0;
-  transform: scale(0.85) rotate(-3deg);
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.2,.8,.2,1);
-  pointer-events: none;
-  box-shadow: 0 20px 44px rgba(0,0,0,0.34);
-  border: 1px solid rgba(255,255,255,0.14);
-}
-.category-row:hover .category-row-preview,
-.category-row:focus-visible .category-row-preview{
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-}
-.category-row-preview-inner{
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--ink);
-  background-image: linear-gradient(135deg, var(--tone) 0%, var(--ink) 130%);
-  background-size: cover;
-  background-position: center;
-  color: rgba(255,255,255,0.92);
-}
-.category-row-preview-inner svg{ width: 44px; height: 44px; }
-/* Rows with a real photo (currently just Gaming — see index.html) set
-   background-image inline via style="", which overrides just that one
-   property above and leaves background-size/position doing the cover/center
-   fit. No gradient, no icon glyph needed once there's an actual photo. */
-.category-row-preview-inner--photo{ background-color: var(--ink); }
+.category-tile[data-tone="1"]{ --tone: #C8302C; }
+.category-tile[data-tone="2"]{ --tone: #2F7D6B; }
+.category-tile[data-tone="3"]{ --tone: #6C4FD1; }
+.category-tile[data-tone="4"]{ --tone: #D18A2B; }
+.category-tile[data-tone="5"]{ --tone: #2B7FC7; }
+.category-tile[data-tone="6"]{ --tone: #C74B8F; }
+.category-tile[data-tone="7"]{ --tone: #C9A227; }
 
 /* ---------- FOR BRANDS (four-step process, before Categories/Roster) ---------- */
 .brand-steps{
@@ -4863,17 +4791,12 @@ html.dark-mode .creator-panel::before{
 }
 
 @media (max-width: 720px){
-  .category-row{ gap: 14px; padding: 18px 4px; }
-  .category-row-index{ width: 32px; font-size: 11px; }
-  .category-row-icon{ width: 38px; height: 38px; }
-  .category-row-icon svg{ width: 17px; height: 17px; }
-  /* No cursor to follow on touch — the tint wash + description reveal on tap
-     (via :focus-visible/:hover, both still fire on tap) carry the effect instead. */
-  .category-row-preview{ display: none; }
+  .category-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .category-tile-title{ font-size: clamp(19px, 5.5vw, 24px); left: 16px; right: 16px; bottom: 14px; }
 }
 @media (max-width: 560px){
   .category-head{ margin-bottom: 40px; }
-  .category-row-title{ font-size: clamp(22px, 7vw, 30px); }
+  .category-grid{ grid-template-columns: 1fr 1fr; }
 }
 
 /* =========================================================
