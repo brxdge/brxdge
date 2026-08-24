@@ -1186,9 +1186,16 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .roster-empty{ text-align:center; padding:60px 20px; color:var(--muted); border:1px dashed var(--panel-line); border-radius:var(--radius-lg); grid-column:1/-1; }
 
   /* ---------- CONTACT ---------- */
-  .contact-grid{ display:grid; grid-template-columns:1fr 1fr; gap:50px; align-items:start; }
+  /* Single centered column instead of the old two-column split: the
+     pitch/heading/trust strip sits centered up top, and the panel below
+     (the Creator/Management chooser, then the form once a tile is
+     picked) spans nearly the full section width so the chooser tiles can
+     be maximized instead of squeezed into a half-width column. */
+  .contact-grid{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:48px; }
+  .contact-info{ display:flex; flex-direction:column; align-items:center; max-width:640px; }
+  .contact-info .featured-italiccc{ text-align:center; }
   .contact-grid h2{ font-size:clamp(30px,4vw,44px); }
-  .contact-grid p.lede{ color:var(--muted); margin-top:16px; max-width:400px; }
+  .contact-grid p.lede{ color:var(--muted); margin:16px auto 0; max-width:480px; text-align:center; }
 
   /* Quick credibility strip between the pitch and the socials — same
      approved numbers already used in About, so nothing here is invented
@@ -1208,7 +1215,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .trust-lbl{ display:block; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); }
   .trust-divider{ width:1px; height:32px; background:var(--panel-line); flex-shrink:0; }
 
-  .socials{ display:flex; gap:12px; margin-top:26px; }
+  .socials{ display:flex; gap:12px; margin-top:26px; justify-content:center; }
   .social-btn{
     width:42px; height:42px; border-radius:50%; border:1px solid var(--panel-line);
     display:flex; align-items:center; justify-content:center; color:var(--muted);
@@ -1216,52 +1223,84 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   }
   .social-btn:hover{ color:var(--text); background:var(--panel); border-color:var(--coral); transform:translateY(-2px); }
 
-  /* Form gets its own contained card instead of floating fields directly
-     on the section background — reads as a distinct, "official" place to
-     hand over contact details rather than a loose stack of inputs. */
+  /* Form/chooser panel now spans nearly the full section width instead
+     of sitting in a half-width column. */
   .contact-form-panel{
-    position:relative;
+    position:relative; width:100%; max-width:1040px; margin:0 auto;
     border:1px solid var(--panel-line); border-radius:var(--radius-lg);
-    background:var(--panel); padding:38px;
+    background:var(--panel); padding:48px 56px;
     box-shadow:0 24px 60px rgba(14,14,14,0.08);
   }
   html.dark-mode .contact-form-panel{ box-shadow:0 24px 60px rgba(0,0,0,0.35); }
 
-  /* Chooser gate shown first inside the form panel — two photo tiles
-     (Creator / Management) instead of the form itself, so the visitor
-     self-segments before typing anything. Reuses the site's established
-     grayscale-photo-that-colorizes-on-hover language (see .card-photo)
-     and the two-layer photo+tone-gradient fallback pattern from the
-     Categories rows, so missing photography degrades to a clean gradient
-     instead of broken art. */
-  .contact-chooser-label{ font-size:13px; color:var(--muted); margin-bottom:14px; }
-  .chooser-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  /* Chooser gate shown first inside the form panel — two large photo
+     tiles (Creator / Management) instead of the form itself, so the
+     visitor self-segments before typing anything. Reuses the site's
+     established grayscale-photo-that-colorizes-on-hover language (see
+     .card-photo) and the two-layer photo+tone-gradient fallback pattern
+     from the Categories rows, so missing photography degrades to a clean
+     gradient instead of broken art. Tone-tinted glow on hover borrows
+     the same coral/violet pairing already used on the inquiry pills
+     below, so the Creator tile and the "Creator" pill read as the same
+     choice. Copy sits bottom-aligned over a darkening gradient, editorial
+     poster-style, rather than centered — reads richer at this size than
+     dead-center text ever does. */
+  .contact-chooser{ text-align:center; }
+  .contact-chooser-label{
+    display:block; font-family:'Space Mono',monospace; font-size:12.5px; font-weight:700;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--coral); margin-bottom:28px;
+  }
+  .chooser-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
   .chooser-tile{
     position:relative;
-    height:220px; border-radius:var(--radius-md); border:1px solid var(--panel-line);
+    height:clamp(260px,30vw,400px); border-radius:var(--radius-lg); border:1px solid var(--panel-line);
     background-size:cover; background-position:center; overflow:hidden;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:flex-end; justify-content:center; padding:0 20px 32px;
     cursor:pointer; font-family:inherit;
-    transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), border-color 0.2s ease;
+    box-shadow:0 16px 36px rgba(14,14,14,0.10);
+    transition:transform 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.25s ease, box-shadow 0.35s ease;
   }
+  html.dark-mode .chooser-tile{ box-shadow:0 16px 36px rgba(0,0,0,0.3); }
   .chooser-tile::before{
     content:""; position:absolute; inset:0;
-    background:linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 100%);
+    background:linear-gradient(180deg, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.30) 55%, rgba(10,10,10,0.80) 100%);
     filter:grayscale(1);
-    transition:filter 0.3s ease, background 0.3s ease;
+    transition:filter 0.35s ease;
   }
   .chooser-tile:hover, .chooser-tile:focus-visible{
-    transform:translateY(-3px); border-color:var(--coral); outline:none;
+    transform:translateY(-6px) scale(1.015); outline:none;
+  }
+  .chooser-tile[data-choose="Creator"]:hover, .chooser-tile[data-choose="Creator"]:focus-visible{
+    border-color:var(--coral); box-shadow:0 22px 50px rgba(90,90,90,0.35);
+  }
+  .chooser-tile[data-choose="Brand"]:hover, .chooser-tile[data-choose="Brand"]:focus-visible{
+    border-color:var(--violet); box-shadow:0 22px 50px rgba(26,26,26,0.35);
   }
   .chooser-tile:hover::before, .chooser-tile:focus-visible::before{ filter:grayscale(0); }
+  .chooser-tile-copy{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
   .chooser-tile-label{
-    position:relative; z-index:1;
-    font-family:'Montserrat',sans-serif; font-weight:900; font-size:20px;
+    font-family:'Montserrat',sans-serif; font-weight:900; font-size:clamp(24px,2.6vw,32px);
     letter-spacing:0.02em; text-transform:uppercase; color:#fff;
   }
-  @media (max-width:520px){
-    .chooser-tiles{ grid-template-columns:1fr; }
-    .chooser-tile{ height:150px; }
+  .chooser-tile-sub{
+    display:block; font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
+    letter-spacing:0.04em; text-transform:uppercase; color:rgba(255,255,255,0.75);
+    margin-top:8px;
+  }
+  .chooser-tile-arrow{
+    position:absolute; top:22px; right:22px; z-index:1;
+    width:36px; height:36px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.08);
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    opacity:0; transform:translate(-6px,6px); backdrop-filter:blur(4px);
+    transition:opacity 0.3s ease, transform 0.3s ease;
+  }
+  .chooser-tile:hover .chooser-tile-arrow, .chooser-tile:focus-visible .chooser-tile-arrow{
+    opacity:1; transform:translate(0,0);
+  }
+  @media (max-width:640px){
+    .chooser-tiles{ grid-template-columns:1fr; gap:16px; }
+    .chooser-tile{ height:230px; padding-bottom:24px; }
   }
 
   /* Small back control at the top of the revealed form, letting someone
@@ -1276,7 +1315,10 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   }
   .contact-form-back:hover{ color:var(--text); }
 
-  form.contact-form{ display:flex; flex-direction:column; gap:14px; }
+  /* Fields stay a comfortable reading width and centered, even though
+     the panel around them is now much wider to fit the maximized
+     chooser. */
+  form.contact-form{ display:flex; flex-direction:column; gap:14px; max-width:560px; margin:0 auto; text-align:left; }
   .field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
   .field input, .field textarea, .field select{
     width:100%; padding:13px 16px; border-radius:12px; border:1px solid var(--panel-line);
@@ -1316,7 +1358,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
 
   /* Inline success state swaps in for the form itself — more reassuring
      than a toast alone for something as high-stakes as a lead form. */
-  .form-success{ text-align:center; padding:26px 10px; }
+  .form-success{ text-align:center; padding:26px 10px; max-width:560px; margin:0 auto; }
   .success-icon{
     width:56px; height:56px; margin:0 auto 18px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -1329,7 +1371,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   @media (max-width:520px){
     .contact-trust{ flex-wrap:wrap; gap:14px 22px; padding:18px 20px; max-width:none; }
     .trust-divider{ display:none; }
-    .contact-form-panel{ padding:26px 22px; }
+    .contact-form-panel{ padding:30px 22px; }
   }
 
   footer{ padding:60px 0 40px; border-top:1px solid var(--panel-line); }
@@ -2772,8 +2814,8 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .about-stats-bar .stat-icon svg{ width:15px; height:15px; }
 
   /* ---- CONTACT ---- */
-  .contact-grid{ grid-template-columns: 1fr; gap: 34px; }
-  .contact-grid p.lede{ max-width: none; }
+  .contact-grid{ gap: 34px; }
+  .contact-form-panel{ padding: 34px 26px; }
 
   /* ---- FOOTER ---- */
   .footer-grid{ flex-direction: column; align-items: flex-start; text-align: left; }
