@@ -1254,18 +1254,37 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .chooser-tile{
     position:relative;
     height:clamp(260px,30vw,400px); border-radius:var(--radius-lg); border:1px solid var(--panel-line);
-    background-size:cover; background-position:center; overflow:hidden;
+    overflow:hidden;
     display:flex; align-items:flex-end; justify-content:center; padding:0 20px 32px;
     cursor:pointer; font-family:inherit;
     box-shadow:0 16px 36px rgba(14,14,14,0.10);
     transition:transform 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.25s ease, box-shadow 0.35s ease;
   }
   html.dark-mode .chooser-tile{ box-shadow:0 16px 36px rgba(0,0,0,0.3); }
+  /* Photo layer: deliberately dimmed and softly out of focus rather than
+     crisp, so the label/subtext read clearly over any photo without
+     needing a heavier gradient on top of it. Set via the --tile-bg custom
+     property (from the inline style on the button) rather than a plain
+     background-image, so this layer can carry its own blur/brightness
+     filter without blurring the text sitting above it. Oversized
+     (inset:-12px) so the blur's soft edge falls outside the tile's
+     clipped, rounded bounds instead of showing as a halo. */
   .chooser-tile::before{
-    content:""; position:absolute; inset:0;
-    background:linear-gradient(180deg, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.30) 55%, rgba(10,10,10,0.80) 100%);
-    filter:grayscale(1);
+    content:""; position:absolute; inset:-12px;
+    background-image:var(--tile-bg); background-size:cover; background-position:center;
+    filter:grayscale(1) brightness(0.55) blur(4px);
     transition:filter 0.35s ease;
+  }
+  /* Hover/focus nudges the photo slightly more legible without ever
+     letting it go fully sharp or full-color — it should read as toned
+     down throughout, not just at rest. */
+  .chooser-tile:hover::before, .chooser-tile:focus-visible::before{
+    filter:grayscale(0.55) brightness(0.62) blur(3px);
+  }
+  /* Gradient sits on its own crisp layer above the blurred photo. */
+  .chooser-tile::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(10,10,10,0.25) 0%, rgba(10,10,10,0.35) 55%, rgba(10,10,10,0.82) 100%);
   }
   .chooser-tile:hover, .chooser-tile:focus-visible{
     transform:translateY(-6px) scale(1.015); outline:none;
@@ -1276,7 +1295,6 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .chooser-tile[data-choose="Brand"]:hover, .chooser-tile[data-choose="Brand"]:focus-visible{
     border-color:var(--violet); box-shadow:0 22px 50px rgba(26,26,26,0.35);
   }
-  .chooser-tile:hover::before, .chooser-tile:focus-visible::before{ filter:grayscale(0); }
   .chooser-tile-copy{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
   .chooser-tile-label{
     font-family:'Montserrat',sans-serif; font-weight:900; font-size:clamp(24px,2.6vw,32px);
