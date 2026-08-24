@@ -4257,6 +4257,46 @@ if(inquiryToggle){
 
 const contactForm = document.getElementById('contactForm');
 const contactSuccess = document.getElementById('contactSuccess');
+const contactChooser = document.getElementById('contactChooser');
+const contactFormBackBtn = document.getElementById('contactFormBack');
+
+// Chooser gate: two photo tiles (Creator / Management) shown first
+// instead of the form. Picking one hides the chooser, reveals the form,
+// and pre-selects the matching inquiry pill (Management maps to the
+// existing "Brand" pill value — there's no separate pill for it, and
+// "Brand"/company-side is what that pill already means downstream).
+function showContactForm(type){
+  if(contactChooser) contactChooser.style.display = 'none';
+  if(contactSuccess) contactSuccess.style.display = 'none';
+  contactForm.style.display = 'flex';
+  if(type){
+    const pill = inquiryToggle && inquiryToggle.querySelector(`.inquiry-pill[data-type="${type}"]`);
+    if(pill && !pill.classList.contains('active')) pill.click();
+  }
+}
+
+function showContactChooser(){
+  contactForm.style.display = 'none';
+  if(contactSuccess) contactSuccess.style.display = 'none';
+  if(contactChooser) contactChooser.style.display = 'block';
+}
+
+if(contactChooser){
+  contactChooser.querySelectorAll('.chooser-tile').forEach((tile) => {
+    tile.addEventListener('click', () => showContactForm(tile.dataset.choose));
+  });
+}
+
+if(contactFormBackBtn){
+  contactFormBackBtn.addEventListener('click', () => {
+    // Clear the pre-selection so re-entering the form via a tile starts
+    // clean rather than carrying over the previous pick.
+    if(inquiryToggle) inquiryToggle.querySelectorAll('.inquiry-pill').forEach(p => p.classList.remove('active'));
+    if(contactInquiryType) contactInquiryType.value = '';
+    if(contactMessageField) contactMessageField.placeholder = DEFAULT_MESSAGE_PLACEHOLDER;
+    showContactChooser();
+  });
+}
 
 contactForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -4300,8 +4340,10 @@ if(contactSendAnotherBtn){
     if(inquiryToggle) inquiryToggle.querySelectorAll('.inquiry-pill').forEach(p => p.classList.remove('active'));
     if(contactInquiryType) contactInquiryType.value = '';
     if(contactMessageField) contactMessageField.placeholder = DEFAULT_MESSAGE_PLACEHOLDER;
-    if(contactSuccess) contactSuccess.style.display = 'none';
-    contactForm.style.display = 'flex';
+    // Back to the chooser rather than straight to the form — the pill
+    // selection was just cleared, so re-picking a tile is the natural
+    // next step instead of landing on an unselected form.
+    showContactChooser();
   });
 }
 
@@ -4353,15 +4395,15 @@ function scrollToSection(id){
 }
 
 // Used by the "Build Your Campaign →" (For Brands) and "Apply for
-// Representation →" (For Creators) CTAs — scrolls to the existing contact
-// form AND pre-selects its Brand/Creator inquiry pill, rather than routing
-// either audience to a separate form. Reuses the pill's own click handler
-// (see the inquiryToggle wiring below) instead of duplicating the
-// active-state/placeholder-swap logic here.
+// Representation →" (For Creators) CTAs — scrolls to the contact section
+// AND skips straight past the Creator/Management chooser to the form,
+// pre-selecting its Brand/Creator inquiry pill, since the visitor's
+// intent was already declared by which CTA they clicked. Reuses
+// showContactForm() (see the chooser wiring above) instead of duplicating
+// the reveal/pre-select logic here.
 function scrollToContactAs(type){
   scrollToSection('contact');
-  const pill = inquiryToggle && inquiryToggle.querySelector(`.inquiry-pill[data-type="${type}"]`);
-  if(pill && !pill.classList.contains('active')) pill.click();
+  showContactForm(type);
 }
 
 // ---------------- FAQ ACCORDION ----------------
