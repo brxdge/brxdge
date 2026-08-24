@@ -1227,6 +1227,55 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   }
   html.dark-mode .contact-form-panel{ box-shadow:0 24px 60px rgba(0,0,0,0.35); }
 
+  /* Chooser gate shown first inside the form panel — two photo tiles
+     (Creator / Management) instead of the form itself, so the visitor
+     self-segments before typing anything. Reuses the site's established
+     grayscale-photo-that-colorizes-on-hover language (see .card-photo)
+     and the two-layer photo+tone-gradient fallback pattern from the
+     Categories rows, so missing photography degrades to a clean gradient
+     instead of broken art. */
+  .contact-chooser-label{ font-size:13px; color:var(--muted); margin-bottom:14px; }
+  .chooser-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .chooser-tile{
+    position:relative;
+    height:220px; border-radius:var(--radius-md); border:1px solid var(--panel-line);
+    background-size:cover; background-position:center; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-family:inherit;
+    transition:transform 0.3s cubic-bezier(0.22,1,0.36,1), border-color 0.2s ease;
+  }
+  .chooser-tile::before{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 100%);
+    filter:grayscale(1);
+    transition:filter 0.3s ease, background 0.3s ease;
+  }
+  .chooser-tile:hover, .chooser-tile:focus-visible{
+    transform:translateY(-3px); border-color:var(--coral); outline:none;
+  }
+  .chooser-tile:hover::before, .chooser-tile:focus-visible::before{ filter:grayscale(0); }
+  .chooser-tile-label{
+    position:relative; z-index:1;
+    font-family:'Montserrat',sans-serif; font-weight:900; font-size:20px;
+    letter-spacing:0.02em; text-transform:uppercase; color:#fff;
+  }
+  @media (max-width:520px){
+    .chooser-tiles{ grid-template-columns:1fr; }
+    .chooser-tile{ height:150px; }
+  }
+
+  /* Small back control at the top of the revealed form, letting someone
+     who picked the wrong tile return to the chooser without losing their
+     place in the page. */
+  .contact-form-back{
+    display:inline-flex; align-items:center; gap:6px;
+    align-self:flex-start; margin-bottom:2px;
+    background:none; border:none; color:var(--muted);
+    font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    transition:color 0.2s ease;
+  }
+  .contact-form-back:hover{ color:var(--text); }
+
   form.contact-form{ display:flex; flex-direction:column; gap:14px; }
   .field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:7px; }
   .field input, .field textarea, .field select{
