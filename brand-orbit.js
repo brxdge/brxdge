@@ -119,6 +119,15 @@ import * as THREE from './assets/vendor/three.module.min.js';
     envMapIntensity: 1.6,
   });
 
+  // Slightly higher roughness than the struts/arches — a large flat panel
+  // at strut-level mirror polish would blow out into a single bright glare
+  // slab under the key/rim lights instead of reading as a deck surface.
+  // Still the same chrome family (same base color, still metal), just
+  // softened so the panel's own subtle reflections stay legible.
+  const deckMat = chromeMat.clone();
+  deckMat.roughness = 0.34;
+  deckMat.clearcoat = 0.25;
+
   // A strut is a cylinder stretched and oriented between two points —
   // used for every straight member (deck rails, hangers, cross-braces).
   function makeStrut(p1, p2, radius){
@@ -156,7 +165,9 @@ import * as THREE from './assets/vendor/three.module.min.js';
       bridge.add(new THREE.Mesh(geo, chromeMat));
     });
 
-    // Deck rails (front + back)
+    // Deck edge rails (front + back) — sit right at the deck plate's top
+    // surface, reading as a low guardrail running along each long edge
+    // rather than free-floating rods.
     [depth, -depth].forEach((z) => {
       bridge.add(makeStrut(
         new THREE.Vector3(-half * 1.03, deckY, z),
@@ -179,10 +190,20 @@ import * as THREE from './assets/vendor/three.module.min.js';
       bridge.add(makeStrut(archPoint(t, depth), archPoint(t, -depth), 0.028));
     });
 
-    // Deck cross-beams tying the two rails together
-    [-1.5, -0.75, 0, 0.75, 1.5].forEach((x) => {
-      bridge.add(makeStrut(new THREE.Vector3(x, deckY, depth), new THREE.Vector3(x, deckY, -depth), 0.03));
-    });
+    // Flat deck plate spanning between the two edge rails — a real, solid
+    // roadway surface instead of the bare cross-beams that used to tie the
+    // rails together (those read as a ladder rather than a bridge deck).
+    // Its top face sits flush with the rails, so the rails read as a
+    // raised curb running along each edge of a continuous deck.
+    {
+      const deckLength = half * 2 * 1.03;
+      const deckSpan = depth * 2;
+      const deckThickness = 0.09;
+      const deckGeo = new THREE.BoxGeometry(deckLength, deckThickness, deckSpan);
+      const deckMesh = new THREE.Mesh(deckGeo, deckMat);
+      deckMesh.position.set(0, deckY - deckThickness / 2 - 0.01, 0);
+      bridge.add(deckMesh);
+    }
 
     return bridge;
   }
@@ -287,7 +308,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
   //   1. The turntable stops dead where it is — no ramp, no flourish —
   //      so the structure holds still and the teardown reads clearly.
   //   2. Every individual piece (both arches, both deck rails, all 16
-  //      hangers, the 4 cross-braces, the 5 deck beams) lets go on its
+  //      hangers, the 4 cross-braces, the flat deck plate) lets go on its
   //      own staggered delay biased left-to-right, then falls under a
   //      gentle gravity curve, drifting slightly and tumbling as it
   //      fades out — the bridge comes apart piece by piece rather than
