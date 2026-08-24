@@ -4223,10 +4223,11 @@ async function deleteTalent(id){
 
 /* ---------------- CONTACT FORM (general inquiries, from the Contact Us section) ---------------- */
 
-// Inquiry-type pills: one click of self-segmentation (Brand / Creator /
-// Other) instead of an extra typed field. Tapping the active pill again
-// deselects it — it's a helpful default, not a required gate on submitting.
-const inquiryToggle = document.getElementById('inquiryToggle');
+// Inquiry type used to be a second self-segmentation step inside the form
+// itself (Brand/Creator/Other pills) — retired as redundant now that the
+// Creator/Management chooser tiles one step back already capture the same
+// choice. The hidden field below still carries it through to submission;
+// showContactForm() sets it directly instead of simulating a pill click.
 const contactInquiryType = document.getElementById('contactInquiryType');
 const contactMessageField = document.getElementById('contactMessage');
 const DEFAULT_MESSAGE_PLACEHOLDER = 'Tell us about your brand or your content...';
@@ -4236,25 +4237,6 @@ const INQUIRY_MESSAGE_PLACEHOLDERS = {
   Other: "Tell us what's on your mind...",
 };
 
-if(inquiryToggle){
-  inquiryToggle.querySelectorAll('.inquiry-pill').forEach((pill) => {
-    pill.addEventListener('click', () => {
-      const wasActive = pill.classList.contains('active');
-      inquiryToggle.querySelectorAll('.inquiry-pill').forEach(p => p.classList.remove('active'));
-      if(wasActive){
-        contactInquiryType.value = '';
-        if(contactMessageField) contactMessageField.placeholder = DEFAULT_MESSAGE_PLACEHOLDER;
-        return;
-      }
-      pill.classList.add('active');
-      contactInquiryType.value = pill.dataset.type;
-      if(contactMessageField){
-        contactMessageField.placeholder = INQUIRY_MESSAGE_PLACEHOLDERS[pill.dataset.type] || DEFAULT_MESSAGE_PLACEHOLDER;
-      }
-    });
-  });
-}
-
 const contactForm = document.getElementById('contactForm');
 const contactSuccess = document.getElementById('contactSuccess');
 const contactChooser = document.getElementById('contactChooser');
@@ -4262,16 +4244,16 @@ const contactFormBackBtn = document.getElementById('contactFormBack');
 
 // Chooser gate: two photo tiles (Creator / Management) shown first
 // instead of the form. Picking one hides the chooser, reveals the form,
-// and pre-selects the matching inquiry pill (Management maps to the
-// existing "Brand" pill value — there's no separate pill for it, and
-// "Brand"/company-side is what that pill already means downstream).
+// and records the inquiry type (Management maps to the existing "Brand"
+// value — there's no separate backend category for it, and "Brand"/
+// company-side is what that value already means downstream).
 function showContactForm(type){
   if(contactChooser) contactChooser.style.display = 'none';
   if(contactSuccess) contactSuccess.style.display = 'none';
   contactForm.style.display = 'flex';
   if(type){
-    const pill = inquiryToggle && inquiryToggle.querySelector(`.inquiry-pill[data-type="${type}"]`);
-    if(pill && !pill.classList.contains('active')) pill.click();
+    if(contactInquiryType) contactInquiryType.value = type;
+    if(contactMessageField) contactMessageField.placeholder = INQUIRY_MESSAGE_PLACEHOLDERS[type] || DEFAULT_MESSAGE_PLACEHOLDER;
   }
 }
 
@@ -4291,7 +4273,6 @@ if(contactFormBackBtn){
   contactFormBackBtn.addEventListener('click', () => {
     // Clear the pre-selection so re-entering the form via a tile starts
     // clean rather than carrying over the previous pick.
-    if(inquiryToggle) inquiryToggle.querySelectorAll('.inquiry-pill').forEach(p => p.classList.remove('active'));
     if(contactInquiryType) contactInquiryType.value = '';
     if(contactMessageField) contactMessageField.placeholder = DEFAULT_MESSAGE_PLACEHOLDER;
     showContactChooser();
@@ -4337,7 +4318,6 @@ const contactSendAnotherBtn = document.getElementById('contactSendAnother');
 if(contactSendAnotherBtn){
   contactSendAnotherBtn.addEventListener('click', () => {
     contactForm.reset();
-    if(inquiryToggle) inquiryToggle.querySelectorAll('.inquiry-pill').forEach(p => p.classList.remove('active'));
     if(contactInquiryType) contactInquiryType.value = '';
     if(contactMessageField) contactMessageField.placeholder = DEFAULT_MESSAGE_PLACEHOLDER;
     // Back to the chooser rather than straight to the form — the pill
