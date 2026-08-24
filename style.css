@@ -187,19 +187,14 @@
 }
 @media (min-width: 861px){
 }
-  /* The BRXDGE / CA wordmark spans use the shared .eyebrow class, which
+  /* The POSSIBILITIES wordmark span uses the shared .eyebrow class, which
      carries its own margin-bottom for use elsewhere on the page — here
-     that stacked on top of .hero-grid's own gap, doubling up the space
-     between "BRXDGE" and "CA". Zeroing it out leaves gap as the single
-     source of truth for spacing in this cluster. */
+     that stacked on top of .hero-grid's own gap, doubling the space below
+     the bridge mark. Zeroing it out leaves gap as the single source of
+     truth for spacing in this cluster. (A second stacked "CA" eyebrow
+     used to sit directly under this one, pulled up via an adjacent-
+     sibling rule — removed along with the CA text itself.) */
   .hero-grid .eyebrow{ margin-bottom: 0; line-height: 1; }
-  /* Pull "CA" up closer to "BRXDGE" specifically, without touching the
-     gap between the bridge and "BRXDGE" above it (that one still uses
-     the plain .hero-grid gap and looks right as-is). This adjacent-sibling
-     selector only matches an .eyebrow directly following another .eyebrow
-     — i.e. just this pair — since the bridge button isn't itself an
-     .eyebrow. */
-  .hero-grid .eyebrow + .eyebrow{ margin-top: -12px; }
 
   /* EST. / MMXXVI — flank the bridge mark directly (one word on each side)
      instead of sitting together as a single line above it. Positioned
