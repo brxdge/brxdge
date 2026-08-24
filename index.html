@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=22">
+<link rel="stylesheet" href="style.css?v=23">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1096,7 +1096,33 @@
     </div>
 
     <div class="contact-form-panel">
-      <form class="contact-form" id="contactForm">
+      <!-- Chooser gate: shown first instead of the form. Two photo tiles —
+           Creator and Management (mapped to the existing "Brand" pill
+           value, since that's the pill the rest of the form/backend
+           already understands) — each carrying the same two-layer
+           photo + tone-gradient fallback used on the Categories rows, so
+           a missing/not-yet-uploaded photo (assets/contact-creator.jpg,
+           assets/contact-management.jpg, for now) never shows broken art.
+           Swap those two paths once final photography is ready. Picking a
+           tile calls showContactForm(type) in script.js, which hides this,
+           reveals the form, and pre-selects the matching inquiry pill. -->
+      <div class="contact-chooser" id="contactChooser">
+        <p class="contact-chooser-label">I'm reaching out as a…</p>
+        <div class="chooser-tiles">
+          <button type="button" class="chooser-tile" data-choose="Creator" style="background-image:url('assets/contact-creator.jpg'), linear-gradient(135deg, var(--coral) 0%, var(--ink) 130%);">
+            <span class="chooser-tile-label">Creator</span>
+          </button>
+          <button type="button" class="chooser-tile" data-choose="Brand" style="background-image:url('assets/contact-management.jpg'), linear-gradient(135deg, var(--violet) 0%, var(--ink) 130%);">
+            <span class="chooser-tile-label">Management</span>
+          </button>
+        </div>
+      </div>
+
+      <form class="contact-form" id="contactForm" style="display:none;">
+        <button type="button" class="contact-form-back" id="contactFormBack" aria-label="Back to selection">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
         <div class="field">
           <label>I'm reaching out as a…</label>
           <div class="inquiry-toggle" id="inquiryToggle" role="group" aria-label="Inquiry type">
@@ -1882,7 +1908,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=24"></script>
+<script src="script.js?v=25"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
