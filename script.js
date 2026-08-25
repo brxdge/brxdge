@@ -303,23 +303,30 @@
 
     if (p === 100) {
       clearInterval(interval);
-      // Exit sequence slowed down further (client revision, round 2 — the
-      // first pass still read as too fast) so the expand/burst transition
-      // has real room to play out before the hero page cuts in. Matches
-      // the further-lengthened CSS transition durations on
-      // .loader-mark.expand and #loader in style.css.
+      // Exit sequence, redesigned as two clean sequential phases (client
+      // revision, round 3 — not "make it slower", but "expand fully from
+      // its normal size to big, THEN transition into the main page" as
+      // two distinct steps rather than a scale+fade blended together):
+      //   1. The mark expands (.loader-mark.expand's transform transition
+      //      in style.css) while staying fully opaque.
+      //   2. Only once that expand has finished does #loader itself start
+      //      its own opacity transition, fading the whole loader (giant
+      //      mark included) away to reveal the page underneath.
+      // The two setTimeout delays below match those two CSS transition
+      // durations exactly — keep them in sync if either changes.
       setTimeout(() => {
         // Everything else steps back so the mark can take over the transition
         loader.querySelector('.loader-content').classList.add('exit');
         if (loaderMark) loaderMark.classList.add('expand');
         setTimeout(() => {
+          // Phase 2 starts here, only after the expand (1.3s) has played out.
           loader.style.opacity = '0';
-          setTimeout(() => loader.style.display = 'none', 1200);
+          setTimeout(() => loader.style.display = 'none', 600);
           // Straight into the hero content entrance
           if (heroAnim) heroAnim.classList.add('play');
           heroItems.forEach((item) => item.classList.add('play'));
-        }, 2200);
-      }, 600);
+        }, 1300);
+      }, 350);
     }
   }, 30);
 });
