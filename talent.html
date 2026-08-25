@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=45">
+<link rel="stylesheet" href="style.css?v=46">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -325,10 +325,10 @@
      talent BRXDGE represents immediately sees the "that could be you" pivot
      before scrolling further. Moved off the homepage, which now only links
      here via the nav "Talent" item. This is the last section on the page —
-     "Get In Touch" (#contact) isn't duplicated here, so the CTA below sends
-     a creator to index.html's contact section instead (with the "Creator"
-     inquiry pill still pre-selected there via a ?contactAs= deep link —
-     see the bottom of script.js). -->
+     "Get In Touch" (#contact) isn't duplicated here, so the CTA below opens
+     the shared #contactOverlay popup instead (see openCreatorApplicationModal()
+     in script.js) rather than scrolling to a section that doesn't exist on
+     this page. Applying never leaves the Talent page. -->
 <section id="forCreators" class="reveal" data-reveal="up">
   <div class="wrap">
     <div class="creator-panel">
@@ -347,7 +347,7 @@
           <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Partnerships</li>
           <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Growth</li>
         </ul>
-        <button type="button" class="btn btn-primary" onclick="window.location.href='index.html?contactAs=Creator#contact'">
+        <button type="button" class="btn btn-primary" onclick="openCreatorApplicationModal()">
           <span class="btn-label">Apply for Representation</span>
           <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -603,6 +603,56 @@
       <button type="button" class="gender-option" data-gender="Male">
         <span class="go-label">Male</span>
         <span class="go-sub">Male talent only</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD YOUR PREFERRED TALENTS — a guided filter prompt that pops up on
+     top of the full roster a beat after it appears (right after the gender
+     pick), inviting a visitor to narrow things down instead of only
+     discovering the "Filters" toggle on their own. talent.html-only:
+     Contact popup, unlike this, and the rest of the roster overlay stay in
+     the shared chrome, but this one has no reason to exist on index.html
+     (there's no roster to build a shortlist from there), so its wiring in
+     script.js is guarded rather than duplicating this markup there too.
+     Every control here shares the exact same filter state (trNicheFilter,
+     trPlatformFilters, etc.) as the inline "Filters" panel below — see
+     renderTrExpandedFilters() in script.js, which rebuilds both sets of
+     controls together on every change so they can never drift out of
+     sync. -->
+<div class="modal-overlay" id="trBuildOverlay">
+  <div class="modal trb-modal">
+    <button class="modal-close" id="trBuildClose" aria-label="Close">&times;</button>
+    <h3>Build Your Preferred Talents</h3>
+    <p class="sub">Narrow the roster down to exactly what you're looking for. You can always fine-tune this later from the Filters button.</p>
+    <div class="trb-filters-grid">
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trbNicheSelect">Niche</label>
+        <select class="tr-filter-select" id="trbNicheSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trbLocationSelect">Location</label>
+        <select class="tr-filter-select" id="trbLocationSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trbAudienceSizeSelect">Audience Size</label>
+        <select class="tr-filter-select" id="trbAudienceSizeSelect"></select>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Platform</label>
+        <div class="filters tr-chip-multi" id="trbPlatformFilters"></div>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Available For</label>
+        <div class="filters tr-chip-multi" id="trbAvailabilityFilters"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="trBuildSkip">Skip, show me everyone</button>
+      <button type="button" class="btn btn-primary" id="trBuildApply">
+        <span>Show My Talents</span>
+        <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
   </div>
@@ -1030,7 +1080,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=37"></script>
+<script src="script.js?v=38"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
