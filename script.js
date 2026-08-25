@@ -262,8 +262,13 @@
 
   // Brand mark pops in first, ahead of the counting. loader-bridge.js's
   // own assembly-animation timing is hardcoded to start at this same
-  // 150ms mark — keep the two in sync if this ever changes.
-  setTimeout(() => { if (loaderMark) loaderMark.classList.add('show'); }, 150);
+  // 150ms mark — keep the two in sync if this ever changes. The
+  // percentage (now positioned above the mark) fades/rises in on this
+  // same beat rather than just appearing instantly at first paint.
+  setTimeout(() => {
+    if (loaderMark) loaderMark.classList.add('show');
+    if (loadPercent) loadPercent.classList.add('show');
+  }, 150);
 
   let p = 0;
   let wordShown = false;
