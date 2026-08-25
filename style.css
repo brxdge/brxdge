@@ -4405,7 +4405,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loader-mark, .loader-word {
+  .loader-mark, .loader-word, .percentage {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -4414,7 +4414,15 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 
 /* Bigger loader box + bold brand-style percentage (was tiny Space Mono) */
 .loader-content { width: 280px; text-align: center; color: var(--text); }
-.percentage { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 26px; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 18px; color: var(--text); font-weight: 900; }
+/* Now sits above the bridge mark (client revision — was between the mark
+   and the wordmark). Starts hidden and fades/rises in a beat after first
+   paint (.show added by script.js, same 150ms mark the bridge itself pops
+   in on) rather than just appearing instantly — the transition lives on
+   the base rule itself (not introduced alongside the value change) so it
+   reliably animates; see the .loader-mark.shrink-armed/.shrink comment
+   further down for why that distinction matters. */
+.percentage { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 26px; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 18px; color: var(--text); font-weight: 900; opacity: 0; transform: translateY(10px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.percentage.show{ opacity: 1; transform: translateY(0); }
 
 /* Brand wordmark stays visible alongside the icon at every breakpoint;
    only drop it on very narrow screens to avoid crowding. */
