@@ -793,7 +793,7 @@
 
 .profiles-bolds { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: -0.02em; display: block; align-items: center; }
 
-  #loader { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 1.2s ease, background 0.6s ease; }
+  #loader { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease, background 0.35s ease; }
 
 
   :root{ --ink: #F3F3F3; --ink-2: #E7E7E7; --panel: #FFFFFF; --panel-line: rgba(103,103,103,0.18); --coral: #5A5A5A; --gold: #8A8A8A; --violet: #1A1A1A; --on-accent: #FFFFFF; --text: #111111; --muted: #616161; --radius-lg: 28px; --radius-md: 16px; --avatar-bg: #E7E7E7; --chrome: linear-gradient(135deg, #8A8A8A 0%, #FFFFFF 10%, #7A7A7A 20%, #1A1A1A 30%, #FFFFFF 40%, #3A3A3A 50%, #151515 60%, #FFFFFF 70%, #5A5A5A 80%, #FFFFFF 90%, #8A8A8A 100%); color-scheme: light; }
@@ -5290,13 +5290,15 @@ html.dark-mode .creator-panel::before{
   100%{ opacity: 0.7; transform: translateX(-50%) scale(1); }
 }
 
-/* Burst transition on exit — client revision (round 2): extended further,
-   the client felt the round-1 pass (0.9s -> 1.6s/1.7s) still read as too
-   fast for the handoff to the main page. Now transform 2.6s / opacity 2.8s
-   with a slightly later delay, so the burst has real room to breathe
-   before the page underneath takes over. Kept in sync with script.js's
-   exit-sequence setTimeout chain below. */
-.loader-mark.expand{ transition: transform 2.6s cubic-bezier(0.7, 0, 0.84, 0), opacity 2.8s ease 0.2s; transform: scale(9); opacity: 0; animation: none; }
+/* Exit, redesigned as two clean sequential phases (client revision, round
+   3) rather than a scale+fade blended together: 1) the mark expands from
+   its normal size up to big — fully opaque the whole time, no fading
+   here — then 2) once that expand has finished, #loader itself (the
+   whole loader, mark included) transitions/fades away to reveal the main
+   page underneath. script.js's exit-sequence setTimeout chain below
+   waits for this transform transition to finish before starting #loader's
+   own opacity transition, so the two phases play in order, not at once. */
+.loader-mark.expand{ transition: transform 1.3s cubic-bezier(0.7, 0, 0.84, 0); transform: scale(9); animation: none; }
 .loader-mark-shadow{ position: absolute; left: 50%; bottom: -20px; width: 140px; height: 28px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .loader-content.exit .loader-mark-shadow{ opacity: 0 !important; }
 
