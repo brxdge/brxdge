@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=26">
+<link rel="stylesheet" href="style.css?v=27">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -169,25 +169,35 @@
 
 <div id="loader">
   <div class="loader-content">
+    <!-- BRXDGE LOADER MARK — a real 3D twin-arch bridge (rendered by
+         loader-bridge.js / three.js), the same geometry family as the
+         hero's #heroOrbitMark but its own short-lived scene. Starts hidden
+         in favor of the flat SVG fallback below; loader-bridge.js adds
+         .is-ready once WebGL is confirmed working and swaps the two over —
+         see .loader-mark / .loader-mark-fallback in style.css. The .show/
+         .expand classes (drop-in bounce + expand-and-burst exit) are still
+         driven by script.js exactly as before. -->
     <div class="loader-mark-drop-zone">
-      <svg class="loader-mark" id="loaderMark" viewBox="0 0 100 100">
-        <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
-        <path class="loader-arc" d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#loaderGrad)" stroke-width="3"/>
-        <line class="loader-hanger" x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
-        <line class="loader-hanger" x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
-        <defs>
-          <linearGradient id="loaderGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
-          </linearGradient>
-        </defs>
-      </svg>
+      <div class="loader-mark" id="loaderMark" aria-hidden="true">
+        <canvas id="loaderCanvas" aria-hidden="true"></canvas>
+        <div class="loader-mark-fallback" aria-hidden="true">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#loaderFallbackGrad)" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="8" cy="67" r="5" fill="url(#loaderFallbackGrad)"/>
+            <circle cx="92" cy="67" r="5" fill="url(#loaderFallbackGrad)"/>
+            <defs>
+              <linearGradient id="loaderFallbackGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#F5F5F5"/>
+                <stop offset="50%" stop-color="#9A9A9A"/>
+                <stop offset="100%" stop-color="#F5F5F5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
       <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
     </div>
     <div class="percentage" id="loadPercent">0%</div>
-    <div class="bar"><div class="fill" id="loadBar"></div></div>
     <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
       <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
       <span class="lw-underline" aria-hidden="true"></span>
@@ -280,9 +290,63 @@
 </nav>
 
 <main>
-<!-- HERO -->
+<!-- BRIDGING CREATORS HEADLINE — now shown FIRST (moved back to being the
+     page's true entrance, per the client's requested section swap). Uses
+     the standard page-load .hero-anim/.play trigger — script.js arms the
+     *first* .hero-anim element in the document the instant the loader
+     finishes — the same mechanism the 3D bridge mark below used to run
+     when it was first. id="home" lives here now: nav "Home"/the logo/
+     footer links all just target whichever section is physically first,
+     so they keep working with zero changes. -->
 <section class="hero" id="home">
-  
+  <div class="wrap">
+    <!-- "BRXDGE TO POSSIBILITIES" + CTA buttons. Reuses the hero's
+         title/mask typography (.hero-title/.hero-title-mask/.hero-title-
+         line) and now drives its reveal off the same .hero-anim.play
+         trigger those rules already key off of, since this is the first
+         .hero-anim in the document again. -->
+    <div class="services-intro">
+
+<div class="hero-copy hero-anim">
+      <h1 class="hero-title">
+        <span class="hero-title-mask"><span class="hero-title-line">BRIDGING CREATORS TO</span></span>
+
+
+
+
+        <span class="hero-title-mask"><em class="hero-title-line">BIGGER OPPORTUNITIES</em></span>
+      </h1>
+
+      <p class="lede hero-anim-item">Talent management, brand partnerships, and strategy built around Canadian creators — not templates.</p>
+
+      <div class="hero-actions hero-anim-item">
+        <button class="btn btn-primary" onclick="scrollToSection('roster')">
+          <span class="btn-label">Explore Talent</span>
+          <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="scrollToSection('contact')">
+          <svg class="btn-icon btn-icon-lead" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-2.5 2.5a3.5 3.5 0 0 0 5 5l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="btn-label">Work With BRXDGE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<!-- 3D BRIDGE MARK — now the SECOND section (was the hero/first section).
+     Below the fold on load now, so it switches from the page-load
+     .hero-anim/.play trigger to the standard scroll-into-view
+     .reveal/.active pattern every other below-the-fold section uses (see
+     sectionObserver in script.js) — the whole section fades/slides up as
+     the visitor scrolls to it, same as Roster/Categories/etc. New id
+     ("bridge-mark") since "home" moved to the section above; nothing else
+     in the codebase targeted this section by id, so the rename is safe.
+     The click-to-cross interaction (brand-orbit.js) now lands on
+     "what-we-do" instead of this section, so crossing the bridge still
+     carries the visitor forward to new content. -->
+<section class="hero reveal" id="bridge-mark" data-reveal="up">
+
 
     <div class="hero-copy hero-anim">
       <span class="eyebrow hero-anim-item">B R X D G E</span>
@@ -325,65 +389,17 @@
     <span class="eyebrow hero-anim-item">POSSIBILITIES</span>
 
 
-      <!-- Entrance: each line rises out of its own overflow:hidden mask
-           (.hero-title-mask) rather than the plain fade+slide every other
-           .hero-anim-item uses — see .hero-title-line in style.css and the
-           .hero-anim.play trigger that's already set on page load.
+      <!-- Each title line still rises out of its own overflow:hidden mask
+           on the page-load hero-anim trigger elsewhere in this file; here
+           the eyebrow/button fade in via the same .hero-anim-item rules,
+           which get their .play class the moment the loader finishes
+           regardless of this section's scroll position, so they're
+           already settled by the time this section scrolls into view —
+           the section-level .reveal/.active transform is what actually
+           carries the visible "entrance" motion here now.
            Scroll: .hero-copy also carries a scroll-driven fade/lift/blur
            (--hero-scroll, set by initHeroScrollTransition() in script.js). -->
   </div>
-</section>
-<!-- Unique id — this section (headline + CTAs, relocated from the hero)
-     is the bridge's click-to-cross landing target (see scrollToSection('services')
-     in brandorbit.js). The actual "WHAT WE DO?" section below has its own
-     id="what-we-do" specifically so the two don't collide — they used to
-     both be id="services", which silently broke getElementById('services')
-     lookups (the bridge landed here fine, but anything targeting the real
-     "what we do" section — like the typewriter headline trigger — grabbed
-     this section instead, since duplicate IDs always resolve to the first
-     match in the DOM). -->
-<section id="services" class="reveal" data-reveal="up">
-  <div class="wrap">
-    <!-- "BRXDGE TO POSSIBILITIES" + CTA buttons, relocated here from the
-         hero. Reuses the hero's title/mask typography for a matching look,
-         but its reveal is driven by THIS section's own scroll-into-view
-         .reveal/.active toggle (see the sectionObserver in script.js and
-         the "#services .hero-title-line" rule in style.css) rather than
-         the hero's page-load-once .hero-anim/.play trigger — that trigger
-         only ever arms the first .hero-anim element in the document, so a
-         second copy of it here would never fire and the text would stay
-         invisible (its at-rest state is opacity:0). The typography rules
-         are also scoped to #services specifically, since the original
-         ".hero h1" styling only applies inside .hero. -->
-    <div class="services-intro">
-
-<div class="hero-copy hero-anim">
-      <h1 class="hero-title">
-        <span class="hero-title-mask"><span class="hero-title-line">BRIDGING CREATORS TO</span></span>
-
-
-
-
-        <span class="hero-title-mask"><em class="hero-title-line">BIGGER OPPORTUNITIES</em></span>
-      </h1>
-
-      <p class="lede hero-anim-item">Talent management, brand partnerships, and strategy built around Canadian creators — not templates.</p>
-
-      <div class="hero-actions hero-anim-item">
-        <button class="btn btn-primary" onclick="scrollToSection('roster')">
-          <span class="btn-label">Explore Talent</span>
-          <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="btn btn-ghost" onclick="scrollToSection('contact')">
-          <svg class="btn-icon btn-icon-lead" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-2.5 2.5a3.5 3.5 0 0 0 5 5l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <span class="btn-label">Work With BRXDGE</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  </div>
-</div>
-
 </section>
 
 
@@ -1911,11 +1927,18 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=27"></script>
+<script src="script.js?v=28"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
-<script type="module" src="brand-orbit.js?v=2"></script>
+<script type="module" src="brand-orbit.js?v=3"></script>
+<!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
+     deliberately NOT shared with brand-orbit.js: the loader mark is a
+     one-shot ~4.3s render that must never compete with or be torn down
+     by the hero mark's setup, which starts around the same time. Timing
+     constants here are hardcoded to match script.js's loader interval —
+     see the comments in both files if that cadence ever changes. -->
+<script type="module" src="loader-bridge.js?v=1"></script>
 </body>
 </html>
 
