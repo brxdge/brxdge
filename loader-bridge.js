@@ -1,12 +1,14 @@
 /* =========================================================
    BRXDGE LOADER MARK — 3D bridge, rotate + assemble entrance
    The loader's brand mark used to be a flat SVG bridge that drew its arc
-   and popped its hangers in via CSS. This is the real 3D twin-arch bridge
-   (same geometry family as the hero's #heroOrbitMark) instead, doing a
+   and popped its hangers in via CSS. This is the real 3D twin lattice-
+   truss-arch bridge (same geometry family as the hero's #heroOrbitMark,
+   matching the client's reference bridge artwork) instead, doing a
    single, unrepeatable "super incredible" entrance every time the site
-   loads: every strut, arch, rail, hanger, cross-brace and deck plate
-   starts scattered and invisible around the finished bridge's shape,
-   then flies inward — spinning, staggered left-to-right — while the
+   loads: every truss chord segment, diagonal, hanger, railing post,
+   end-bearing block and deck plate starts scattered and invisible around
+   the finished bridge's shape, then flies inward — spinning, staggered
+   left-to-right — while the
    whole rig turns fast on a turntable that spins down to a calm, steady
    rotation right as the last piece locks into place. It's the exact
    mirror of the hero mark's click-to-cross teardown (pieces converging
@@ -19,8 +21,8 @@
      Keeping them fully independent means this scene's teardown/disposal
      can never race with or interfere with the hero scene's setup, which
      starts around the very same moment.
-   - Like brand-orbit.js, the heavy part (building the ~20 separate
-     arch/rail/hanger/brace/deck meshes and rendering the first frame) is
+   - Like brand-orbit.js, the heavy part (building the ~80 separate truss/
+     hanger/rail/block/deck meshes and rendering the first frame) is
      deferred off the module's initial synchronous execution. This turned
      out to matter A LOT here specifically: running it synchronously at
      module-eval time was blocking script.js's loader countdown from
@@ -109,73 +111,118 @@ import * as THREE from './assets/vendor/three.module.min.js';
   deckMat.roughness = 0.34;
   deckMat.clearcoat = 0.25;
 
-  // Fewer radial/tube segments than the hero mark's buildBridge() uses —
-  // even at this mark's doubled ~220px on-screen size the extra smoothness
+  // Fewer radial segments than the hero mark's buildBridge() uses — even
+  // at this mark's doubled ~220px on-screen size the extra smoothness
   // stays close to invisible for the few seconds it's up; cutting it
-  // substantially reduces the
-  // triangle count (and first-render shader/rasterization cost) across
-  // the ~20 separate meshes below.
-  function makeStrut(p1, p2, radius){
+  // substantially reduces the triangle count (and first-render
+  // shader/rasterization cost). All struts also share ONE unit cylinder
+  // geometry (radius 1, height 1, scaled per-instance) rather than each
+  // baking its own — the lattice truss arches below need a few dozen of
+  // these, so reusing a single buffer keeps geometry/GPU-upload cost from
+  // scaling with strut count; only the transform differs per piece.
+  const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
+  const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
+  function makeStrut(p1, p2, radius, mat){
     const dir = new THREE.Vector3().subVectors(p2, p1);
-    const len = dir.length();
-    const geo = new THREE.CylinderGeometry(radius, radius, len, 6, 1);
-    const mesh = new THREE.Mesh(geo, chromeMat);
+    const len = Math.max(dir.length(), 0.0001);
+    const mesh = new THREE.Mesh(UNIT_CYL, mat || chromeMat);
+    mesh.scale.set(radius, len, radius);
     mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
     return mesh;
   }
 
-  // Same twin-arch silhouette as the hero mark's buildBridge(), at a
-  // lower poly count (see the makeStrut comment above) and with fewer
-  // hangers (6 per side instead of 8) — still reads clearly as the same
-  // bridge motif at this size, with meaningfully less to render.
+  // Same twin lattice-truss-arch silhouette as the hero mark's
+  // buildBridge() (matching the client's reference bridge artwork), at a
+  // lower poly count and fewer truss bays/hangers/railing posts — still
+  // reads clearly as the same trussed bridge motif at this size, with
+  // meaningfully less to render.
   function buildBridge(){
     const bridge = new THREE.Group();
     const half = 1.7, peak = 1.05, baseY = -0.15, deckY = -0.65, depth = 0.55;
-    const archSegs = 24;
+    const archSegs = 7; // truss bays per arch (hero: 12)
+    const trussDepth = 0.16; // perpendicular thickness of the lattice band
 
-    function archPoint(t, z){
+    function archOuter(t, z){
       return new THREE.Vector3(t * half, peak * (1 - t * t) + baseY, z);
     }
+    // Perpendicular to the arch's tangent (half, -2*peak*t), pointing
+    // inward/downward through the truss band, so the inner chord traces a
+    // curve offset a constant distance inside the outer one.
+    function archNormal(t){
+      const nx = -2 * peak * t, ny = -half;
+      const len = Math.hypot(nx, ny) || 1;
+      return { x: nx / len, y: ny / len };
+    }
+    function archInner(t, z){
+      const o = archOuter(t, z);
+      const n = archNormal(t);
+      return new THREE.Vector3(o.x + n.x * trussDepth, o.y + n.y * trussDepth, z);
+    }
 
+    // Outer + inner chord, X-braced between them every bay.
     [depth, -depth].forEach((z) => {
-      const pts = [];
+      const outerPts = [], innerPts = [];
       for (let i = 0; i <= archSegs; i++){
-        pts.push(archPoint(-1 + (2 * i / archSegs), z));
+        const t = -1 + (2 * i / archSegs);
+        outerPts.push(archOuter(t, z));
+        innerPts.push(archInner(t, z));
       }
-      const curve = new THREE.CatmullRomCurve3(pts);
-      const geo = new THREE.TubeGeometry(curve, 36, 0.055, 6, false);
-      bridge.add(new THREE.Mesh(geo, chromeMat));
+      for (let i = 0; i < archSegs; i++){
+        bridge.add(makeStrut(outerPts[i], outerPts[i + 1], 0.048));  // top chord
+        bridge.add(makeStrut(innerPts[i], innerPts[i + 1], 0.042));  // bottom chord
+        bridge.add(makeStrut(outerPts[i], innerPts[i + 1], 0.024));  // diagonal \
+        bridge.add(makeStrut(innerPts[i], outerPts[i + 1], 0.024));  // diagonal /
+      }
     });
 
-    [depth, -depth].forEach((z) => {
-      bridge.add(makeStrut(
-        new THREE.Vector3(-half * 1.03, deckY, z),
-        new THREE.Vector3(half * 1.03, deckY, z),
-        0.045
-      ));
-    });
+    // Chunky end-bearing blocks where each arch springs from the deck.
+    function makeEndBlock(x){
+      const w = 0.22, h = 0.34, d = depth * 2 + 0.14;
+      const mesh = new THREE.Mesh(UNIT_BOX, deckMat);
+      mesh.scale.set(w, h, d);
+      mesh.position.set(x, deckY + h / 2 - 0.06, 0);
+      return mesh;
+    }
+    [-half * 1.05, half * 1.05].forEach((x) => bridge.add(makeEndBlock(x)));
 
-    const hangerXs = [-1.3, -0.75, -0.25, 0.25, 0.75, 1.3];
+    const hangerXs = [-1.3, -0.65, 0, 0.65, 1.3];
     [depth, -depth].forEach((z) => {
       hangerXs.forEach((x) => {
-        bridge.add(makeStrut(archPoint(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
+        bridge.add(makeStrut(archOuter(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
       });
-    });
-
-    [-1.2, -0.4, 0.4, 1.2].forEach((x) => {
-      const t = x / half;
-      bridge.add(makeStrut(archPoint(t, depth), archPoint(t, -depth), 0.028));
     });
 
     {
       const deckLength = half * 2 * 1.03;
       const deckSpan = depth * 2;
       const deckThickness = 0.09;
-      const deckGeo = new THREE.BoxGeometry(deckLength, deckThickness, deckSpan);
-      const deckMesh = new THREE.Mesh(deckGeo, deckMat);
+      const deckMesh = new THREE.Mesh(UNIT_BOX, deckMat);
+      deckMesh.scale.set(deckLength, deckThickness, deckSpan);
       deckMesh.position.set(0, deckY - deckThickness / 2 - 0.01, 0);
       bridge.add(deckMesh);
+    }
+
+    // Deck-edge railing — a top rail plus vertical balusters along each
+    // side (fewer than the hero mark's, matching this mark's lower
+    // overall detail level).
+    {
+      const railTopY = deckY + 0.15;
+      const balusterXs = [-1.5, -0.75, 0, 0.75, 1.5];
+      [depth, -depth].forEach((z) => {
+        bridge.add(makeStrut(
+          new THREE.Vector3(-half * 1.03, railTopY, z),
+          new THREE.Vector3(half * 1.03, railTopY, z),
+          0.026
+        ));
+        balusterXs.forEach((x) => {
+          bridge.add(makeStrut(
+            new THREE.Vector3(x, deckY, z),
+            new THREE.Vector3(x, railTopY, z),
+            0.014
+          ));
+        });
+      });
     }
 
     return bridge;
@@ -216,10 +263,11 @@ import * as THREE from './assets/vendor/three.module.min.js';
   fitSize();
 
   // ---------------- ROTATE + ASSEMBLE ENTRANCE ----------------
-  // Every piece (both arches, both deck rails, all 12 hangers, the 4
-  // cross-braces, the flat deck plate) starts scattered around the
-  // bridge's finished shape and invisible, then flies inward to its
-  // resting position/rotation on a staggered per-piece timeline — the
+  // Every piece (every truss chord/diagonal in both lattice arches, all
+  // 10 hangers, both end-bearing blocks, the flat deck plate, and every
+  // railing post) starts scattered around the bridge's finished shape and
+  // invisible, then flies inward to its resting position/rotation on a
+  // staggered per-piece timeline — the
   // literal reverse of the hero mark's click-to-cross teardown, which
   // this borrows its fall/opacity/quaternion math from.
   const pieces = bridge.children.map((mesh) => {
