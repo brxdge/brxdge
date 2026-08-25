@@ -6401,11 +6401,21 @@ html.dark-mode .creator-panel::before{
   font-size: 12px;
   color: var(--muted);
 }
+/* Client revision: this used to just inherit the base h1-h3 treatment
+   (Helvetica Neue 800) at a fairly modest size — read as an afterthought
+   next to the rest of the site's big Montserrat-900 display headlines
+   (.about-headline's "Built by creators, run for creators." etc). Bumped
+   to the same family/weight and a comparably dramatic size so it actually
+   reads as a headline, not a subtitle. Widened alongside .bg-panel-inner's
+   own "maximize the screen" pass so a bigger headline still gets a couple
+   of line breaks instead of one very long line. */
 .bg-headline{
-  font-size: clamp(30px, 4vw, 50px);
-  line-height: 1.08;
-  letter-spacing: -0.01em;
-  max-width: 760px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: clamp(40px, 6vw, 84px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  max-width: 920px;
 }
 .bg-lede{
   margin-top: 20px;
@@ -6463,27 +6473,57 @@ html.dark-mode .creator-panel::before{
   gap: 20px;
   margin-top: 34px;
 }
+/* Client revision: these read as flat, low-contrast rectangles (a bare
+   border + barely-there background against an already-dark backdrop).
+   Same lift-on-hover + circular icon-badge treatment as .about-stats-bar
+   .stat elsewhere on the site (see that rule) — consistent with the rest
+   of the site's "card" language instead of a one-off plain box, and gives
+   the icon actual presence instead of floating loose above the title. */
 .bg-pillar{
   border: 1px solid var(--panel-line);
   border-radius: var(--radius-md);
   background: var(--panel);
-  padding: 18px 16px;
+  padding: 24px 20px;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.bg-pillar:hover{
+  transform: translateY(-4px);
+  border-color: var(--coral);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+}
+.bg-pillar-icon-wrap{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  border: 1px solid var(--panel-line);
+  color: var(--coral);
+  margin-bottom: 16px;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+.bg-pillar:hover .bg-pillar-icon-wrap{
+  background: var(--coral);
+  border-color: var(--coral);
+  color: var(--on-accent);
+  transform: scale(1.08);
 }
 .bg-pillar-icon{
-  width: 30px;
-  height: 30px;
-  color: var(--coral);
-  margin-bottom: 12px;
+  width: 19px;
+  height: 19px;
+  color: inherit;
 }
 .bg-pillar-title{
   font-weight: 700;
-  font-size: 13.5px;
-  margin-bottom: 4px;
+  font-size: 14.5px;
+  margin-bottom: 6px;
 }
 .bg-pillar-desc{
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--muted);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 /* ---- panel 2: "Where We Are Now" stats ---- */
@@ -6583,5 +6623,5 @@ html.dark-mode .creator-panel::before{
 @media (max-width: 560px){
   .bg-pillars{ grid-template-columns: 1fr; }
   .bg-stats-bar{ grid-template-columns: 1fr; }
-  .bg-headline{ font-size: clamp(26px, 8vw, 36px); }
+  .bg-headline{ font-size: clamp(30px, 9vw, 44px); line-height: 1.06; }
 }
