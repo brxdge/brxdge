@@ -699,6 +699,22 @@
 .hero-copy .hero-anim-item:nth-child(3){ transition-delay: 0.28s; }
 .orbit-stage.hero-anim-item{ transition-delay: 0.3s; }
 
+/* "Zoom/iris through the mark" — client wants the loader→page handoff to
+   read as flying forward through the bridge mark and arriving at the
+   page, not two disconnected animations (mark scales up in style.css's
+   .loader-mark.expand, separately the page fades up). This adds a matching
+   scale-settle to #home's hero-anim-item entrance (starts zoomed in past
+   its final size, settles to scale(1)) so it plays at the same moment the
+   giant expanded mark is fading out over it (script.js starts both at
+   once) — the shrinking mark and the settling page read as one continuous
+   forward motion instead of a plain cut. Scoped to #home specifically —
+   .hero-anim-item is reused by the second, separately scroll-triggered
+   hero-copy block down in #bridge-mark (eyebrow/orbit-mark button), which
+   should keep its plain fade+slide untouched. */
+#home .hero-anim-item{ transform: translateY(26px) scale(1.16); }
+#home .hero-anim.play .hero-anim-item,
+#home .hero-anim-item.play{ transform: translateY(0) scale(1); }
+
 /* Hero headline entrance — "BRXDGE TO" / "POSSIBILITIES" each rise up out
    of their own overflow:hidden mask with a scale + blur settle, instead of
    the plain fade+slide every other .hero-anim-item gets. Gated by the same
