@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=48">
+<link rel="stylesheet" href="style.css?v=49">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -299,12 +299,17 @@
     <span class="roster-orb roster-orb-2"></span>
   </div>
   <div class="wrap">
-    <div class="section-head">
-      <!-- The container class handles the overall alignment -->
-<div style="text-align: center; width: 100%;">
-  <span class="featured-italic">BRXDGE </span>
-  <span class="profiles-bold">TALENT</span>
-</div>
+    <!-- Client revision: replaced the small centered .featured-italic/
+         .profiles-bold pair with a dedicated, much bigger fashion-editorial
+         masthead — deliberately different fonts than the site-wide eyebrow
+         pairing (Space Mono tag + Bricolage Grotesque Black display word,
+         both already loaded — no new font request), fluid vw-based sizing
+         so "TALENT" genuinely fills the width of this section's widened
+         1720px stage instead of sitting small in the middle of it. See
+         .roster-masthead in style.css. -->
+    <div class="roster-masthead">
+      <span class="roster-masthead-tag">BRXDGE</span>
+      <span class="roster-masthead-word" data-text="TALENT">TALENT</span>
     </div>
     <div class="roster-toolbar" id="rosterToolbar" style="display:none;">
       <button class="btn btn-primary" id="addTalentBtn">+ Add Talent</button>
