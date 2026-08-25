@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=49">
+<link rel="stylesheet" href="style.css?v=52">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -719,21 +719,74 @@
 
     <div class="filters tr-gender-filters tr-anim-item" id="trGenderFilters"></div>
 
+    <!-- Client revision: rebuilt as a minimal editorial toolbar per the
+         client's reference screenshots — three zones (Show Filters +
+         search / live profile count / Sort by + View toggle) over a
+         full-width divider. Every pre-existing id (#talentSearchInput,
+         #talentSearchClear, #trFiltersToggle, #trFiltersBadge,
+         #trViewToggle + its buttons) is unchanged, just re-homed into the
+         new .tr-toolbar-left/-center/-right zones — see .talent-search-wrap
+         / .tr-toolbar-* in style.css and the new #trSort wiring + trSortMode
+         in script.js. -->
     <div class="talent-search-wrap tr-anim-item" id="talentSearchWrap">
-      <div class="talent-search">
-        <svg class="talent-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
-          <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <input type="text" id="talentSearchInput" class="talent-search-input" placeholder="Search talent by name…" autocomplete="off" aria-label="Search talent by name">
-        <button type="button" id="talentSearchClear" class="talent-search-clear" aria-label="Clear search" style="display:none;">&times;</button>
+      <div class="tr-toolbar-left">
+        <button type="button" class="tr-filters-toggle" id="trFiltersToggle" aria-expanded="false" aria-controls="trFiltersPanel">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Show Filters
+          <span class="tr-filters-badge" id="trFiltersBadge">0</span>
+        </button>
+        <div class="talent-search">
+          <svg class="talent-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="talentSearchInput" class="talent-search-input" placeholder="Search talent by name…" autocomplete="off" aria-label="Search talent by name">
+          <button type="button" id="talentSearchClear" class="talent-search-clear" aria-label="Clear search" style="display:none;">&times;</button>
+        </div>
       </div>
-      <button type="button" class="tr-filters-toggle" id="trFiltersToggle" aria-expanded="false" aria-controls="trFiltersPanel">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Filters
-        <span class="tr-filters-badge" id="trFiltersBadge">0</span>
-      </button>
+
+      <div class="tr-toolbar-center">
+        <span class="tr-toolbar-count" id="trToolbarCount">0 Profiles</span>
+      </div>
+
+      <div class="tr-toolbar-right">
+        <!-- Client revision: new "Sort by" menu, matching the reference
+             toolbar's right-side control next to View. Purely a display
+             order — see getFilteredTrList()'s trSortMode switch in
+             script.js; nothing here touches which talent match, only the
+             order they render in. -->
+        <div class="tr-sort" id="trSort">
+          <button type="button" class="tr-sort-toggle" id="trSortToggle" aria-haspopup="true" aria-expanded="false" aria-controls="trSortMenu">
+            Sort by: <span id="trSortLabel">Featured</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="tr-sort-menu" id="trSortMenu" role="menu">
+            <button type="button" class="tr-sort-option active" data-sort="featured" role="menuitem">Featured</button>
+            <button type="button" class="tr-sort-option" data-sort="name-asc" role="menuitem">Name A–Z</button>
+            <button type="button" class="tr-sort-option" data-sort="name-desc" role="menuitem">Name Z–A</button>
+            <button type="button" class="tr-sort-option" data-sort="reach-desc" role="menuitem">Social Reach: High–Low</button>
+            <button type="button" class="tr-sort-option" data-sort="reach-asc" role="menuitem">Social Reach: Low–High</button>
+          </div>
+        </div>
+        <!-- Client revision: added a Grid / Showcase / List display toggle —
+             same talent cards, three different CSS layouts (see
+             .tr-view-comfort/.tr-view-list in style.css and the click wiring
+             in script.js). Grid starts active to match the default layout. -->
+        <div class="tr-view-toggle" id="trViewToggle" role="group" aria-label="Roster layout">
+          <button type="button" class="tr-view-btn active" data-view="grid" aria-label="Grid view" aria-pressed="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="15" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="15" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="15" y="15" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <button type="button" class="tr-view-btn" data-view="comfort" aria-label="Showcase view" aria-pressed="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="1" stroke="currentColor" stroke-width="2"/><rect x="13" y="4" width="8" height="16" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+          <button type="button" class="tr-view-btn" data-view="list" aria-label="List view" aria-pressed="false">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="4" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="15" width="18" height="4" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
+
+    <div class="tr-toolbar-divider" aria-hidden="true"></div>
 
     <!-- Niche / platform / audience size / location / availability —
          collapsed behind the "Filters" toggle above so the default view
@@ -765,7 +818,56 @@
     </div>
 
     <div class="roster-grid roster-grid--all" id="talentRosterGrid"></div>
+
+    <!-- Client revision: was unbounded (rendered every filtered match at
+         once) — now paginated 6 at a time, this button reveals the next
+         batch. Hidden by default; updateTrLoadMoreUI() in script.js shows
+         it (and updates the "Load N More" label) only when there's more
+         beyond what's currently on screen. -->
+    <div class="tr-load-more-wrap" id="trLoadMoreWrap" style="display:none;">
+      <button type="button" class="btn btn-ghost tr-load-more-btn" id="trLoadMoreBtn">
+        <span>Load More Talent</span>
+      </button>
+    </div>
   </div>
+
+  <!-- Client revision: this overlay is a fixed, self-scrolling full-screen
+       view (see .mediakit-overlay), so the site's real <footer> further
+       down the page's normal DOM flow is never reachable while it's open —
+       scrolling to the bottom of the roster used to just dead-end in empty
+       space. Reuses the main footer's classes (.footer-grid/.brand/
+       .footer-links/.fineprint, plus the bare "footer" element's own
+       padding/border-top rule) for a consistent look, with its own
+       gradient id (gradMarkTr) so it doesn't collide with the main
+       footer's brand-mark gradient def elsewhere in the document, and
+       without the FAQ trigger button (that has its own id, already used
+       by the real footer's copy). -->
+  <footer class="tr-footer">
+    <div class="wrap footer-grid">
+      <div class="brand">
+        <svg class="brand-mark" width="32" height="32" viewBox="0 0 100 100">
+          <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
+          <path d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#gradMarkTr)" stroke-width="3"/>
+          <line x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
+          <line x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+          <line x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
+          <line x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+          <line x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
+          <defs>
+            <linearGradient id="gradMarkTr" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="brand-name">BRXDGE</span>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#home">Home</a><a href="index.html#about">About</a>
+        <a href="index.html#what-we-do">Services</a><a href="index.html#contact">Contact</a>
+      </div>
+    </div>
+    <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities.</p>
+  </footer>
 </div>
 
 <!-- COMPANY BACKGROUND — opened from the About section's "See Our
@@ -1097,7 +1199,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=38"></script>
+<script src="script.js?v=40"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
