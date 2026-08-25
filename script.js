@@ -303,22 +303,23 @@
 
     if (p === 100) {
       clearInterval(interval);
-      // Exit sequence slowed down (client revision — "don't be so fast")
-      // so the expand/burst transition has room to actually read before
-      // the hero page cuts in. Matches the lengthened CSS transition
-      // durations on .loader-mark.expand and #loader in style.css.
+      // Exit sequence slowed down further (client revision, round 2 — the
+      // first pass still read as too fast) so the expand/burst transition
+      // has real room to play out before the hero page cuts in. Matches
+      // the further-lengthened CSS transition durations on
+      // .loader-mark.expand and #loader in style.css.
       setTimeout(() => {
         // Everything else steps back so the mark can take over the transition
         loader.querySelector('.loader-content').classList.add('exit');
         if (loaderMark) loaderMark.classList.add('expand');
         setTimeout(() => {
           loader.style.opacity = '0';
-          setTimeout(() => loader.style.display = 'none', 700);
+          setTimeout(() => loader.style.display = 'none', 1200);
           // Straight into the hero content entrance
           if (heroAnim) heroAnim.classList.add('play');
           heroItems.forEach((item) => item.classList.add('play'));
-        }, 1300);
-      }, 500);
+        }, 2200);
+      }, 600);
     }
   }, 30);
 });
