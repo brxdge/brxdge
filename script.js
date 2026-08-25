@@ -255,24 +255,40 @@
   document.addEventListener('DOMContentLoaded', () => {
   const loader = document.getElementById('loader');
   const loadPercent = document.getElementById('loadPercent');
-  const loadBar = document.getElementById('loadBar');
   const loaderMark = document.getElementById('loaderMark');
   const loaderWord = document.getElementById('loaderWord');
   const heroAnim = document.querySelector('.hero-anim');
   const heroItems = document.querySelectorAll('.hero-anim-item');
 
-  // Brand mark pops in first, ahead of the counting
+  // Brand mark pops in first, ahead of the counting. loader-bridge.js's
+  // own assembly-animation timing is hardcoded to start at this same
+  // 150ms mark — keep the two in sync if this ever changes.
   setTimeout(() => { if (loaderMark) loaderMark.classList.add('show'); }, 150);
 
   let p = 0;
   let wordShown = false;
-  // Count up more gradually so the loader has room to breathe
+  const COUNT_DURATION_MS = 3000;
+  const countStart = performance.now();
+  // Driven off elapsed wall-clock time rather than a flat per-tick
+  // increment: every integer 1..100 still gets shown, in order, none
+  // skipped, at a steady 30ms cadence under normal conditions (30ms of
+  // elapsed time is exactly 1% of the 3000ms total). The difference only
+  // shows up if something else briefly blocks the main thread (a slow
+  // synchronous script elsewhere, a busy tab, etc.) — a flat "+1 per
+  // tick" counter would just pick up where it left off and run long,
+  // stretching the loader out past its intended 3000ms; computing p from
+  // real elapsed time instead means the very next tick jumps straight to
+  // wherever it should actually be, so the counter can't be stalled into
+  // running indefinitely. loader-bridge.js's render lifetime is
+  // hardcoded against this same 3000ms total; keep the two in sync if
+  // this duration ever changes.
   const interval = setInterval(() => {
-    p += Math.random() * 9; 
-    if (p > 100) p = 100;
-    
-    loadPercent.textContent = Math.floor(p) + '%';
-    loadBar.style.width = p + '%';
+    const elapsed = performance.now() - countStart;
+    const next = Math.min(100, Math.floor((elapsed / COUNT_DURATION_MS) * 100));
+    if (next === p) return;
+    p = next;
+
+    loadPercent.textContent = p + '%';
 
     // Wordmark reveals letter-by-letter once loading is nearly finished,
     // not mid-way through — it should feel like the last flourish before
@@ -281,7 +297,7 @@
       wordShown = true;
       if (loaderWord) loaderWord.classList.add('show');
     }
-    
+
     if (p === 100) {
       clearInterval(interval);
       setTimeout(() => {
@@ -297,7 +313,7 @@
         }, 650);
       }, 400);
     }
-  }, 200);
+  }, 30);
 });
 /* ---------------- UPDATED NAV SCROLL BEHAVIOR ---------------- */
 /* ---------------- SMOOTH NAV SCROLL BEHAVIOR ---------------- */
@@ -4475,13 +4491,12 @@ document.querySelectorAll('.reveal').forEach((section) => {
 (function initTypewriterHeadline(){
   const line1 = document.getElementById('servicesEyebrow');
   const line2 = document.getElementById('servicesHeading');
-  // "what-we-do", not "services" — the id="services" section is a
-  // *different* section (the relocated "BRXDGE TO POSSIBILITIES" headline
-  // + CTAs, which is the bridge's click-to-cross landing target). The two
-  // used to share id="services", which meant this lookup silently grabbed
-  // the wrong section and could fire the typewriter while that first
-  // section was on screen instead of this one. See index.html for the
-  // full explanation.
+  // "what-we-do" — the actual "THREE WAYS WE MOVE FORWARD" services
+  // section — is intentionally a separate id from #home/#bridge-mark
+  // (the "BRIDGING CREATORS..." headline and the 3D bridge mark). All
+  // three used to collide under id="services" at one point or another;
+  // this lookup must stay pinned to "what-we-do" specifically so it
+  // never silently grabs the wrong section again. See index.html.
   const section = document.getElementById('what-we-do');
   if(!line1 || !line2 || !section) return;
 
