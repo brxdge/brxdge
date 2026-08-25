@@ -41,10 +41,12 @@
    Timing is hardcoded to match script.js's loader countdown exactly (see
    the comments there): the mark's CSS .show class lands at 150ms, the
    percent count finishes at 4000ms, and the loader is fully gone from
-   the DOM by ~6500ms (slowed down + given a slower expand exit per a
-   client revision). This module keeps its own render loop alive a
-   little past that (RENDER_LIFETIME_MS) and then disposes its GPU
-   resources — the scene is never needed again once the loader unmounts.
+   the DOM by ~8000ms (slowed down, then given an even slower expand exit
+   in a second round of client revisions — the exit "burst" now gets a
+   full ~2-3s to play out before the hero page cuts in). This module keeps
+   its own render loop alive a little past that (RENDER_LIFETIME_MS) and
+   then disposes its GPU resources — the scene is never needed again once
+   the loader unmounts.
 
    Same self-hosted-three.js / hand-built PMREM studio environment / SVG
    fallback-on-WebGL-failure conventions as brand-orbit.js throughout.
@@ -71,7 +73,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // comment. A much shorter timeout than brand-orbit.js's (which can
   // afford to wait up to 1500ms, since the hero mark is hidden behind
   // the loader the whole time anyway): the loader itself is only on
-  // screen for ~6.5s total, so this needs to fire fast.
+  // screen for ~8s total, so this needs to fire fast.
   if ('requestIdleCallback' in window) {
     requestIdleCallback(setup, { timeout: 60 });
   } else {
@@ -335,7 +337,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   setPiecesToScattered();
 
-  const RENDER_LIFETIME_MS = 6800; // covers script.js's full ~6500ms loader lifecycle (slowed + slower expand exit), plus a small buffer
+  const RENDER_LIFETIME_MS = 8500; // covers script.js's full ~8000ms loader lifecycle (round 2: exit further extended), plus a small buffer
   let disposed = false;
   const start = performance.now();
   let rafId;
