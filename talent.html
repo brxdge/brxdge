@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=46">
+<link rel="stylesheet" href="style.css?v=47">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -665,9 +665,11 @@
     <span class="roster-orb roster-orb-2"></span>
   </div>
   <div class="wrap">
-    <button class="mk-back" id="trBack">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Back to Roster
+    <!-- Client revision: icon-only close button instead of the "Back to
+         Roster" pill — same X-icon-circle treatment already used for
+         #bgBack (see .tr-back-close / .bg-back-close in style.css). -->
+    <button class="mk-back tr-back-close" id="trBack" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
 
     <!-- Floating cast summary — pops up top-right once talent has been
@@ -694,10 +696,20 @@
       </div>
     </div>
 
+    <!-- Client revision: bigger, editorial, Dulcedo-inspired header —
+         left-aligned oversized wordmark instead of the old centered pair,
+         with a small tag + live count block set off to the side (see
+         .tr-header-meta / .tr-header-tag / the ghost-echo ::before on
+         .profiles-bold in style.css). #trSub keeps its id/behavior — it's
+         still the same element script.js's renderTalentRosterGrid()
+         updates, just repositioned in markup. -->
     <div class="tr-header tr-anim-item">
-      <span class="featured-italic">BRXDGE</span>
-      <span class="profiles-bold">TALENT ROSTER</span>
-      <p class="tr-sub" id="trSub">Showing all talent</p>
+      <div class="tr-header-meta">
+        <span class="tr-header-tag">The Full Network</span>
+        <p class="tr-sub" id="trSub">Showing all talent</p>
+      </div>
+      <span class="featured-italic" data-text="BRXDGE">BRXDGE</span>
+      <span class="profiles-bold" data-text="TALENT ROSTER">TALENT ROSTER</span>
     </div>
 
     <div class="filters tr-gender-filters tr-anim-item" id="trGenderFilters"></div>
