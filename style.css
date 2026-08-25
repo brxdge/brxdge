@@ -699,22 +699,6 @@
 .hero-copy .hero-anim-item:nth-child(3){ transition-delay: 0.28s; }
 .orbit-stage.hero-anim-item{ transition-delay: 0.3s; }
 
-/* "Zoom/iris through the mark" — client wants the loader→page handoff to
-   read as flying forward through the bridge mark and arriving at the
-   page, not two disconnected animations (mark scales up in style.css's
-   .loader-mark.expand, separately the page fades up). This adds a matching
-   scale-settle to #home's hero-anim-item entrance (starts zoomed in past
-   its final size, settles to scale(1)) so it plays at the same moment the
-   giant expanded mark is fading out over it (script.js starts both at
-   once) — the shrinking mark and the settling page read as one continuous
-   forward motion instead of a plain cut. Scoped to #home specifically —
-   .hero-anim-item is reused by the second, separately scroll-triggered
-   hero-copy block down in #bridge-mark (eyebrow/orbit-mark button), which
-   should keep its plain fade+slide untouched. */
-#home .hero-anim-item{ transform: translateY(26px) scale(1.16); }
-#home .hero-anim.play .hero-anim-item,
-#home .hero-anim-item.play{ transform: translateY(0) scale(1); }
-
 /* Hero headline entrance — "BRXDGE TO" / "POSSIBILITIES" each rise up out
    of their own overflow:hidden mask with a scale + blur settle, instead of
    the plain fade+slide every other .hero-anim-item gets. Gated by the same
@@ -5306,15 +5290,36 @@ html.dark-mode .creator-panel::before{
   100%{ opacity: 0.7; transform: translateX(-50%) scale(1); }
 }
 
-/* Exit, redesigned as two clean sequential phases (client revision, round
-   3) rather than a scale+fade blended together: 1) the mark expands from
-   its normal size up to big — fully opaque the whole time, no fading
-   here — then 2) once that expand has finished, #loader itself (the
-   whole loader, mark included) transitions/fades away to reveal the main
-   page underneath. script.js's exit-sequence setTimeout chain below
-   waits for this transform transition to finish before starting #loader's
-   own opacity transition, so the two phases play in order, not at once. */
-.loader-mark.expand{ transition: transform 1.3s cubic-bezier(0.7, 0, 0.84, 0); transform: scale(9); animation: none; }
+/* Exit (client revision, round 4): the mark expanding up to a giant size
+   read as it jumping to "already big" out of nowhere instead of a real
+   transition, so this is a plainer, more believable two-step handoff
+   instead: 1) the mark shrinks back down in place and fades out — like
+   it's receding away, not blowing up — then 2) once that shrink-fade has
+   finished, #loader itself (the rest of the loader) transitions/fades
+   away to reveal the main page underneath. script.js's exit-sequence
+   setTimeout chain below waits for this transition to finish before
+   starting #loader's own opacity transition, so the two phases play in
+   order, not at once. Ease-in (accelerating) curve, not the ease-out used
+   elsewhere in the loader — something receding/collapsing away should
+   speed up as it goes, not decelerate into place like an arrival does.
+
+   Split into two classes instead of one, and added a frame apart in
+   script.js with a forced reflow in between: .loader-mark.show's entrance
+   animation uses fill-mode "forwards", which keeps "owning" transform/
+   opacity indefinitely even once finished, so simply adding a class that
+   sets animation:none and a new transform/opacity value AT THE SAME TIME
+   gives the transition no distinct "before" frame to interpolate from —
+   it just snaps straight to the end value with no visible motion at all
+   (confirmed by frame-sampling the computed style; this silently affected
+   the mark's very first "expand" version too, at scale(9) — never caught
+   there because a snap straight to a giant screen-filling shape looks the
+   same in a screenshot as an animated one). shrink-armed freezes the mark
+   at its current resting state (killing the animation, arming the
+   transition) with nothing left to change; only once that's painted (the
+   forced reflow in script.js) does .shrink change the actual target
+   values, so the transition has a real starting point to animate from. */
+.loader-mark.shrink-armed{ animation: none; transform: scale(1); opacity: 1; transition: transform 0.7s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.7s cubic-bezier(0.55, 0, 1, 0.45); }
+.loader-mark.shrink{ transform: scale(0.08); opacity: 0; }
 .loader-mark-shadow{ position: absolute; left: 50%; bottom: -20px; width: 140px; height: 28px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .loader-content.exit .loader-mark-shadow{ opacity: 0 !important; }
 
@@ -5383,7 +5388,8 @@ html.dark-mode .creator-panel::before{
 @media (prefers-reduced-motion: reduce){
   .loader-mark,
   .loader-mark.show,
-  .loader-mark.expand,
+  .loader-mark.shrink-armed,
+  .loader-mark.shrink,
   .loader-mark-shadow,
   .lw-char,
   .lw-underline{
