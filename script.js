@@ -4639,12 +4639,13 @@ document.querySelectorAll('.reveal').forEach((section) => {
   twObserver.observe(section);
 })();
 
-/* ---------------- MANAGERS: fetch from the database, then wire up
-   the hover-reactive background ---------------- */
+/* ---------------- MANAGERS: fetch from the database, render one card
+   per manager (photo inline in the card — see the MANAGERS section in
+   style.css for why this dropped the old hover-reactive side photo
+   pane) ---------------- */
 (async function initManagers(){
   const grid = document.getElementById('managersGrid');
-  const bg = document.getElementById('managersBg');
-  if (!grid || !bg) return;
+  if (!grid) return;
 
   let managers = [];
   try {
@@ -4656,29 +4657,16 @@ document.querySelectorAll('.reveal').forEach((section) => {
   }
   if (!managers.length) return;
 
-  grid.innerHTML = managers.map((m, i) => `
-    <div class="manager-card stagger-item" data-bg-index="${i}">
-      <img src="${escapeHtml(m.photo || '')}" alt="${escapeHtml(m.name || '')}" loading="lazy">
-      <h3>${escapeHtml(m.name || '')}</h3>
-      <span class="role">${escapeHtml(m.role || '')}</span>
-      <p class="bio">${escapeHtml(m.bio || '')}</p>
+  grid.innerHTML = managers.map((m) => `
+    <div class="manager-card stagger-item">
+      <div class="manager-card-photo"><img src="${escapeHtml(m.photo || '')}" alt="${escapeHtml(m.name || '')}" loading="lazy"></div>
+      <div class="manager-card-body">
+        <h3>${escapeHtml(m.name || '')}</h3>
+        <span class="role">${escapeHtml(m.role || '')}</span>
+        <p class="bio">${escapeHtml(m.bio || '')}</p>
+      </div>
     </div>
   `).join('');
-
-  bg.innerHTML = managers.map((m, i) =>
-    `<div class="bg-layer${i === 0 ? ' active' : ''}" style="--bg: url('${escapeHtml(m.photo || '')}')"></div>`
-  ).join('');
-
-  const layers = Array.from(bg.querySelectorAll('.bg-layer'));
-  function showLayer(index){
-    layers.forEach((layer, i) => layer.classList.toggle('active', i === index));
-  }
-  grid.querySelectorAll('.manager-card').forEach(card => {
-    const index = parseInt(card.dataset.bgIndex, 10);
-    if (isNaN(index)) return;
-    card.addEventListener('mouseenter', () => showLayer(index));
-  });
-  grid.addEventListener('mouseleave', () => showLayer(0));
 })();
 
 // Tap-to-color for the "What We Do" tilt-cards. On desktop, hover already
