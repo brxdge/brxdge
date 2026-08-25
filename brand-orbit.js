@@ -325,10 +325,16 @@ import * as THREE from './assets/vendor/three.module.min.js';
   let tearStart = 0;
 
   function goToNextSection(){
+    // Targets "what-we-do" rather than the old "services" id — after the
+    // hero/"BRIDGING CREATORS" section swap, "services" no longer exists
+    // as an id, and landing here on the bridge-mark section itself (now
+    // directly below the hero) would just scroll the visitor back to
+    // content they've already seen. "what-we-do" is the next new content
+    // on the page, so crossing the bridge still carries them forward.
     if (typeof window.scrollToSection === 'function') {
-      window.scrollToSection('services');
+      window.scrollToSection('what-we-do');
     } else {
-      const el = document.getElementById('services');
+      const el = document.getElementById('what-we-do');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
