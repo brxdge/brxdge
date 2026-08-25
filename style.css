@@ -3932,6 +3932,78 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
    get real room, instead of being capped at a narrow centered column. */
 #roster .wrap{ max-width: 1720px; padding: 0 32px; }
 
+/* ---------- ROSTER SECTION MASTHEAD ("BRXDGE TALENT") ----------
+   Client revision: this used to be the site-wide .featured-italic (Cormorant
+   Garamond italic) + .profiles-bold (Montserrat 900) pair, small and
+   centered. Deliberately different fonts here — Space Mono for the small
+   tracked tag, Bricolage Grotesque at its heaviest loaded weight (800) for
+   the display word — so this section reads as its own fashion-editorial
+   moment rather than another instance of the same eyebrow used everywhere
+   else on the site. Sizing is vw-heavy on purpose: at the section's own
+   widened 1720px stage (#roster .wrap above) the word is meant to run
+   close to edge-to-edge, not sit small in the middle of the space. */
+.roster-masthead{
+  text-align: center;
+  margin: 0 0 56px;
+}
+.roster-masthead-tag{
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: clamp(12px, 1.4vw, 15px);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin: 0 0 18px;
+}
+.roster-masthead-tag::before,
+.roster-masthead-tag::after{
+  content: '';
+  width: 32px;
+  height: 1px;
+  background: var(--panel-line);
+}
+.roster-masthead-word{
+  position: relative;
+  display: block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: clamp(96px, 21vw, 400px);
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+/* Faint outlined echo just behind/below the word — same depth trick used
+   on the full-roster overlay's header, implemented the same robust way
+   (left+right, not left+width) so it can never wrap or size differently
+   than the real word above it. Single word here so wrapping isn't a real
+   risk, but keeping the technique consistent avoids reintroducing that
+   class of bug if this ever becomes multi-word copy later. */
+.roster-masthead-word::before{
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: translate(0.04em, 0.06em);
+  z-index: -1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--panel-line);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (max-width: 680px){
+  .roster-masthead{ margin: 0 0 36px; }
+  .roster-masthead-tag{ gap: 8px; font-size: 10px; letter-spacing: 0.3em; margin: 0 0 12px; }
+  .roster-masthead-tag::before,
+  .roster-masthead-tag::after{ width: 16px; }
+  .roster-masthead-word{ font-size: clamp(56px, 22vw, 96px); letter-spacing: -0.02em; }
+}
+
 /* Same treatment for a single talent's media kit page — let the banner,
    header and platform cards use the full width of the screen instead of
    being capped at the default 1180px content column. */
