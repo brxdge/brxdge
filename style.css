@@ -7,7 +7,17 @@
    text's own background-position so the highlight band drifts continuously,
    reading as light moving across brushed metal rather than a static gradient.
    Shared by every liquid-chrome text-clip usage (.hero h1 em, .about-copy
-   h2 em, .slide-center h2 em). */
+   h2 em, .slide-center h2 em).
+
+   The backface-visibility/translateZ(0)/will-change trio on each of those
+   rules isn't decorative -- animating background-position on a
+   background-clip:text element runs forever (infinite alternate) and is a
+   known trigger for a Chrome/GPU compositor bug where a stale tile from an
+   earlier frame gets left behind at a glyph edge, showing up as a faint
+   "ghosted" duplicate letter (most visible on the first character of
+   "OPPORTUNITIES"). Forcing this element onto its own GPU layer via these
+   three properties makes Chrome fully repaint it each frame instead of
+   reusing a possibly-stale cached tile, which eliminates the ghosting. */
 @keyframes chrome-sweep{
   0%{ background-position: 0% 50%; }
   100%{ background-position: 100% 50%; }
@@ -94,6 +104,11 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: background-position;
   animation: chrome-sweep 10s ease-in-out infinite alternate;
 }
 .services-intro .hero-actions{ margin-top: 44px; justify-content: center; }
@@ -390,6 +405,11 @@
     background:var(--chrome);
     background-size:250% 100%;
     -webkit-background-clip:text; background-clip:text; color:transparent;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: background-position;
     animation: chrome-sweep 10s ease-in-out infinite alternate;
   }
 
@@ -556,7 +576,7 @@
 /* The emphasis word gets the brighter, higher-contrast liquid-chrome
    text-clip instead — a sharper highlight sweep than the flatter steel
    tile behind it, so it still reads as a distinct accent. */
-.slide-center h2 em{ font-style: normal; background: var(--chrome); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: chrome-sweep 10s ease-in-out infinite alternate; }
+.slide-center h2 em{ font-style: normal; background: var(--chrome); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-backface-visibility: hidden; backface-visibility: hidden; -webkit-transform: translateZ(0); transform: translateZ(0); will-change: background-position; animation: chrome-sweep 10s ease-in-out infinite alternate; }
 .slide-center p{ color: rgba(26,26,26,0.72); font-size: 14px; max-width: 260px; }
 
 /* Liquid-chrome sweep — slides the 11-stop --chrome gradient across the
@@ -1011,7 +1031,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
      .eyebrow elsewhere keeps it, this one reads cleaner without it. */
   .hero-copy .eyebrow::before{ content: none; display: none; }
   .hero h1{ font-size: clamp(80px, 12vw, 144px); font-weight: 800; line-height: 1.02; align-items: center; }
-  .hero h1 em{ font-style: normal; background: var(--chrome); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: chrome-sweep 10s ease-in-out infinite alternate; }
+  .hero h1 em{ font-style: normal; background: var(--chrome); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-backface-visibility: hidden; backface-visibility: hidden; -webkit-transform: translateZ(0); transform: translateZ(0); will-change: background-position; animation: chrome-sweep 10s ease-in-out infinite alternate; }
   .hero p.lede{ margin-top: 44px; font-size: 36px; color: var(--muted); max-width: 920px; }
   .hero-actions{ display: flex; gap: 28px; margin-top: 68px; flex-wrap: wrap; justify-content: center; }
   .hero-actions .btn{ padding:28px 48px; font-size:30px; gap:16px; }
