@@ -696,14 +696,23 @@ function trActivePanelFilterCount(){
     (trAudienceSizeFilter !== 'All' ? 1 : 0) + trPlatformFilters.size + trAvailabilityFilters.size;
 }
 
-function resetTrFilters(){
-  trGenderFilter = 'All';
-  trSearchQuery = '';
+// Just the niche/location/audience-size/platform/availability group —
+// shared by resetTrFilters() (full reset, including gender + search) and
+// the "Build Your Preferred Talents" popup's "Skip, show me everyone"
+// button, which should clear these back to "show everything" without also
+// undoing the gender the visitor already picked one step earlier.
+function resetTrExpandedFilters(){
   trNicheFilter = 'All';
   trLocationFilter = 'All';
   trAudienceSizeFilter = 'All';
   trPlatformFilters.clear();
   trAvailabilityFilters.clear();
+}
+
+function resetTrFilters(){
+  trGenderFilter = 'All';
+  trSearchQuery = '';
+  resetTrExpandedFilters();
 }
 
 const defaultRoster = [
@@ -1357,16 +1366,29 @@ function openTalentRosterOverlay(gender){
   requestAnimationFrame(() => requestAnimationFrame(() => {
     talentRosterOverlay.classList.add('tr-in');
   }));
+
+  // "Build Your Preferred Talents" — a guided filter prompt, shown a beat
+  // after the grid so a visitor sees it populate first, then gets invited
+  // to narrow it down rather than only discovering the Filters toggle on
+  // their own. openTrBuildPopup() is defined further down and is a no-op
+  // where the popup doesn't exist (index.html never reaches this function
+  // in the first place, since nothing there can open the roster overlay).
+  setTimeout(openTrBuildPopup, 550);
 }
 
 function closeTalentRosterOverlay(){
   talentRosterOverlay.classList.remove('show');
+  closeTrBuildPopup();
   setBodyScrollLocked(mediakitOverlay.classList.contains('show') ? 'hidden' : '');
 }
 
 document.getElementById('trBack').addEventListener('click', closeTalentRosterOverlay);
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && talentRosterOverlay.classList.contains('show')) closeTalentRosterOverlay();
+  if (e.key !== 'Escape') return;
+  // Close the build popup first if it's the topmost thing open, rather
+  // than closing the whole roster overlay out from under it in one step.
+  if (trBuildOverlay && trBuildOverlay.classList.contains('show')) { closeTrBuildPopup(); return; }
+  if (talentRosterOverlay.classList.contains('show')) closeTalentRosterOverlay();
 });
 
 /* ---------------- COMPANY BACKGROUND (horizontal-scroll story) ----------------
@@ -1585,75 +1607,84 @@ function updateTrFiltersUI(){
   if (clearBtn) clearBtn.style.display = trHasActiveFilters() ? 'inline-flex' : 'none';
 }
 
+// Fills a <select>'s options and current value if it exists on the page —
+// used to drive both the collapsible Filters panel's selects AND the
+// "Build Your Preferred Talents" popup's own selects from the same data,
+// since talent.html has one of each per field (trNicheSelect/trbNicheSelect,
+// etc.) that both need to reflect the same underlying filter state.
+function populateTrSelect(id, optionsHtml, currentValue){
+  const select = document.getElementById(id);
+  if (!select) return;
+  select.innerHTML = optionsHtml;
+  select.value = currentValue;
+}
+
+// Same idea for the Platform/Available For chip multi-selects: rebuilds a
+// chip bar from a fresh values list, wiring every chip's click to toggle
+// the shared Set and re-render EVERYTHING filter-related afterward (both
+// the panel's and the popup's copies of every control) so the two never
+// show a stale/mismatched state relative to each other.
+function populateTrChipBar(id, values, activeSet){
+  const bar = document.getElementById(id);
+  if (!bar) return;
+  bar.innerHTML = '';
+  values.forEach(v => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (activeSet.has(v) ? ' active' : '');
+    chip.textContent = v;
+    chip.addEventListener('click', () => {
+      if (activeSet.has(v)) activeSet.delete(v); else activeSet.add(v);
+      applyTrFilterChange();
+    });
+    bar.appendChild(chip);
+  });
+}
+
 // Builds the Niche / Location / Audience Size selects and the Platform /
-// Available For chip multi-selects inside the collapsible filters panel,
-// every option list generated fresh from whatever's actually on the
-// roster right now — same "derive options from live data" approach as
+// Available For chip multi-selects — both the collapsible Filters panel's
+// copies AND the "Build Your Preferred Talents" popup's copies, every
+// option list generated fresh from whatever's actually on the roster right
+// now — same "derive options from live data" approach as
 // renderTrGenderFilters() above, so a talent added with a new niche or
 // platform shows up as a filterable option without any code changes.
+// populateTrSelect()/populateTrChipBar() are both null-safe, so this works
+// fine on pages that only have one of the two control sets (or neither).
 function renderTrExpandedFilters(){
-  const nicheSelect = document.getElementById('trNicheSelect');
-  if (nicheSelect) {
-    const niches = [...new Set(rosterData.map(t => t.niche).filter(Boolean))].sort();
-    nicheSelect.innerHTML = `<option value="All">Any niche</option>` +
-      niches.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-    nicheSelect.value = trNicheFilter;
-  }
+  const niches = [...new Set(rosterData.map(t => t.niche).filter(Boolean))].sort();
+  const nicheOptions = `<option value="All">Any niche</option>` +
+    niches.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  populateTrSelect('trNicheSelect', nicheOptions, trNicheFilter);
+  populateTrSelect('trbNicheSelect', nicheOptions, trNicheFilter);
 
-  const locationSelect = document.getElementById('trLocationSelect');
-  if (locationSelect) {
-    const locations = [...new Set(rosterData.map(t => t.location).filter(Boolean))].sort();
-    locationSelect.innerHTML = `<option value="All">Any location</option>` +
-      locations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-    locationSelect.value = trLocationFilter;
-  }
+  const locations = [...new Set(rosterData.map(t => t.location).filter(Boolean))].sort();
+  const locationOptions = `<option value="All">Any location</option>` +
+    locations.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  populateTrSelect('trLocationSelect', locationOptions, trLocationFilter);
+  populateTrSelect('trbLocationSelect', locationOptions, trLocationFilter);
 
-  const audienceSizeSelect = document.getElementById('trAudienceSizeSelect');
-  if (audienceSizeSelect) {
-    audienceSizeSelect.innerHTML = AUDIENCE_SIZE_BUCKETS
-      .map(b => `<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
-    audienceSizeSelect.value = trAudienceSizeFilter;
-  }
+  const audienceOptions = AUDIENCE_SIZE_BUCKETS
+    .map(b => `<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
+  populateTrSelect('trAudienceSizeSelect', audienceOptions, trAudienceSizeFilter);
+  populateTrSelect('trbAudienceSizeSelect', audienceOptions, trAudienceSizeFilter);
 
-  const platformBar = document.getElementById('trPlatformFilters');
-  if (platformBar) {
-    const platforms = [...new Set(rosterData.flatMap(t => (t.socials || []).map(s => s.platform)).filter(Boolean))].sort();
-    platformBar.innerHTML = '';
-    platforms.forEach(p => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'chip' + (trPlatformFilters.has(p) ? ' active' : '');
-      chip.textContent = p;
-      chip.addEventListener('click', () => {
-        if (trPlatformFilters.has(p)) trPlatformFilters.delete(p); else trPlatformFilters.add(p);
-        chip.classList.toggle('active');
-        renderTalentRosterGrid();
-        updateTrFiltersUI();
-      });
-      platformBar.appendChild(chip);
-    });
-  }
+  const platforms = [...new Set(rosterData.flatMap(t => (t.socials || []).map(s => s.platform)).filter(Boolean))].sort();
+  populateTrChipBar('trPlatformFilters', platforms, trPlatformFilters);
+  populateTrChipBar('trbPlatformFilters', platforms, trPlatformFilters);
 
-  const availabilityBar = document.getElementById('trAvailabilityFilters');
-  if (availabilityBar) {
-    const tags = [...new Set(rosterData.flatMap(t => t.availableFor || []).filter(Boolean))].sort();
-    availabilityBar.innerHTML = '';
-    tags.forEach(tag => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'chip' + (trAvailabilityFilters.has(tag) ? ' active' : '');
-      chip.textContent = tag;
-      chip.addEventListener('click', () => {
-        if (trAvailabilityFilters.has(tag)) trAvailabilityFilters.delete(tag); else trAvailabilityFilters.add(tag);
-        chip.classList.toggle('active');
-        renderTalentRosterGrid();
-        updateTrFiltersUI();
-      });
-      availabilityBar.appendChild(chip);
-    });
-  }
+  const tags = [...new Set(rosterData.flatMap(t => t.availableFor || []).filter(Boolean))].sort();
+  populateTrChipBar('trAvailabilityFilters', tags, trAvailabilityFilters);
+  populateTrChipBar('trbAvailabilityFilters', tags, trAvailabilityFilters);
 
   updateTrFiltersUI();
+}
+
+// Every filter control (either copy) funnels through this after mutating
+// state: re-renders the grid, then rebuilds both control sets so neither
+// can ever show a value/active-state the other doesn't agree with.
+function applyTrFilterChange(){
+  renderTalentRosterGrid();
+  renderTrExpandedFilters();
 }
 
 const trFiltersToggle = document.getElementById('trFiltersToggle');
@@ -1670,24 +1701,42 @@ const trNicheSelectEl = document.getElementById('trNicheSelect');
 if (trNicheSelectEl) {
   trNicheSelectEl.addEventListener('change', (e) => {
     trNicheFilter = e.target.value;
-    renderTalentRosterGrid();
-    updateTrFiltersUI();
+    applyTrFilterChange();
+  });
+}
+const trbNicheSelectEl = document.getElementById('trbNicheSelect');
+if (trbNicheSelectEl) {
+  trbNicheSelectEl.addEventListener('change', (e) => {
+    trNicheFilter = e.target.value;
+    applyTrFilterChange();
   });
 }
 const trLocationSelectEl = document.getElementById('trLocationSelect');
 if (trLocationSelectEl) {
   trLocationSelectEl.addEventListener('change', (e) => {
     trLocationFilter = e.target.value;
-    renderTalentRosterGrid();
-    updateTrFiltersUI();
+    applyTrFilterChange();
+  });
+}
+const trbLocationSelectEl = document.getElementById('trbLocationSelect');
+if (trbLocationSelectEl) {
+  trbLocationSelectEl.addEventListener('change', (e) => {
+    trLocationFilter = e.target.value;
+    applyTrFilterChange();
   });
 }
 const trAudienceSizeSelectEl = document.getElementById('trAudienceSizeSelect');
 if (trAudienceSizeSelectEl) {
   trAudienceSizeSelectEl.addEventListener('change', (e) => {
     trAudienceSizeFilter = e.target.value;
-    renderTalentRosterGrid();
-    updateTrFiltersUI();
+    applyTrFilterChange();
+  });
+}
+const trbAudienceSizeSelectEl = document.getElementById('trbAudienceSizeSelect');
+if (trbAudienceSizeSelectEl) {
+  trbAudienceSizeSelectEl.addEventListener('change', (e) => {
+    trAudienceSizeFilter = e.target.value;
+    applyTrFilterChange();
   });
 }
 const trClearFiltersBtn = document.getElementById('trClearFilters');
@@ -1699,6 +1748,42 @@ if (trClearFiltersBtn) {
     renderTrGenderFilters();
     renderTrExpandedFilters();
     renderTalentRosterGrid();
+  });
+}
+
+/* ---------------- BUILD YOUR PREFERRED TALENTS (popup) ----------------
+   A guided version of the same expanded filters above, shown automatically
+   a beat after the full roster overlay opens — see the setTimeout in
+   openTalentRosterOverlay() below. Every control here shares state (and is
+   kept in sync) with the collapsible Filters panel via renderTrExpandedFilters()
+   and applyTrFilterChange() above; this section only owns opening/closing
+   the popup itself and the Skip/Apply actions. Guarded throughout since
+   this popup's markup — unlike the rest of the roster overlay — only
+   exists on talent.html. */
+const trBuildOverlay = document.getElementById('trBuildOverlay');
+
+function openTrBuildPopup(){
+  if (trBuildOverlay) trBuildOverlay.classList.add('show');
+}
+function closeTrBuildPopup(){
+  if (trBuildOverlay) trBuildOverlay.classList.remove('show');
+}
+
+const trBuildClose = document.getElementById('trBuildClose');
+if (trBuildClose) trBuildClose.addEventListener('click', closeTrBuildPopup);
+
+const trBuildApply = document.getElementById('trBuildApply');
+if (trBuildApply) trBuildApply.addEventListener('click', closeTrBuildPopup);
+
+// "Skip" means show everyone — clears the niche/location/audience-size/
+// platform/availability choices (but leaves the gender pick from the step
+// before this one alone; that wasn't this popup's decision to undo).
+const trBuildSkip = document.getElementById('trBuildSkip');
+if (trBuildSkip) {
+  trBuildSkip.addEventListener('click', () => {
+    resetTrExpandedFilters();
+    applyTrFilterChange();
+    closeTrBuildPopup();
   });
 }
 
@@ -4450,15 +4535,19 @@ function scrollToContactAs(type){
   showContactForm(type);
 }
 
-// Deep link: ?contactAs=Creator (etc.) — used by talent.html's "Apply for
-// Representation" CTA now that #contact only lives on index.html. It
-// navigates to index.html?contactAs=Creator#contact; the URL's own #contact
-// fragment handles the scroll natively, this just pre-selects the inquiry
-// type and skips straight to the form, same as the same-page CTAs above.
-// showContactForm() is guarded, so this is a safe no-op on any page (or in
-// the rare case #contact is somehow still missing) rather than throwing.
-const requestedContactAs = new URLSearchParams(location.search).get('contactAs');
-if(requestedContactAs) showContactForm(requestedContactAs);
+// Used by talent.html's "Apply for Representation" CTA — opens the same
+// popup contact modal used for talent-booking inquiries (#contactOverlay,
+// part of the shared chrome on every page) instead of navigating away, so
+// applying for representation never leaves the Talent page. talentName is
+// left blank (this isn't about a specific talent) and the title/subtitle
+// are swapped for representation-specific copy instead of openContactModal()'s
+// booking-flavored defaults.
+function openCreatorApplicationModal(){
+  document.getElementById('contactModalTitle').textContent = 'Apply for Representation';
+  document.getElementById('contactModalSub').textContent = "Tell us about your content and audience, and a real human on the team will get back to you.";
+  document.getElementById('contactPopupTalent').value = '';
+  contactOverlay.classList.add('show');
+}
 
 // ---------------- FAQ ACCORDION ----------------
 // Independent items rather than a strict single-open accordion — opening
