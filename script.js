@@ -303,29 +303,48 @@
 
     if (p === 100) {
       clearInterval(interval);
-      // Exit sequence, redesigned as two clean sequential phases (client
-      // revision, round 3 — not "make it slower", but "expand fully from
-      // its normal size to big, THEN transition into the main page" as
-      // two distinct steps rather than a scale+fade blended together):
-      //   1. The mark expands (.loader-mark.expand's transform transition
-      //      in style.css) while staying fully opaque.
-      //   2. Only once that expand has finished does #loader itself start
-      //      its own opacity transition, fading the whole loader (giant
-      //      mark included) away to reveal the page underneath.
+      // Exit sequence (client revision, round 4 — the "expand until it's
+      // huge" version read as the bridge jumping to a giant size "out of
+      // nowhere" rather than a real transition. Replaced with a plainer,
+      // more physically believable two-step handoff:
+      //   1. The mark shrinks back down and fades out in place
+      //      (.loader-mark.shrink's transform+opacity transition in
+      //      style.css) — like it's receding away, not blowing up.
+      //   2. Only once that shrink has finished does #loader itself start
+      //      its own opacity transition, fading the rest of the loader
+      //      away to reveal the page underneath.
       // The two setTimeout delays below match those two CSS transition
       // durations exactly — keep them in sync if either changes.
       setTimeout(() => {
         // Everything else steps back so the mark can take over the transition
         loader.querySelector('.loader-content').classList.add('exit');
-        if (loaderMark) loaderMark.classList.add('expand');
+        if (loaderMark) {
+          // Two classes, one frame apart, not one: .show's entrance
+          // animation has fill-mode "forwards" and keeps "owning"
+          // transform/opacity indefinitely, so switching animation off
+          // and the transform/opacity target values in the very same
+          // style recalc leaves the transition with no distinct "before"
+          // frame to interpolate from — it just snaps straight to the
+          // shrunk/faded end state with no visible motion (see style.css's
+          // comment above .loader-mark.shrink-armed for how this was
+          // caught). shrink-armed freezes the mark at its current resting
+          // state first (kills the animation, arms the transition,
+          // changes nothing visually); the forced reflow makes the
+          // browser actually paint that frame before .shrink changes the
+          // real target values a moment later, so there's a real "before"
+          // to animate away from.
+          loaderMark.classList.add('shrink-armed');
+          void loaderMark.offsetWidth; // force a reflow between the two classes
+          loaderMark.classList.add('shrink');
+        }
         setTimeout(() => {
-          // Phase 2 starts here, only after the expand (1.3s) has played out.
+          // Phase 2 starts here, only after the shrink-fade (0.7s) has played out.
           loader.style.opacity = '0';
           setTimeout(() => loader.style.display = 'none', 600);
           // Straight into the hero content entrance
           if (heroAnim) heroAnim.classList.add('play');
           heroItems.forEach((item) => item.classList.add('play'));
-        }, 1300);
+        }, 700);
       }, 350);
     }
   }, 30);
