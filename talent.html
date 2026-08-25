@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRXDGE Talent | Meet the Creators We Represent</title>
+<meta name="description" content="Browse the creators represented by BRXDGE, a Canadian talent management agency spanning TikTok, Instagram, and YouTube. Explore the full roster and apply for representation.">
+<meta name="robots" content="index, follow">
+<!-- IMPORTANT: this canonical/og:url/og:image block was hardcoded to
+     "https://www.brxdge.com/" — a domain that isn't actually owned/pointed
+     at this site yet. Social platforms (iMessage, Facebook, Slack, etc.)
+     read og:url as the "real" address for whatever's being shared, so
+     tapping a shared link's preview card was sending people to that dead
+     domain instead of back to this live site. Pointed everything below at
+     the real live Railway URL instead. Once a real domain is bought and
+     pointed at this deployment, find-and-replace
+     "https://brxdge-production.up.railway.app" with the new domain across
+     this <head> block (and in talent-backend/index.js's per-talent OG
+     middleware, which builds these same tags dynamically for individual
+     talent share links). -->
+<link rel="canonical" href="https://brxdge-production.up.railway.app/talent.html">
+<meta name="theme-color" content="#0C0C0C">
+
+<!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BRXDGE">
+<meta property="og:title" content="BRXDGE Talent | Meet the Creators We Represent">
+<meta property="og:description" content="Browse the creators represented by BRXDGE, a Canadian talent management agency spanning TikTok, Instagram, and YouTube.">
+<meta property="og:url" content="https://brxdge-production.up.railway.app/talent.html">
+<!-- Was pointed at "assets/og-image.jpg", which doesn't exist in the repo
+     (404s) — that's why link previews were falling back to the favicon/logo
+     instead of showing a real preview image. Using the logo that does
+     exist (brxdge.png) as the default until a proper 1200x630 preview
+     graphic is designed and uploaded to assets/og-image.jpg. -->
+<meta property="og:image" content="https://brxdge-production.up.railway.app/brxdge.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BRXDGE Talent | Meet the Creators We Represent">
+<meta name="twitter:description" content="Browse the creators represented by BRXDGE, a Canadian talent management agency spanning TikTok, Instagram, and YouTube.">
+<meta name="twitter:image" content="https://brxdge-production.up.railway.app/brxdge.png">
+
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "BRXDGE",
+  "description": "BRXDGE is a Canadian talent management agency representing social media creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.",
+  "url": "https://brxdge-production.up.railway.app/",
+  "logo": "https://brxdge-production.up.railway.app/brxdge.png",
+  "areaServed": {
+    "@type": "Country",
+    "name": "Canada"
+  }
+}
+</script>
+<!-- Once you share your real Instagram/TikTok/YouTube profile URLs, add a
+     "sameAs": ["...", "...", "..."] array here — it links this Organization
+     entry to your actual social accounts, which helps Google connect the two.
+     If BRXDGE is based in a specific city/province, replace the plain
+     "Canada" areaServed above with a real street "address" (PostalAddress)
+     instead — that's a stronger signal for city-level searches, but only
+     add it once there's a real address to put there; a fabricated one
+     would do more harm than good. -->
+
+<!-- Was two separate fonts.googleapis.com stylesheet requests (each its own
+     round trip) and only preconnected to fonts.googleapis.com — the actual
+     font FILES load from the separate fonts.gstatic.com origin, which was
+     still paying a full fresh DNS+TCP+TLS handshake with no preconnect.
+     Combined into one stylesheet request and added the missing preconnect. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=44">
+<script>
+  // Applied before first paint so the loader/site never flashes the wrong theme.
+  (function () {
+    try {
+      var saved = localStorage.getItem('brxdge-theme');
+      var wantsDark = saved !== 'light';
+      if (wantsDark) document.documentElement.classList.add('dark-mode');
+    } catch (e) {
+      /* storage unavailable — still default to the brand's dark theme */
+      document.documentElement.classList.add('dark-mode');
+    }
+  })();
+</script>
+</head>
+<body>
+
+<!-- Ambient background line, echoing the bridge-cable motif from the logo.
+     Fixed, faint, and quiet — a texture rather than a graphic. -->
+<div class="brand-lines-bg" aria-hidden="true">
+  <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+    <defs>
+      <radialGradient id="glowDotGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="currentColor" stop-opacity="0.95"/>
+        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+
+    <!-- FAR LAYER: a second, higher and fainter span suggesting depth, like
+         a sister bridge further back in the haze. Parallaxes slower than
+         the near layer so it reads as further away. -->
+    <g class="cable-layer cable-layer--far">
+      <path class="cable-base-far" d="M -80 400 Q 800 214 1680 400"/>
+      <line class="hanger-far" x1="180" y1="300" x2="180" y2="400"/>
+      <line class="hanger-far" x1="420" y1="252" x2="420" y2="400"/>
+      <line class="hanger-far" x1="660" y1="224" x2="660" y2="400"/>
+      <line class="hanger-far" x1="900" y1="216" x2="900" y2="400"/>
+      <line class="hanger-far" x1="1140" y1="227" x2="1140" y2="400"/>
+      <line class="hanger-far" x1="1380" y1="258" x2="1380" y2="400"/>
+      <line class="hanger-far" x1="1620" y1="304" x2="1620" y2="400"/>
+    </g>
+
+    <!-- NEAR LAYER: the primary bridge-cable motif from the logo -->
+    <g class="cable-layer cable-layer--near">
+      <!-- Hangers dropping from the cable, matching the logo's proportions -->
+      <line class="hanger" x1="100" y1="446" x2="100" y2="590"/>
+      <line class="hanger" x1="280" y1="385" x2="280" y2="590"/>
+      <line class="hanger" x1="460" y1="342" x2="460" y2="590"/>
+      <line class="hanger" x1="640" y1="317" x2="640" y2="590"/>
+      <line class="hanger" x1="820" y1="310" x2="820" y2="590"/>
+      <line class="hanger" x1="1000" y1="321" x2="1000" y2="590"/>
+      <line class="hanger" x1="1180" y1="350" x2="1180" y2="590"/>
+      <line class="hanger" x1="1360" y1="397" x2="1360" y2="590"/>
+      <line class="hanger" x1="1540" y1="462" x2="1540" y2="590"/>
+
+      <!-- Tiny deck lights where each hanger meets the roadway, twinkling
+           like a suspension bridge lit up at dusk -->
+      <circle class="hanger-light" cx="100" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="280" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="460" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="640" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="820" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1000" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1180" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1360" cy="590" r="2.4"/>
+      <circle class="hanger-light" cx="1540" cy="590" r="2.4"/>
+
+      <!-- Cable: a faint base line plus a slow-traveling glint, like light on the wire -->
+      <path id="cablePathNear" class="cable-base" d="M -50 510 Q 800 310 1650 510"/>
+      <path class="cable-shimmer" d="M -50 510 Q 800 310 1650 510"/>
+
+      <!-- Soft glowing orb that drifts the full span of the cable, like a
+           light crossing the bridge at night -->
+      <circle class="cable-glow-dot" r="5" fill="url(#glowDotGrad)">
+        <animateMotion dur="16s" repeatCount="indefinite" rotate="auto">
+          <mpath xlink:href="#cablePathNear" href="#cablePathNear"/>
+        </animateMotion>
+      </circle>
+    </g>
+  </svg>
+</div>
+
+<!-- BRIDGE CROSSING FLASH — a brief full-viewport flash brand-orbit.js
+     triggers at the peak of the click-to-cross burst, so the hero-to-
+     next-section handoff reads as one deliberate cinematic transition
+     rather than a small object fading while the page separately scrolls
+     underneath it. See .cross-flash in style.css. -->
+<div class="cross-flash" id="crossFlash" aria-hidden="true"></div>
+
+
+<div id="loader">
+  <div class="loader-content">
+    <!-- BRXDGE LOADER MARK — a real 3D twin-arch bridge (rendered by
+         loader-bridge.js / three.js), the same geometry family as the
+         hero's #heroOrbitMark but its own short-lived scene. Starts hidden
+         in favor of the flat SVG fallback below; loader-bridge.js adds
+         .is-ready once WebGL is confirmed working and swaps the two over —
+         see .loader-mark / .loader-mark-fallback in style.css. The .show/
+         .expand classes (drop-in bounce + expand-and-burst exit) are still
+         driven by script.js exactly as before. -->
+    <!-- Percentage moved above the bridge mark (client revision) — was
+         between the mark and the wordmark. Fades/rises in on a short delay
+         (see .percentage/.percentage.show in style.css and the 150ms
+         setTimeout in script.js) instead of just appearing instantly with
+         the rest of the loader's first paint. -->
+    <div class="percentage" id="loadPercent">0%</div>
+    <div class="loader-mark-drop-zone">
+      <div class="loader-mark" id="loaderMark" aria-hidden="true">
+        <canvas id="loaderCanvas" aria-hidden="true"></canvas>
+        <div class="loader-mark-fallback" aria-hidden="true">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#loaderFallbackGrad)" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="8" cy="67" r="5" fill="url(#loaderFallbackGrad)"/>
+            <circle cx="92" cy="67" r="5" fill="url(#loaderFallbackGrad)"/>
+            <defs>
+              <linearGradient id="loaderFallbackGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#F5F5F5"/>
+                <stop offset="50%" stop-color="#9A9A9A"/>
+                <stop offset="100%" stop-color="#F5F5F5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+      <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
+    </div>
+    <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
+      <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
+      <span class="lw-underline" aria-hidden="true"></span>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <!-- Left column -->
+  <div class="nav-col nav-col-left">
+    <div class="nav-links left-links">
+      <a href="index.html#home"><span>Home</span></a>
+      <a href="index.html#about"><span>About</span></a>
+      <a href="#roster"><span>Talent</span></a>
+    </div>
+    <!-- Mobile-only: single "Contact" link shown top-left instead of the full nav-links list -->
+    <a href="#contact" class="mobile-top-link">Contact</a>
+  </div>
+
+  <!-- Center Logo -->
+  <a href="index.html" class="brand" aria-label="BRXDGE, back to home">
+    <span class="brand-mark-wrap">
+      <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path class="brand-mark-arc" d="M8 64 Q50 28 92 64" fill="none" stroke="url(#navMarkGrad)" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="8" cy="67" r="6.5" fill="url(#navMarkGrad)"/>
+        <circle cx="92" cy="67" r="6.5" fill="url(#navMarkGrad)"/>
+        <defs>
+          <linearGradient id="navMarkGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="50%" stop-color="#9A9A9A"/>
+            <stop offset="100%" stop-color="#FFFFFF"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+    <span class="brand-name">BRXDGE</span>
+  </a>
+
+  <!-- Right column -->
+  <div class="nav-col nav-col-right right-group">
+    <div class="nav-links right-links">
+      <a href="index.html#what-we-do"><span>Services</span></a>
+      <a href="#contact"><span>Contact</span></a>
+    </div>
+
+    <!-- NAV TALENTS — shows the current campaign cast (talent added via the
+         "+ Add to Campaign" button on each talent card). Hidden until the
+         cast has at least one talent. Replaces the old bottom cast tray;
+         tapping/clicking opens a dropdown with the cast list, Clear, and
+         Send Campaign Brief actions (see renderNavTalents() in script.js). -->
+    <div class="nav-talents-wrap" id="navTalentsWrap">
+      <button type="button" class="nav-talents-btn" id="navTalentsBtn" aria-haspopup="true" aria-expanded="false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="nav-talents-label">Talents</span>
+        <span class="nav-talents-count" id="navTalentsCount">0</span>
+      </button>
+      <div class="nav-talents-dropdown" id="navTalentsDropdown">
+        <div class="nav-talents-dropdown-head">
+          <span>Your Cast</span>
+          <button type="button" class="nav-talents-clear" id="navTalentsClear">Clear</button>
+        </div>
+        <div class="nav-talents-list" id="navTalentsList"></div>
+        <button type="button" class="btn btn-primary nav-talents-send" id="navTalentsSend">
+          Build Campaign Request
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="theme-switch" id="themeToggle" aria-label="Toggle dark mode" role="switch" aria-checked="false" type="button">
+      <svg class="ts-icon ts-icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="ts-icon ts-icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      <span class="theme-switch-knob" aria-hidden="true"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE BOTTOM TAB BAR (replaces the old hamburger + slide-down menu below 860px) -->
+<nav class="mobile-tabbar" id="mobileTabbar">
+  <a href="index.html#home">Home</a>
+  <a href="index.html#about">About</a>
+  <a href="#roster">Talent</a>
+  <a href="index.html#what-we-do">Services</a>
+  <button class="theme-switch" id="themeToggleMobile" aria-label="Toggle dark mode" role="switch" aria-checked="false" type="button">
+    <svg class="ts-icon ts-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <svg class="ts-icon ts-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+    <span class="theme-switch-knob" aria-hidden="true"></span>
+  </button>
+</nav>
+
+<main>
+<!-- ROSTER -->
+<section id="roster" class="reveal" data-reveal="scale">
+  <div class="roster-ambient" aria-hidden="true">
+    <span class="roster-orb roster-orb-1"></span>
+    <span class="roster-orb roster-orb-2"></span>
+  </div>
+  <div class="wrap">
+    <div class="section-head">
+      <!-- The container class handles the overall alignment -->
+<div style="text-align: center; width: 100%;">
+  <span class="featured-italic">BRXDGE </span>
+  <span class="profiles-bold">TALENT</span>
+</div>
+    </div>
+    <div class="roster-toolbar" id="rosterToolbar" style="display:none;">
+      <button class="btn btn-primary" id="addTalentBtn">+ Add Talent</button>
+    </div>
+    <div class="roster-grid" id="rosterGrid"></div>
+    <div class="view-all-wrap">
+      <button class="btn btn-ghost view-all-btn" id="viewAllTalentBtn">
+        <span>View All Talent</span>
+        <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FOR CREATORS — lives on the dedicated Talent page (talent.html), placed
+     directly after the roster grid so a creator who's just browsed the
+     talent BRXDGE represents immediately sees the "that could be you" pivot
+     before scrolling further. Moved off the homepage, which now only links
+     here via the nav "Talent" item. CTA reuses #contact (duplicated on this
+     page) + its "Creator" inquiry pill — see scrollToContactAs() in
+     script.js. -->
+<section id="forCreators" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="creator-panel">
+      <div class="creator-panel-copy">
+        <span class="featured-italic featured-grotesque">ARE YOU A</span>
+        <span class="profiles-bold">CREATOR?</span>
+        <p class="category-sub">Turn your audience into opportunities.</p>
+      </div>
+      <div class="creator-panel-handles">
+        <p class="creator-handles-intro">BRXDGE handles:</p>
+        <ul class="creator-handles-list">
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-4.5 7.45 8.5 8.5 0 0 1-8.9-.3L3 20l1.4-3.9a8.38 8.38 0 0 1-1.15-4.3 8.5 8.5 0 0 1 17.75-.3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Brand negotiations</li>
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Campaign management</li>
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 2v6h6M9 13h6M9 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Contracts</li>
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg></span>Strategy</li>
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Partnerships</li>
+          <li class="stagger-item"><span class="creator-handle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Growth</li>
+        </ul>
+        <button type="button" class="btn btn-primary" onclick="scrollToContactAs('Creator')">
+          <span class="btn-label">Apply for Representation</span>
+          <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="reveal" data-reveal="left">
+  <div class="wrap contact-grid">
+    <div class="contact-info">
+      <span class="featured-italiccc">Get In Touch</span>
+      <h2>Let's work together.</h2>
+      <p class="lede">Brand looking to book talent, or a creator looking for representation? Send us a message. A real human on the team will get back to you.</p>
+
+      <!-- Same approved numbers already shown in About, resurfaced here as a
+           quick trust signal right where someone's deciding whether to
+           actually fill out the form. The reply-time badge is a real
+           commitment, not a stat — keep it honest to whatever your actual
+           turnaround is. -->
+      <div class="contact-trust">
+        <div class="trust-item">
+          <span class="trust-num" data-count-to="47">0</span>
+          <span class="trust-lbl">Creators repped</span>
+        </div>
+        <div class="trust-divider" aria-hidden="true"></div>
+        <div class="trust-item">
+          <span class="trust-num" data-count-to="128">0</span>
+          <span class="trust-lbl">Brand deals closed</span>
+        </div>
+        <div class="trust-divider" aria-hidden="true"></div>
+        <div class="trust-item">
+          <span class="trust-num trust-num-static">24h</span>
+          <span class="trust-lbl">Avg. reply time</span>
+        </div>
+      </div>
+
+      <div class="socials">
+        <a class="social-btn" href="#" aria-label="Instagram" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"/></svg>
+        </a>
+        <a class="social-btn" href="#" aria-label="TikTok" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 3v11.2a3.4 3.4 0 1 1-2.6-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3c.6 3 2.6 4.7 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </a>
+        <a class="social-btn" href="#" aria-label="YouTube" onclick="return false;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-form-panel">
+      <!-- Chooser gate: shown first instead of the form. Two photo tiles —
+           Creator and Management (mapped to the existing "Brand" pill
+           value, since that's the pill the rest of the form/backend
+           already understands) — each carrying the same two-layer
+           photo + tone-gradient fallback used on the Categories rows, so
+           a missing/not-yet-uploaded photo (assets/contact-creator.jpg,
+           assets/contact-management.jpg, for now) never shows broken art.
+           Swap those two paths once final photography is ready. Photos
+           render dimmed/blurred by design (see .chooser-tile::before in
+           style.css) so the label reads clearly over any photo. Picking a
+           tile calls showContactForm(type) in script.js, which hides this,
+           reveals the form, and records the inquiry type on the hidden
+           #contactInquiryType field. -->
+      <div class="contact-chooser" id="contactChooser">
+        <p class="contact-chooser-label">I'm reaching out as a…</p>
+        <div class="chooser-tiles">
+          <button type="button" class="chooser-tile" data-choose="Creator" style="--tile-bg:url('assets/contact-creator.jpg'), linear-gradient(135deg, var(--coral) 0%, var(--ink) 130%);">
+            <span class="chooser-tile-arrow" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="chooser-tile-copy">
+              <span class="chooser-tile-label">Creator</span>
+              <span class="chooser-tile-sub">Creators, pages &amp; talent</span>
+            </span>
+          </button>
+          <button type="button" class="chooser-tile" data-choose="Brand" style="--tile-bg:url('assets/contact-management.jpg'), linear-gradient(135deg, var(--violet) 0%, var(--ink) 130%);">
+            <span class="chooser-tile-arrow" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="chooser-tile-copy">
+              <span class="chooser-tile-label">Management</span>
+              <span class="chooser-tile-sub">Brands &amp; agencies</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <form class="contact-form" id="contactForm" style="display:none;">
+        <button type="button" class="contact-form-back" id="contactFormBack" aria-label="Back to selection">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <!-- The Brand/Creator/Other pill selector that used to live here was
+             retired — it duplicated the choice the visitor already made on
+             the Creator/Management tiles one step back. That choice still
+             flows into the submission the same way (see showContactForm()
+             in script.js, which sets this hidden field directly now instead
+             of simulating a pill click). -->
+        <input type="hidden" id="contactInquiryType" value="">
+        <div class="field"><label for="contactName">Name</label><input type="text" id="contactName" required></div>
+        <div class="field"><label for="contactEmail">Email</label><input type="email" id="contactEmail" required></div>
+        <div class="field"><label for="contactMessage">Message</label><textarea id="contactMessage" required placeholder="Tell us about your brand or your content..."></textarea></div>
+        <button type="submit" class="btn btn-primary btn-contact-submit">
+          <span>Send Message</span>
+          <svg class="view-all-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <p class="form-reassurance">Real humans read every message. Expect a reply within 1 business day.</p>
+      </form>
+
+      <div class="form-success" id="contactSuccess" style="display:none;">
+        <div class="success-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>Message sent.</h3>
+        <p>Thanks for reaching out. A real human on the team will get back to you within 1 business day.</p>
+        <button type="button" class="btn btn-ghost" id="contactSendAnother">Send another message</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div class="brand">
+      <svg class="brand-mark" width="32" height="32" viewBox="0 0 100 100">
+        <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
+        <path d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#gradMark2)" stroke-width="3"/>
+        <line x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <line x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
+        <line x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+        <line x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
+        <defs>
+          <linearGradient id="gradMark2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-name">BRXDGE</span>
+    </div>
+    <div class="footer-links">
+      <a href="index.html#home">Home</a><a href="index.html#about">About</a><a href="#roster">Talent</a>
+      <a href="index.html#what-we-do">Services</a><a href="#contact">Contact</a>
+      <button type="button" class="footer-faq-link" id="faqTrigger" aria-expanded="false" aria-controls="faqPanel">FAQ</button>
+    </div>
+  </div>
+  <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities. <a href="admin.html" class="footer-admin-link">Manager Login</a></p>
+</footer>
+
+<!-- FAQ WIDGET — used to be an inline section before Contact, then a
+     popup opened by an always-floating bottom-right button; the floating
+     trigger read as distracting sitting over every section, so it's now
+     opened from a plain "FAQ" link in the footer nav row instead (see
+     #faqTrigger above) — nothing floats over the page until you actually
+     click it. Same 8 questions, same independent-accordion behavior via
+     initFaqAccordion() in script.js, which targets .faq-item/.faq-question
+     generically so it needed no changes. Open/close wiring is
+     initFaqPopup() in script.js. -->
+<div class="faq-panel" id="faqPanel" role="dialog" aria-modal="false" aria-labelledby="faqPanelTitle">
+  <div class="faq-panel-head">
+    <div>
+      <span class="faq-panel-eyebrow">Frequently Asked</span>
+      <h3 id="faqPanelTitle">Questions</h3>
+    </div>
+    <button type="button" class="faq-panel-close" id="faqPanelClose" aria-label="Close FAQ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="faq-panel-body">
+    <div class="faq-list" id="faqList">
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>How much does it cost to work with a creator?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Pricing depends on the creator, the platform mix, and what you need delivered. Send us your brief and we'll come back with a straightforward quote.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Can I request multiple creators?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes, most campaigns run with a small cast rather than a single creator. Build your roster from the talent directory and send it over as one brief.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>What platforms do your creators use?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Instagram, TikTok, and YouTube, mostly. Every talent profile lists exactly where their audience lives and how big it is.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you handle contracts?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes, every booking includes a contract between the brand and the creator, drafted and managed by the BRXDGE team from brief to signature.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you handle payments?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Yes, payment runs through BRXDGE, so you're invoiced once instead of coordinating payouts with each creator individually.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Can I request a specific creator?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Absolutely, browse the roster and tell us who you'd like to work with, or describe your campaign and we'll suggest a shortlist.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>How quickly will BRXDGE respond?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>Real humans read every message. Expect a reply within 1 business day.</p></div>
+      </div>
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Do you represent creators exclusively?</span>
+          <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer"><p>It depends on the creator and the category. Some are represented exclusively, others aren't. Ask us about a specific creator and we'll tell you directly.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal">
+    <button class="modal-close" id="loginClose">&times;</button>
+    <h3> Login</h3>
+    <p class="sub">Enter the manager passcode to add, edit, or remove talent from the roster.</p>
+    <form id="loginForm">
+      <div class="field"><label for="usernameInput">Username</label><input type="text" id="usernameInput" autocomplete="username" required></div>
+      <div class="field"><label for="passcodeInput">Password</label><input type="password" id="passcodeInput" autocomplete="current-password" required></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONTACT POPUP MODAL (opened from "Get in Touch" on a talent profile) -->
+<div class="modal-overlay" id="contactOverlay">
+  <div class="modal">
+    <button class="modal-close" id="contactClose">&times;</button>
+    <h3 id="contactModalTitle">Get In Touch</h3>
+    <p class="sub" id="contactModalSub">Send us a message and a real human on the team will get back to you.</p>
+    <form id="contactPopupForm">
+      <input type="hidden" id="contactPopupTalent" value="">
+      <div class="field"><label for="contactPopupName">Name</label><input type="text" id="contactPopupName" required></div>
+      <div class="field"><label for="contactPopupEmail">Email</label><input type="email" id="contactPopupEmail" required></div>
+      <div class="field"><label for="contactPopupMessage">Message</label><textarea id="contactPopupMessage" required placeholder="Tell us about your brand or your content..."></textarea></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CAMPAIGN BRIEF MODAL (opened from the cast tray's "Build Campaign Request").
+     Full flow: Talent -> Browse -> Filter -> View Profile -> Add to Campaign ->
+     Build Cast -> Submit Campaign Request. This modal is the last two steps:
+     it recaps who's in the cast, then collects the structured campaign
+     details a manager actually needs to scope the ask (type, deliverables,
+     budget, timeline) instead of a single free-text box. -->
+<div class="modal-overlay" id="campaignBriefOverlay">
+  <div class="modal modal-campaign-brief" style="max-width:620px;">
+    <button class="modal-close" id="campaignBriefClose">&times;</button>
+    <h3>Submit Campaign Request</h3>
+    <p class="sub">Tell us about your campaign and we'll get back to you about this cast within 1 business day.</p>
+
+    <div class="cast-brief-section-label">Selected Talent</div>
+    <div class="cast-brief-list" id="castBriefList"></div>
+
+    <form id="campaignBriefForm">
+      <div class="field"><label for="briefBrandName">Company / Brand</label><input type="text" id="briefBrandName" required placeholder="e.g. Nike"></div>
+
+      <div class="field-row">
+        <div class="field"><label for="briefContactName">Your Name</label><input type="text" id="briefContactName" required></div>
+        <div class="field"><label for="briefEmail">Email</label><input type="email" id="briefEmail" required></div>
+      </div>
+
+      <div class="field"><label for="briefCampaignName">Campaign Name</label><input type="text" id="briefCampaignName" required placeholder="e.g. Summer Running Campaign"></div>
+
+      <div class="field">
+        <label>Campaign Type</label>
+        <input type="hidden" id="briefCampaignType">
+        <div class="inquiry-toggle" id="briefCampaignTypePills">
+          <button type="button" class="inquiry-pill" data-type="Sponsored Content">Sponsored Content</button>
+          <button type="button" class="inquiry-pill" data-type="Product Launch">Product Launch</button>
+          <button type="button" class="inquiry-pill" data-type="Event">Event</button>
+          <button type="button" class="inquiry-pill" data-type="Brand Ambassador">Brand Ambassador</button>
+          <button type="button" class="inquiry-pill" data-type="UGC">UGC</button>
+          <button type="button" class="inquiry-pill" data-type="Other">Other</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Deliverables <span class="field-optional">(optional)</span></label>
+        <div class="inquiry-toggle" id="briefDeliverablesPills">
+          <button type="button" class="inquiry-pill" data-deliverable="Instagram Reel">Instagram Reel</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Instagram Story">Instagram Story</button>
+          <button type="button" class="inquiry-pill" data-deliverable="TikTok Video">TikTok Video</button>
+          <button type="button" class="inquiry-pill" data-deliverable="YouTube Video">YouTube Video</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Blog Post">Blog Post</button>
+          <button type="button" class="inquiry-pill" data-deliverable="Event Appearance">Event Appearance</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="briefBudget">Campaign Budget <span class="field-optional">(optional)</span></label>
+          <select id="briefBudget">
+            <option value="">Not sure yet</option>
+            <option value="Under $2,500">Under $2,500</option>
+            <option value="$2,500–$5,000">$2,500–$5,000</option>
+            <option value="$5,000–$10,000">$5,000–$10,000</option>
+            <option value="$10,000–$25,000">$10,000–$25,000</option>
+            <option value="$25,000–$50,000">$25,000–$50,000</option>
+            <option value="$50,000+">$50,000+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="briefTimeline">Campaign Timeline <span class="field-optional">(optional)</span></label>
+          <input type="text" id="briefTimeline" placeholder="e.g. September 2026">
+        </div>
+      </div>
+
+      <div class="field"><label for="briefMessage">Additional Information <span class="field-optional">(optional)</span></label><textarea id="briefMessage" placeholder="Creative direction, must-haves, examples you like..."></textarea></div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Submit Campaign Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ADD/EDIT TALENT MODAL — content is fully owned/rendered by the shared
+     phase-by-phase wizard (talent-wizard.js), the same one the admin
+     dashboard uses. See openTalentModal() in script.js. -->
+<div class="modal-overlay" id="talentOverlay">
+  <div class="modal tw-modal" id="talentModalBody"></div>
+</div>
+
+<!-- TALENT FILTER POPUP (opened from "View All Talent" on the roster) -->
+<div class="modal-overlay" id="talentFilterOverlay">
+  <div class="modal talent-filter-modal">
+    <button class="modal-close" id="talentFilterClose">&times;</button>
+    <h3>View All Talent</h3>
+    <p class="sub">Choose who you'd like to see across the full roster.</p>
+    <div class="gender-options">
+      <button type="button" class="gender-option" data-gender="All">
+        <span class="go-label">All</span>
+        <span class="go-sub">Everyone on the roster</span>
+      </button>
+      <button type="button" class="gender-option" data-gender="Female">
+        <span class="go-label">Female</span>
+        <span class="go-sub">Female talent only</span>
+      </button>
+      <button type="button" class="gender-option" data-gender="Male">
+        <span class="go-label">Male</span>
+        <span class="go-sub">Male talent only</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TALENT ROSTER FULL VIEW (opened from the "View All Talent" filter popup) -->
+<div class="mediakit-overlay talent-roster-overlay" id="talentRosterOverlay">
+  <div class="roster-ambient" aria-hidden="true">
+    <span class="roster-orb roster-orb-1"></span>
+    <span class="roster-orb roster-orb-2"></span>
+  </div>
+  <div class="wrap">
+    <button class="mk-back" id="trBack">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Roster
+    </button>
+
+    <!-- Floating cast summary — pops up top-right once talent has been
+         added to the campaign while browsing the full roster. The main
+         navbar's Talents button is hidden behind this full-screen overlay,
+         so this is the only way to review/build the cast without leaving
+         the roster (see setupCastWidget('roster', ...) in script.js). -->
+    <div class="nav-talents-wrap tr-talents-wrap" id="trTalentsWrap">
+      <button type="button" class="nav-talents-btn" id="trTalentsBtn" aria-haspopup="true" aria-expanded="false">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="nav-talents-label">Talents</span>
+        <span class="nav-talents-count" id="trTalentsCount">0</span>
+      </button>
+      <div class="nav-talents-dropdown" id="trTalentsDropdown">
+        <div class="nav-talents-dropdown-head">
+          <span>Your Cast</span>
+          <button type="button" class="nav-talents-clear" id="trTalentsClear">Clear</button>
+        </div>
+        <div class="nav-talents-list" id="trTalentsList"></div>
+        <button type="button" class="btn btn-primary nav-talents-send" id="trTalentsSend">
+          Build Campaign Request
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="tr-header tr-anim-item">
+      <span class="featured-italic">BRXDGE</span>
+      <span class="profiles-bold">TALENT ROSTER</span>
+      <p class="tr-sub" id="trSub">Showing all talent</p>
+    </div>
+
+    <div class="filters tr-gender-filters tr-anim-item" id="trGenderFilters"></div>
+
+    <div class="talent-search-wrap tr-anim-item" id="talentSearchWrap">
+      <div class="talent-search">
+        <svg class="talent-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+          <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="talentSearchInput" class="talent-search-input" placeholder="Search talent by name…" autocomplete="off" aria-label="Search talent by name">
+        <button type="button" id="talentSearchClear" class="talent-search-clear" aria-label="Clear search" style="display:none;">&times;</button>
+      </div>
+      <button type="button" class="tr-filters-toggle" id="trFiltersToggle" aria-expanded="false" aria-controls="trFiltersPanel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Filters
+        <span class="tr-filters-badge" id="trFiltersBadge">0</span>
+      </button>
+    </div>
+
+    <!-- Niche / platform / audience size / location / availability —
+         collapsed behind the "Filters" toggle above so the default view
+         stays as clean as the old gender-chips-only layout. Gender itself
+         stays as its own always-visible chip row (trGenderFilters above)
+         since it was already there and reads best up top. -->
+    <div class="tr-filters-panel" id="trFiltersPanel">
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trNicheSelect">Niche</label>
+        <select class="tr-filter-select" id="trNicheSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trLocationSelect">Location</label>
+        <select class="tr-filter-select" id="trLocationSelect"></select>
+      </div>
+      <div class="tr-filter-group">
+        <label class="tr-filter-label" for="trAudienceSizeSelect">Audience Size</label>
+        <select class="tr-filter-select" id="trAudienceSizeSelect"></select>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Platform</label>
+        <div class="filters tr-chip-multi" id="trPlatformFilters"></div>
+      </div>
+      <div class="tr-filter-group tr-filter-group--wide">
+        <label class="tr-filter-label">Available For</label>
+        <div class="filters tr-chip-multi" id="trAvailabilityFilters"></div>
+      </div>
+      <button type="button" class="tr-filters-clear" id="trClearFilters">Clear all filters</button>
+    </div>
+
+    <div class="roster-grid roster-grid--all" id="talentRosterGrid"></div>
+  </div>
+</div>
+
+<!-- COMPANY BACKGROUND — opened from the About section's "See Our
+     Background" button (#viewBackgroundBtn). Horizontal-scroll story with
+     3 main panels (Manifesto / Where We Are Now / The Team) bridged by
+     2 narrow photo "connectors". See the big CSS comment above
+     ".background-overlay" in style.css for how the scroll mechanics work,
+     and initBackground()/updateBgTrack() in script.js for the JS side.
+     The Team panel reuses the #managersGrid container and initManagers()
+     render logic that used to live in the homepage's standalone #managers
+     section (moved here wholesale, in place of the old placeholder
+     Founders panel) — see the top of the MANAGERS section in style.css
+     for how that render logic changed (single column, photo inside each
+     card) in a later revision. -->
+<div class="mediakit-overlay background-overlay" id="backgroundOverlay">
+  <button class="mk-back bg-back-close" id="bgBack" aria-label="Close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+
+  <div class="bg-progress" id="bgProgress" aria-hidden="true">
+    <button type="button" class="bg-progress-dot" data-bg-dot="0" aria-label="Manifesto"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="1" aria-label="Where We Are Now"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="2" aria-label="The Team"></button>
+  </div>
+
+  <div class="bg-scrollpad" id="bgScrollPad">
+    <div class="bg-stage" id="bgStage">
+      <div class="bg-track" id="bgTrack">
+
+        <!-- PANEL 1 — MANIFESTO -->
+        <section class="bg-panel" data-bg-panel="0">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">Our Manifesto</div>
+              <h2 class="bg-headline">We built the bridge we wished existed.</h2>
+              <p class="bg-lede">Every creator we work with has a story about a brand deal that fell through, a contract nobody explained, or a DM that went unanswered for three weeks. BRXDGE exists to be the opposite of that, end to end.</p>
+              <p class="bg-lede">No templates. No roster-padding. No creator treated like a line item on someone else's media kit. We measure our own success by how far the people we represent get to go.</p>
+              <div class="bg-pillars">
+                <div class="bg-pillar">
+                  <div class="bg-pillar-num">01</div>
+                  <div class="bg-pillar-title">Transparency First</div>
+                  <div class="bg-pillar-desc">Real numbers, real terms, nothing buried in fine print.</div>
+                </div>
+                <div class="bg-pillar">
+                  <div class="bg-pillar-num">02</div>
+                  <div class="bg-pillar-title">Creator-Led Strategy</div>
+                  <div class="bg-pillar-desc">Built around your audience, never a template.</div>
+                </div>
+                <div class="bg-pillar">
+                  <div class="bg-pillar-num">03</div>
+                  <div class="bg-pillar-title">Real Relationships</div>
+                  <div class="bg-pillar-desc">Hands-on management, not a ticket queue.</div>
+                </div>
+                <div class="bg-pillar">
+                  <div class="bg-pillar-num">04</div>
+                  <div class="bg-pillar-title">Long-Term Growth</div>
+                  <div class="bg-pillar-desc">Careers we build for years, not one campaign.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="bg-connector" data-bg-connector="0">
+          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-1/700/1400" alt="" loading="lazy">
+          <div class="bg-connector-fade" aria-hidden="true"></div>
+          <span class="bg-connector-caption">Where It Started</span>
+        </div>
+
+        <!-- PANEL 2 — WHERE WE ARE NOW (formerly "About Us") -->
+        <section class="bg-panel" data-bg-panel="1">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">Where We Are Now</div>
+              <h2 class="bg-headline">Hands-on management, without the corporate feel.</h2>
+              <p class="bg-lede">We handle everything from content strategy and audience growth to contract negotiation and brand matchmaking, so our talent can spend their time making things people actually want to watch, not managing spreadsheets.</p>
+              <p class="bg-lede">Every creator on our roster gets a strategy built around their actual audience, not a template pulled from someone else's playbook.</p>
+              <div class="about-stats-bar bg-stats-bar">
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="47">0</span>
+                  <span class="lbl">Creators repped</span>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M7.8 8.2a6 6 0 0 0 0 7.6M16.2 8.2a6 6 0 0 1 0 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.6 4.8a11 11 0 0 0 0 14.4M19.4 4.8a11 11 0 0 1 0 14.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="310000000" data-suffix="+">0</span>
+                  <span class="lbl">Combined reach</span>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="128">0</span>
+                  <span class="lbl">Brand deals closed</span>
+                </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="5">0</span>
+                  <span class="lbl">Years running</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="bg-connector" data-bg-connector="1">
+          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-3/700/1400" alt="" loading="lazy">
+          <div class="bg-connector-fade" aria-hidden="true"></div>
+          <span class="bg-connector-caption">Who's Behind It</span>
+        </div>
+
+        <!-- PANEL 3 — THE TEAM (managers, moved in from the homepage's old
+             standalone #managers section; replaces the former placeholder
+             Founders panel). #managersGrid is the exact same container
+             initManagers() in script.js already renders into — see the
+             top-of-file comment on #backgroundOverlay. -->
+        <section class="bg-panel" data-bg-panel="2">
+          <div class="bg-panel-inner">
+            <div class="bg-panel-content">
+              <div class="bg-kicker">The Team</div>
+              <h2 class="bg-headline">The managers behind every deal.</h2>
+              <p class="bg-lede">Not a ticket queue, a small team of people who actually pick up the phone.</p>
+              <div class="managers-grid" id="managersGrid"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-scrollcue" id="bgScrollCue" aria-hidden="true">
+    <span>Scroll to explore</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<!-- MEDIA KIT FULL VIEW -->
+<div class="mediakit-overlay" id="mediakitOverlay">
+  <!-- Ambient wave-line background — same fixed, faint, cursor-parallax
+       texture language as .brand-lines-bg on the landing page, rewoven
+       into a pinched "ribbon" shape instead of the cable-and-hangers
+       motif. Its own element + its own start/stop parallax listeners
+       (startMediakitLinesParallax()/stopMediakitLinesParallax() in
+       script.js, toggled from openMediakit()/closeMediakit()) — kept
+       fully separate from the homepage effect it's inspired by so this
+       can never regress it. position:fixed (see .mk-lines-bg in
+       style.css) pins it to the viewport rather than the much-taller
+       scrolling content inside .mediakit-overlay, so it reads as a
+       constant backdrop the whole way down the page instead of
+       scrolling away after the hero. -->
+  <div class="mk-lines-bg" id="mkLinesBg" aria-hidden="true">
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+      <g class="mk-wave-layer mk-wave-layer--far">
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,244.0 L 16,253.1 L 32,262.4 L 48,271.9 L 64,281.5 L 80,291.3 L 96,301.2 L 112,311.2 L 128,321.2 L 144,331.4 L 160,341.6 L 176,351.9 L 192,362.2 L 208,372.5 L 224,382.9 L 240,393.3 L 256,403.8 L 272,414.3 L 288,424.8 L 304,435.3 L 320,445.7 L 336,456.1 L 352,466.4 L 368,476.6 L 384,486.5 L 400,496.2 L 416,505.5 L 432,514.4 L 448,522.7 L 464,530.4 L 480,537.3 L 496,543.3 L 512,548.3 L 528,552.2 L 544,554.8 L 560,556.2 L 576,556.3 L 592,554.9 L 608,552.1 L 624,547.8 L 640,542.1 L 656,535.0 L 672,526.5 L 688,516.8 L 704,505.9 L 720,493.9 L 736,481.0 L 752,467.3 L 768,453.0 L 784,438.1 L 800,422.9 L 816,407.4 L 832,391.8 L 848,376.3 L 864,360.9 L 880,345.8 L 896,330.9 L 912,316.5 L 928,302.5 L 944,289.0 L 960,276.1 L 976,263.7 L 992,252.0 L 1008,240.8 L 1024,230.3 L 1040,220.3 L 1056,211.0 L 1072,202.3 L 1088,194.2 L 1104,186.8 L 1120,179.9 L 1136,173.7 L 1152,168.1 L 1168,163.1 L 1184,158.7 L 1200,154.9 L 1216,151.8 L 1232,149.2 L 1248,147.3 L 1264,146.0 L 1280,145.3 L 1296,145.2 L 1312,145.7 L 1328,146.8 L 1344,148.5 L 1360,150.8 L 1376,153.7 L 1392,157.1 L 1408,161.1 L 1424,165.6 L 1440,170.6 L 1456,176.1 L 1472,182.0 L 1488,188.5 L 1504,195.3 L 1520,202.5 L 1536,210.1 L 1552,218.1 L 1568,226.3 L 1584,234.8 L 1600,243.6 L 1600,243.6"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,282.7 L 16,291.8 L 32,301.0 L 48,310.4 L 64,320.0 L 80,329.7 L 96,339.5 L 112,349.4 L 128,359.3 L 144,369.2 L 160,379.2 L 176,389.1 L 192,399.1 L 208,409.0 L 224,418.9 L 240,428.7 L 256,438.5 L 272,448.3 L 288,457.9 L 304,467.4 L 320,476.9 L 336,486.1 L 352,495.2 L 368,504.1 L 384,512.6 L 400,520.9 L 416,528.7 L 432,536.0 L 448,542.8 L 464,548.9 L 480,554.4 L 496,558.9 L 512,562.6 L 528,565.4 L 544,567.0 L 560,567.5 L 576,566.9 L 592,565.0 L 608,562.0 L 624,557.6 L 640,552.1 L 656,545.3 L 672,537.5 L 688,528.5 L 704,518.5 L 720,507.7 L 736,496.0 L 752,483.7 L 768,470.8 L 784,457.4 L 800,443.7 L 816,429.8 L 832,415.7 L 848,401.7 L 864,387.7 L 880,373.9 L 896,360.4 L 912,347.1 L 928,334.2 L 944,321.7 L 960,309.7 L 976,298.1 L 992,287.0 L 1008,276.5 L 1024,266.5 L 1040,257.0 L 1056,248.1 L 1072,239.7 L 1088,231.9 L 1104,224.7 L 1120,218.0 L 1136,212.0 L 1152,206.5 L 1168,201.6 L 1184,197.3 L 1200,193.6 L 1216,190.5 L 1232,188.0 L 1248,186.1 L 1264,184.8 L 1280,184.1 L 1296,184.0 L 1312,184.5 L 1328,185.6 L 1344,187.3 L 1360,189.6 L 1376,192.5 L 1392,195.9 L 1408,199.9 L 1424,204.4 L 1440,209.4 L 1456,214.9 L 1472,220.9 L 1488,227.3 L 1504,234.1 L 1520,241.4 L 1536,249.0 L 1552,256.9 L 1568,265.1 L 1584,273.6 L 1600,282.4 L 1600,282.4"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,321.4 L 16,330.5 L 32,339.7 L 48,349.0 L 64,358.5 L 80,368.1 L 96,377.8 L 112,387.5 L 128,397.3 L 144,407.0 L 160,416.7 L 176,426.4 L 192,436.0 L 208,445.5 L 224,454.9 L 240,464.1 L 256,473.3 L 272,482.2 L 288,491.0 L 304,499.6 L 320,508.0 L 336,516.2 L 352,524.0 L 368,531.5 L 384,538.7 L 400,545.5 L 416,551.8 L 432,557.6 L 448,562.9 L 464,567.5 L 480,571.4 L 496,574.6 L 512,577.0 L 528,578.6 L 544,579.2 L 560,578.8 L 576,577.5 L 592,575.2 L 608,571.8 L 624,567.4 L 640,562.0 L 656,555.7 L 672,548.4 L 688,540.2 L 704,531.2 L 720,521.5 L 736,511.1 L 752,500.1 L 768,488.6 L 784,476.7 L 800,464.5 L 816,452.1 L 832,439.6 L 848,427.1 L 864,414.5 L 880,402.1 L 896,389.8 L 912,377.7 L 928,365.9 L 944,354.4 L 960,343.3 L 976,332.5 L 992,322.1 L 1008,312.2 L 1024,302.7 L 1040,293.7 L 1056,285.2 L 1072,277.1 L 1088,269.6 L 1104,262.6 L 1120,256.2 L 1136,250.2 L 1152,244.9 L 1168,240.1 L 1184,235.8 L 1200,232.2 L 1216,229.1 L 1232,226.7 L 1248,224.8 L 1264,223.5 L 1280,222.8 L 1296,222.8 L 1312,223.3 L 1328,224.4 L 1344,226.1 L 1360,228.4 L 1376,231.3 L 1392,234.7 L 1408,238.7 L 1424,243.2 L 1440,248.2 L 1456,253.7 L 1472,259.7 L 1488,266.1 L 1504,273.0 L 1520,280.2 L 1536,287.8 L 1552,295.7 L 1568,304.0 L 1584,312.5 L 1600,321.2 L 1600,321.2"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,360.2 L 16,369.1 L 32,378.3 L 48,387.6 L 64,397.1 L 80,406.6 L 96,416.1 L 112,425.7 L 128,435.3 L 144,444.8 L 160,454.3 L 176,463.6 L 192,472.8 L 208,481.9 L 224,490.8 L 240,499.5 L 256,508.0 L 272,516.2 L 288,524.2 L 304,531.8 L 320,539.2 L 336,546.2 L 352,552.8 L 368,559.0 L 384,564.8 L 400,570.1 L 416,574.9 L 432,579.2 L 448,583.0 L 464,586.1 L 480,588.5 L 496,590.3 L 512,591.4 L 528,591.8 L 544,591.3 L 560,590.1 L 576,588.1 L 592,585.3 L 608,581.6 L 624,577.2 L 640,572.0 L 656,566.0 L 672,559.3 L 688,551.9 L 704,543.9 L 720,535.2 L 736,526.1 L 752,516.4 L 768,506.4 L 784,496.0 L 800,485.4 L 816,474.5 L 832,463.5 L 848,452.4 L 864,441.3 L 880,430.2 L 896,419.2 L 912,408.3 L 928,397.6 L 944,387.1 L 960,376.8 L 976,366.9 L 992,357.2 L 1008,347.9 L 1024,338.9 L 1040,330.4 L 1056,322.2 L 1072,314.5 L 1088,307.3 L 1104,300.5 L 1120,294.3 L 1136,288.5 L 1152,283.3 L 1168,278.5 L 1184,274.4 L 1200,270.8 L 1216,267.8 L 1232,265.4 L 1248,263.5 L 1264,262.3 L 1280,261.6 L 1296,261.6 L 1312,262.1 L 1328,263.2 L 1344,265.0 L 1360,267.3 L 1376,270.1 L 1392,273.6 L 1408,277.5 L 1424,282.0 L 1440,287.0 L 1456,292.5 L 1472,298.5 L 1488,304.9 L 1504,311.8 L 1520,319.0 L 1536,326.6 L 1552,334.5 L 1568,342.8 L 1584,351.3 L 1600,360.0 L 1600,360.0"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,398.9 L 16,407.8 L 32,417.0 L 48,426.2 L 64,435.6 L 80,445.0 L 96,454.5 L 112,463.9 L 128,473.3 L 144,482.6 L 160,491.8 L 176,500.9 L 192,509.7 L 208,518.4 L 224,526.8 L 240,534.9 L 256,542.7 L 272,550.2 L 288,557.3 L 304,564.0 L 320,570.3 L 336,576.2 L 352,581.6 L 368,586.5 L 384,590.9 L 400,594.7 L 416,598.1 L 432,600.8 L 448,603.0 L 464,604.6 L 480,605.6 L 496,606.0 L 512,605.8 L 528,605.0 L 544,603.5 L 560,601.4 L 576,598.7 L 592,595.4 L 608,591.5 L 624,587.0 L 640,581.9 L 656,576.3 L 672,570.2 L 688,563.6 L 704,556.5 L 720,549.0 L 736,541.1 L 752,532.8 L 768,524.2 L 784,515.4 L 800,506.2 L 816,496.9 L 832,487.4 L 848,477.8 L 864,468.1 L 880,458.3 L 896,448.6 L 912,438.9 L 928,429.3 L 944,419.8 L 960,410.4 L 976,401.2 L 992,392.3 L 1008,383.6 L 1024,375.2 L 1040,367.1 L 1056,359.3 L 1072,351.9 L 1088,345.0 L 1104,338.4 L 1120,332.4 L 1136,326.7 L 1152,321.6 L 1168,317.0 L 1184,313.0 L 1200,309.4 L 1216,306.5 L 1232,304.1 L 1248,302.3 L 1264,301.0 L 1280,300.4 L 1296,300.4 L 1312,300.9 L 1328,302.0 L 1344,303.8 L 1360,306.1 L 1376,308.9 L 1392,312.4 L 1408,316.3 L 1424,320.8 L 1440,325.9 L 1456,331.4 L 1472,337.3 L 1488,343.8 L 1504,350.6 L 1520,357.8 L 1536,365.4 L 1552,373.4 L 1568,381.6 L 1584,390.1 L 1600,398.9 L 1600,398.9"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,437.6 L 16,446.5 L 32,455.6 L 48,464.8 L 64,474.1 L 80,483.5 L 96,492.8 L 112,502.1 L 128,511.3 L 144,520.4 L 160,529.4 L 176,538.1 L 192,546.6 L 208,554.9 L 224,562.8 L 240,570.3 L 256,577.5 L 272,584.2 L 288,590.4 L 304,596.2 L 320,601.5 L 336,606.2 L 352,610.4 L 368,614.0 L 384,617.0 L 400,619.4 L 416,621.2 L 432,622.4 L 448,623.1 L 464,623.2 L 480,622.7 L 496,621.7 L 512,620.2 L 528,618.2 L 544,615.7 L 560,612.7 L 576,609.3 L 592,605.5 L 608,601.3 L 624,596.8 L 640,591.9 L 656,586.7 L 672,581.1 L 688,575.3 L 704,569.2 L 720,562.8 L 736,556.1 L 752,549.2 L 768,542.1 L 784,534.7 L 800,527.1 L 816,519.3 L 832,511.3 L 848,503.1 L 864,494.9 L 880,486.5 L 896,478.0 L 912,469.5 L 928,461.0 L 944,452.4 L 960,444.0 L 976,435.6 L 992,427.3 L 1008,419.3 L 1024,411.4 L 1040,403.8 L 1056,396.4 L 1072,389.4 L 1088,382.7 L 1104,376.4 L 1120,370.5 L 1136,365.0 L 1152,360.0 L 1168,355.5 L 1184,351.5 L 1200,348.1 L 1216,345.1 L 1232,342.8 L 1248,341.0 L 1264,339.8 L 1280,339.2 L 1296,339.1 L 1312,339.7 L 1328,340.8 L 1344,342.6 L 1360,344.9 L 1376,347.8 L 1392,351.2 L 1408,355.2 L 1424,359.7 L 1440,364.7 L 1456,370.2 L 1472,376.2 L 1488,382.6 L 1504,389.4 L 1520,396.7 L 1536,404.3 L 1552,412.2 L 1568,420.4 L 1584,428.9 L 1600,437.7 L 1600,437.7"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,476.3 L 16,485.2 L 32,494.3 L 48,503.4 L 64,512.6 L 80,521.9 L 96,531.1 L 112,540.3 L 128,549.3 L 144,558.2 L 160,566.9 L 176,575.4 L 192,583.5 L 208,591.3 L 224,598.7 L 240,605.7 L 256,612.2 L 272,618.2 L 288,623.6 L 304,628.4 L 320,632.6 L 336,636.2 L 352,639.2 L 368,641.4 L 384,643.0 L 400,644.0 L 416,644.3 L 432,644.1 L 448,643.2 L 464,641.8 L 480,639.8 L 496,637.4 L 512,634.6 L 528,631.4 L 544,627.8 L 560,624.0 L 576,619.9 L 592,615.6 L 608,611.2 L 624,606.6 L 640,601.9 L 656,597.0 L 672,592.1 L 688,587.0 L 704,581.9 L 720,576.6 L 736,571.2 L 752,565.6 L 768,559.9 L 784,554.0 L 800,547.9 L 816,541.6 L 832,535.2 L 848,528.5 L 864,521.7 L 880,514.6 L 896,507.4 L 912,500.1 L 928,492.6 L 944,485.1 L 960,477.5 L 976,470.0 L 992,462.4 L 1008,455.0 L 1024,447.6 L 1040,440.4 L 1056,433.5 L 1072,426.8 L 1088,420.4 L 1104,414.3 L 1120,408.6 L 1136,403.3 L 1152,398.4 L 1168,394.0 L 1184,390.1 L 1200,386.7 L 1216,383.8 L 1232,381.5 L 1248,379.7 L 1264,378.6 L 1280,378.0 L 1296,377.9 L 1312,378.5 L 1328,379.7 L 1344,381.4 L 1360,383.7 L 1376,386.6 L 1392,390.0 L 1408,394.0 L 1424,398.5 L 1440,403.5 L 1456,409.0 L 1472,415.0 L 1488,421.4 L 1504,428.2 L 1520,435.5 L 1536,443.1 L 1552,451.0 L 1568,459.3 L 1584,467.8 L 1600,476.5 L 1600,476.5"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,515.1 L 16,523.9 L 32,532.9 L 48,542.0 L 64,551.2 L 80,560.3 L 96,569.4 L 112,578.5 L 128,587.3 L 144,596.0 L 160,604.5 L 176,612.6 L 192,620.4 L 208,627.8 L 224,634.7 L 240,641.1 L 256,646.9 L 272,652.1 L 288,656.7 L 304,660.6 L 320,663.8 L 336,666.2 L 352,667.9 L 368,668.9 L 384,669.1 L 400,668.6 L 416,667.5 L 432,665.7 L 448,663.3 L 464,660.3 L 480,656.9 L 496,653.1 L 512,649.0 L 528,644.6 L 544,640.0 L 560,635.3 L 576,630.5 L 592,625.8 L 608,621.0 L 624,616.4 L 640,611.8 L 656,607.4 L 672,603.0 L 688,598.7 L 704,594.5 L 720,590.3 L 736,586.2 L 752,582.0 L 768,577.7 L 784,573.3 L 800,568.7 L 816,564.0 L 832,559.1 L 848,553.9 L 864,548.4 L 880,542.8 L 896,536.8 L 912,530.7 L 928,524.3 L 944,517.8 L 960,511.1 L 976,504.3 L 992,497.5 L 1008,490.6 L 1024,483.8 L 1040,477.1 L 1056,470.6 L 1072,464.2 L 1088,458.0 L 1104,452.2 L 1120,446.7 L 1136,441.5 L 1152,436.8 L 1168,432.5 L 1184,428.6 L 1200,425.3 L 1216,422.5 L 1232,420.2 L 1248,418.5 L 1264,417.3 L 1280,416.7 L 1296,416.7 L 1312,417.3 L 1328,418.5 L 1344,420.2 L 1360,422.5 L 1376,425.4 L 1392,428.8 L 1408,432.8 L 1424,437.3 L 1440,442.3 L 1456,447.8 L 1472,453.8 L 1488,460.2 L 1504,467.1 L 1520,474.3 L 1536,481.9 L 1552,489.8 L 1568,498.1 L 1584,506.6 L 1600,515.3 L 1600,515.3"/>
+      <path class="mk-wave-line mk-wave-line--far" d="M 0,553.8 L 16,562.6 L 32,571.6 L 48,580.6 L 64,589.7 L 80,598.8 L 96,607.8 L 112,616.6 L 128,625.4 L 144,633.8 L 160,642.0 L 176,649.9 L 192,657.3 L 208,664.3 L 224,670.7 L 240,676.5 L 256,681.7 L 272,686.1 L 288,689.9 L 304,692.8 L 320,694.9 L 336,696.3 L 352,696.7 L 368,696.4 L 384,695.2 L 400,693.3 L 416,690.6 L 432,687.3 L 448,683.3 L 464,678.9 L 480,674.0 L 496,668.8 L 512,663.3 L 528,657.8 L 544,652.1 L 560,646.6 L 576,641.1 L 592,635.9 L 608,630.9 L 624,626.2 L 640,621.8 L 656,617.7 L 672,613.9 L 688,610.4 L 704,607.2 L 720,604.1 L 736,601.2 L 752,598.4 L 768,595.5 L 784,592.6 L 800,589.6 L 816,586.4 L 832,582.9 L 848,579.2 L 864,575.2 L 880,570.9 L 896,566.3 L 912,561.3 L 928,556.0 L 944,550.5 L 960,544.7 L 976,538.7 L 992,532.6 L 1008,526.3 L 1024,520.1 L 1040,513.8 L 1056,507.6 L 1072,501.6 L 1088,495.7 L 1104,490.1 L 1120,484.8 L 1136,479.8 L 1152,475.2 L 1168,471.0 L 1184,467.2 L 1200,463.9 L 1216,461.2 L 1232,458.9 L 1248,457.2 L 1264,456.1 L 1280,455.5 L 1296,455.5 L 1312,456.1 L 1328,457.3 L 1344,459.0 L 1360,461.3 L 1376,464.2 L 1392,467.6 L 1408,471.6 L 1424,476.1 L 1440,481.1 L 1456,486.7 L 1472,492.6 L 1488,499.1 L 1504,505.9 L 1520,513.1 L 1536,520.7 L 1552,528.7 L 1568,536.9 L 1584,545.4 L 1600,554.2 L 1600,554.2"/>
+      </g>
+      <g class="mk-wave-layer mk-wave-layer--near">
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,263.3 L 16,272.4 L 32,281.7 L 48,291.2 L 64,300.8 L 80,310.5 L 96,320.3 L 112,330.3 L 128,340.3 L 144,350.3 L 160,360.4 L 176,370.5 L 192,380.6 L 208,390.8 L 224,400.9 L 240,411.0 L 256,421.2 L 272,431.3 L 288,441.3 L 304,451.3 L 320,461.3 L 336,471.1 L 352,480.8 L 368,490.3 L 384,499.6 L 400,508.5 L 416,517.1 L 432,525.2 L 448,532.8 L 464,539.7 L 480,545.8 L 496,551.1 L 512,555.4 L 528,558.8 L 544,560.9 L 560,561.9 L 576,561.6 L 592,560.0 L 608,557.0 L 624,552.7 L 640,547.1 L 656,540.2 L 672,532.0 L 688,522.6 L 704,512.2 L 720,500.8 L 736,488.5 L 752,475.5 L 768,461.9 L 784,447.7 L 800,433.3 L 816,418.6 L 832,403.8 L 848,389.0 L 864,374.3 L 880,359.8 L 896,345.7 L 912,331.8 L 928,318.4 L 944,305.4 L 960,292.9 L 976,280.9 L 992,269.5 L 1008,258.7 L 1024,248.4 L 1040,238.7 L 1056,229.5 L 1072,221.0 L 1088,213.1 L 1104,205.7 L 1120,199.0 L 1136,192.8 L 1152,187.3 L 1168,182.3 L 1184,178.0 L 1200,174.3 L 1216,171.1 L 1232,168.6 L 1248,166.7 L 1264,165.4 L 1280,164.7 L 1296,164.6 L 1312,165.1 L 1328,166.2 L 1344,167.9 L 1360,170.2 L 1376,173.1 L 1392,176.5 L 1408,180.5 L 1424,185.0 L 1440,190.0 L 1456,195.5 L 1472,201.5 L 1488,207.9 L 1504,214.7 L 1520,222.0 L 1536,229.6 L 1552,237.5 L 1568,245.7 L 1584,254.2 L 1600,263.0 L 1600,263.0"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,302.1 L 16,311.1 L 32,320.3 L 48,329.7 L 64,339.3 L 80,348.9 L 96,358.7 L 112,368.4 L 128,378.3 L 144,388.1 L 160,397.9 L 176,407.7 L 192,417.5 L 208,427.2 L 224,436.9 L 240,446.4 L 256,455.9 L 272,465.2 L 288,474.5 L 304,483.5 L 320,492.4 L 336,501.1 L 352,509.6 L 368,517.8 L 384,525.7 L 400,533.2 L 416,540.2 L 432,546.8 L 448,552.8 L 464,558.2 L 480,562.9 L 496,566.8 L 512,569.8 L 528,572.0 L 544,573.1 L 560,573.2 L 576,572.2 L 592,570.1 L 608,566.9 L 624,562.5 L 640,557.1 L 656,550.5 L 672,542.9 L 688,534.3 L 704,524.9 L 720,514.6 L 736,503.5 L 752,491.9 L 768,479.7 L 784,467.1 L 800,454.1 L 816,441.0 L 832,427.7 L 848,414.4 L 864,401.1 L 880,388.0 L 896,375.1 L 912,362.4 L 928,350.1 L 944,338.1 L 960,326.5 L 976,315.3 L 992,304.6 L 1008,294.3 L 1024,284.6 L 1040,275.3 L 1056,266.6 L 1072,258.4 L 1088,250.8 L 1104,243.7 L 1120,237.1 L 1136,231.1 L 1152,225.7 L 1168,220.8 L 1184,216.6 L 1200,212.9 L 1216,209.8 L 1232,207.3 L 1248,205.4 L 1264,204.1 L 1280,203.5 L 1296,203.4 L 1312,203.9 L 1328,205.0 L 1344,206.7 L 1360,209.0 L 1376,211.9 L 1392,215.3 L 1408,219.3 L 1424,223.8 L 1440,228.8 L 1456,234.3 L 1472,240.3 L 1488,246.7 L 1504,253.5 L 1520,260.8 L 1536,268.4 L 1552,276.3 L 1568,284.5 L 1584,293.1 L 1600,301.8 L 1600,301.8"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,340.8 L 16,349.8 L 32,359.0 L 48,368.3 L 64,377.8 L 80,387.4 L 96,397.0 L 112,406.6 L 128,416.3 L 144,425.9 L 160,435.5 L 176,445.0 L 192,454.4 L 208,463.7 L 224,472.8 L 240,481.8 L 256,490.6 L 272,499.2 L 288,507.6 L 304,515.7 L 320,523.6 L 336,531.2 L 352,538.4 L 368,545.3 L 384,551.8 L 400,557.8 L 416,563.4 L 432,568.4 L 448,572.9 L 464,576.8 L 480,580.0 L 496,582.5 L 512,584.2 L 528,585.2 L 544,585.2 L 560,584.5 L 576,582.8 L 592,580.2 L 608,576.7 L 624,572.3 L 640,567.0 L 656,560.8 L 672,553.8 L 688,546.1 L 704,537.5 L 720,528.4 L 736,518.6 L 752,508.3 L 768,497.5 L 784,486.4 L 800,475.0 L 816,463.3 L 832,451.6 L 848,439.7 L 864,427.9 L 880,416.1 L 896,404.5 L 912,393.0 L 928,381.7 L 944,370.7 L 960,360.0 L 976,349.7 L 992,339.7 L 1008,330.0 L 1024,320.8 L 1040,312.0 L 1056,303.7 L 1072,295.8 L 1088,288.5 L 1104,281.6 L 1120,275.2 L 1136,269.4 L 1152,264.1 L 1168,259.3 L 1184,255.1 L 1200,251.5 L 1216,248.5 L 1232,246.0 L 1248,244.2 L 1264,242.9 L 1280,242.2 L 1296,242.2 L 1312,242.7 L 1328,243.8 L 1344,245.5 L 1360,247.8 L 1376,250.7 L 1392,254.1 L 1408,258.1 L 1424,262.6 L 1440,267.6 L 1456,273.1 L 1472,279.1 L 1488,285.5 L 1504,292.4 L 1520,299.6 L 1536,307.2 L 1552,315.1 L 1568,323.4 L 1584,331.9 L 1600,340.6 L 1600,340.6"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,379.5 L 16,388.5 L 32,397.6 L 48,406.9 L 64,416.3 L 80,425.8 L 96,435.3 L 112,444.8 L 128,454.3 L 144,463.7 L 160,473.0 L 176,482.2 L 192,491.3 L 208,500.2 L 224,508.8 L 240,517.2 L 256,525.4 L 272,533.2 L 288,540.7 L 304,547.9 L 320,554.8 L 336,561.2 L 352,567.2 L 368,572.7 L 384,577.8 L 400,582.4 L 416,586.5 L 432,590.0 L 448,593.0 L 464,595.3 L 480,597.1 L 496,598.2 L 512,598.6 L 528,598.4 L 544,597.4 L 560,595.8 L 576,593.4 L 592,590.3 L 608,586.6 L 624,582.1 L 640,577.0 L 656,571.2 L 672,564.8 L 688,557.8 L 704,550.2 L 720,542.1 L 736,533.6 L 752,524.6 L 768,515.3 L 784,505.7 L 800,495.8 L 816,485.7 L 832,475.5 L 848,465.1 L 864,454.7 L 880,444.3 L 896,433.9 L 912,423.6 L 928,413.4 L 944,403.4 L 960,393.6 L 976,384.0 L 992,374.7 L 1008,365.7 L 1024,357.0 L 1040,348.7 L 1056,340.8 L 1072,333.2 L 1088,326.1 L 1104,319.5 L 1120,313.3 L 1136,307.6 L 1152,302.4 L 1168,297.8 L 1184,293.7 L 1200,290.1 L 1216,287.1 L 1232,284.7 L 1248,282.9 L 1264,281.7 L 1280,281.0 L 1296,281.0 L 1312,281.5 L 1328,282.6 L 1344,284.4 L 1360,286.7 L 1376,289.5 L 1392,293.0 L 1408,296.9 L 1424,301.4 L 1440,306.4 L 1456,312.0 L 1472,317.9 L 1488,324.3 L 1504,331.2 L 1520,338.4 L 1536,346.0 L 1552,354.0 L 1568,362.2 L 1584,370.7 L 1600,379.4 L 1600,379.4"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,418.2 L 16,427.2 L 32,436.3 L 48,445.5 L 64,454.9 L 80,464.2 L 96,473.6 L 112,483.0 L 128,492.3 L 144,501.5 L 160,510.6 L 176,519.5 L 192,528.2 L 208,536.6 L 224,544.8 L 240,552.6 L 256,560.1 L 272,567.2 L 288,573.9 L 304,580.1 L 320,585.9 L 336,591.2 L 352,596.0 L 368,600.2 L 384,603.9 L 400,607.1 L 416,609.6 L 432,611.6 L 448,613.1 L 464,613.9 L 480,614.2 L 496,613.9 L 512,613.0 L 528,611.6 L 544,609.6 L 560,607.1 L 576,604.0 L 592,600.5 L 608,596.4 L 624,591.9 L 640,586.9 L 656,581.5 L 672,575.7 L 688,569.5 L 704,562.9 L 720,555.9 L 736,548.6 L 752,541.0 L 768,533.1 L 784,525.0 L 800,516.6 L 816,508.1 L 832,499.3 L 848,490.5 L 864,481.5 L 880,472.4 L 896,463.3 L 912,454.2 L 928,445.1 L 944,436.1 L 960,427.2 L 976,418.4 L 992,409.8 L 1008,401.4 L 1024,393.3 L 1040,385.4 L 1056,377.9 L 1072,370.7 L 1088,363.8 L 1104,357.4 L 1120,351.4 L 1136,345.9 L 1152,340.8 L 1168,336.3 L 1184,332.2 L 1200,328.7 L 1216,325.8 L 1232,323.4 L 1248,321.6 L 1264,320.4 L 1280,319.8 L 1296,319.8 L 1312,320.3 L 1328,321.4 L 1344,323.2 L 1360,325.5 L 1376,328.3 L 1392,331.8 L 1408,335.8 L 1424,340.3 L 1440,345.3 L 1456,350.8 L 1472,356.8 L 1488,363.2 L 1504,370.0 L 1520,377.2 L 1536,384.8 L 1552,392.8 L 1568,401.0 L 1584,409.5 L 1600,418.3 L 1600,418.3"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,457.0 L 16,465.9 L 32,474.9 L 48,484.1 L 64,493.4 L 80,502.7 L 96,512.0 L 112,521.2 L 128,530.3 L 144,539.3 L 160,548.2 L 176,556.7 L 192,565.1 L 208,573.1 L 224,580.7 L 240,588.0 L 256,594.8 L 272,601.2 L 288,607.0 L 304,612.3 L 320,617.1 L 336,621.2 L 352,624.8 L 368,627.7 L 384,630.0 L 400,631.7 L 416,632.8 L 432,633.3 L 448,633.1 L 464,632.5 L 480,631.3 L 496,629.6 L 512,627.4 L 528,624.8 L 544,621.7 L 560,618.3 L 576,614.6 L 592,610.6 L 608,606.3 L 624,601.7 L 640,596.9 L 656,591.8 L 672,586.6 L 688,581.2 L 704,575.5 L 720,569.7 L 736,563.6 L 752,557.4 L 768,551.0 L 784,544.3 L 800,537.5 L 816,530.5 L 832,523.2 L 848,515.8 L 864,508.3 L 880,500.6 L 896,492.7 L 912,484.8 L 928,476.8 L 944,468.8 L 960,460.8 L 976,452.8 L 992,444.9 L 1008,437.1 L 1024,429.5 L 1040,422.1 L 1056,414.9 L 1072,408.1 L 1088,401.5 L 1104,395.3 L 1120,389.5 L 1136,384.1 L 1152,379.2 L 1168,374.8 L 1184,370.8 L 1200,367.4 L 1216,364.5 L 1232,362.1 L 1248,360.4 L 1264,359.2 L 1280,358.6 L 1296,358.5 L 1312,359.1 L 1328,360.3 L 1344,362.0 L 1360,364.3 L 1376,367.2 L 1392,370.6 L 1408,374.6 L 1424,379.1 L 1440,384.1 L 1456,389.6 L 1472,395.6 L 1488,402.0 L 1504,408.8 L 1520,416.1 L 1536,423.7 L 1552,431.6 L 1568,439.8 L 1584,448.3 L 1600,457.1 L 1600,457.1"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,495.7 L 16,504.6 L 32,513.6 L 48,522.7 L 64,531.9 L 80,541.1 L 96,550.3 L 112,559.4 L 128,568.3 L 144,577.1 L 160,585.7 L 176,594.0 L 192,602.0 L 208,609.6 L 224,616.7 L 240,623.4 L 256,629.6 L 272,635.2 L 288,640.2 L 304,644.5 L 320,648.2 L 336,651.2 L 352,653.5 L 368,655.2 L 384,656.1 L 400,656.3 L 416,655.9 L 432,654.9 L 448,653.2 L 464,651.0 L 480,648.4 L 496,645.3 L 512,641.8 L 528,638.0 L 544,633.9 L 560,629.6 L 576,625.2 L 592,620.7 L 608,616.1 L 624,611.5 L 640,606.8 L 656,602.2 L 672,597.5 L 688,592.9 L 704,588.2 L 720,583.5 L 736,578.7 L 752,573.8 L 768,568.8 L 784,563.6 L 800,558.3 L 816,552.8 L 832,547.1 L 848,541.2 L 864,535.0 L 880,528.7 L 896,522.1 L 912,515.4 L 928,508.5 L 944,501.5 L 960,494.3 L 976,487.1 L 992,480.0 L 1008,472.8 L 1024,465.7 L 1040,458.8 L 1056,452.0 L 1072,445.5 L 1088,439.2 L 1104,433.2 L 1120,427.6 L 1136,422.4 L 1152,417.6 L 1168,413.2 L 1184,409.4 L 1200,406.0 L 1216,403.2 L 1232,400.9 L 1248,399.1 L 1264,397.9 L 1280,397.3 L 1296,397.3 L 1312,397.9 L 1328,399.1 L 1344,400.8 L 1360,403.1 L 1376,406.0 L 1392,409.4 L 1408,413.4 L 1424,417.9 L 1440,422.9 L 1456,428.4 L 1472,434.4 L 1488,440.8 L 1504,447.7 L 1520,454.9 L 1536,462.5 L 1552,470.4 L 1568,478.7 L 1584,487.2 L 1600,495.9 L 1600,495.9"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,534.4 L 16,543.3 L 32,552.2 L 48,561.3 L 64,570.4 L 80,579.5 L 96,588.6 L 112,597.6 L 128,606.4 L 144,614.9 L 160,623.3 L 176,631.3 L 192,638.9 L 208,646.0 L 224,652.7 L 240,658.8 L 256,664.3 L 272,669.1 L 288,673.3 L 304,676.7 L 320,679.4 L 336,681.2 L 352,682.3 L 368,682.6 L 384,682.2 L 400,681.0 L 416,679.0 L 432,676.5 L 448,673.3 L 464,669.6 L 480,665.5 L 496,660.9 L 512,656.1 L 528,651.2 L 544,646.1 L 560,640.9 L 576,635.8 L 592,630.8 L 608,625.9 L 624,621.3 L 640,616.8 L 656,612.5 L 672,608.5 L 688,604.6 L 704,600.8 L 720,597.2 L 736,593.7 L 752,590.2 L 768,586.6 L 784,583.0 L 800,579.2 L 816,575.2 L 832,571.0 L 848,566.6 L 864,561.8 L 880,556.8 L 896,551.5 L 912,546.0 L 928,540.2 L 944,534.1 L 960,527.9 L 976,521.5 L 992,515.0 L 1008,508.5 L 1024,502.0 L 1040,495.5 L 1056,489.1 L 1072,482.9 L 1088,476.9 L 1104,471.1 L 1120,465.7 L 1136,460.7 L 1152,456.0 L 1168,451.7 L 1184,447.9 L 1200,444.6 L 1216,441.8 L 1232,439.6 L 1248,437.9 L 1264,436.7 L 1280,436.1 L 1296,436.1 L 1312,436.7 L 1328,437.9 L 1344,439.6 L 1360,441.9 L 1376,444.8 L 1392,448.2 L 1408,452.2 L 1424,456.7 L 1440,461.7 L 1456,467.2 L 1472,473.2 L 1488,479.6 L 1504,486.5 L 1520,493.7 L 1536,501.3 L 1552,509.2 L 1568,517.5 L 1584,526.0 L 1600,534.7 L 1600,534.7"/>
+      <path class="mk-wave-line mk-wave-line--near" d="M 0,573.1 L 16,582.0 L 32,590.9 L 48,599.9 L 64,608.9 L 80,618.0 L 96,626.9 L 112,635.7 L 128,644.4 L 144,652.8 L 160,660.8 L 176,668.5 L 192,675.7 L 208,682.5 L 224,688.7 L 240,694.2 L 256,699.0 L 272,703.1 L 288,706.4 L 304,708.9 L 320,710.5 L 336,711.3 L 352,711.1 L 368,710.1 L 384,708.3 L 400,705.6 L 416,702.2 L 432,698.1 L 448,693.4 L 464,688.2 L 480,682.5 L 496,676.6 L 512,670.5 L 528,664.4 L 544,658.2 L 560,652.2 L 576,646.4 L 592,640.9 L 608,635.8 L 624,631.1 L 640,626.7 L 656,622.9 L 672,619.4 L 688,616.3 L 704,613.5 L 720,611.0 L 736,608.7 L 752,606.5 L 768,604.4 L 784,602.3 L 800,600.0 L 816,597.6 L 832,594.9 L 848,591.9 L 864,588.6 L 880,585.0 L 896,581.0 L 912,576.6 L 928,571.9 L 944,566.8 L 960,561.5 L 976,555.9 L 992,550.1 L 1008,544.2 L 1024,538.2 L 1040,532.2 L 1056,526.2 L 1072,520.3 L 1088,514.6 L 1104,509.1 L 1120,503.8 L 1136,498.9 L 1152,494.4 L 1168,490.2 L 1184,486.5 L 1200,483.2 L 1216,480.5 L 1232,478.3 L 1248,476.6 L 1264,475.5 L 1280,474.9 L 1296,474.9 L 1312,475.5 L 1328,476.7 L 1344,478.4 L 1360,480.7 L 1376,483.6 L 1392,487.1 L 1408,491.0 L 1424,495.5 L 1440,500.6 L 1456,506.1 L 1472,512.0 L 1488,518.5 L 1504,525.3 L 1520,532.5 L 1536,540.1 L 1552,548.1 L 1568,556.3 L 1584,564.8 L 1600,573.6 L 1600,573.6"/>
+      </g>
+    </svg>
+  </div>
+  <button class="mk-back" id="mkBack">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to Roster
+  </button>
+
+  <!-- Theme/copy-link/share/QR — collapsed behind one toggle button fixed
+       top-right (mirroring #mkBack's fixed top-left), fanning out into a
+       quarter-circle of buttons on click instead of always showing all 4
+       at once. Static markup, re-wired per talent in openMediakit() via
+       clone-and-replace (see script.js), open/close handled once by
+       initHeroActionsToggle() since that's pure UI state, not per-talent.
+       See .mk-hero-actions in style.css for the arc math (--tx/--ty per
+       button) and the toggle's hamburger/close icon crossfade. -->
+  <div class="mk-hero-actions" id="mkHeroActions">
+    <div class="mk-hero-actions-fan">
+      <button class="mk-hero-action theme-toggle" data-mk-theme-toggle title="Toggle dark mode" aria-label="Toggle dark mode" type="button" id="mkHeroThemeBtn" style="--tx:0px; --ty:72px;">
+        <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="mk-hero-action" title="Copy link" aria-label="Copy link to this profile" id="mkHeroCopyBtn" style="--tx:-36px; --ty:62px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1.5-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="mk-hero-action" title="Share profile" aria-label="Share this profile" id="mkHeroShareBtn" style="--tx:-62px; --ty:36px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="mk-hero-action" title="Show QR code" aria-label="Show a QR code for this profile" id="mkHeroQrBtn" style="--tx:-72px; --ty:0px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor"/></svg>
+      </button>
+    </div>
+    <button class="mk-hero-actions-toggle" id="mkHeroActionsToggle" type="button" aria-expanded="false" aria-label="More actions" aria-haspopup="true">
+      <svg class="mk-hero-actions-toggle-icon mk-hero-actions-toggle-icon--menu" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="mk-hero-actions-toggle-icon mk-hero-actions-toggle-icon--close" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Splash intro — 3D BRXDGE wordmark, shown briefly (~900ms) then
+       fades to reveal the media kit underneath. See mk-splash CSS for
+       the layered stage/glow/float/sheen animation. -->
+  <div class="mk-splash" id="mkSplash">
+    <div class="mk-splash-logo-stage" id="mkSplashLogoStage">
+      <div class="mk-splash-logo-glow" aria-hidden="true"></div>
+      <div class="mk-splash-logo-float">
+        <img class="mk-splash-logo-img" id="mkSplashLogoImg" src="assets/brxdge-loader-3d.png" alt="BRXDGE">
+        <div class="mk-splash-logo-sheen" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mkContent"></div>
+
+  <!-- Sticky "Book" bar — fixed to the bottom of the viewport once the
+       visitor scrolls past the hero (.mediakit-overlay.past-hero, same
+       scroll-driven class used to crossfade #mkBack — see
+       updateHeroScrollProgress() in script.js). Keeps the booking CTA
+       reachable without ever having to scroll back up to find it. -->
+  <div class="mk-sticky-book" id="mkStickyBook">
+    <img class="mk-sticky-book-photo" id="mkStickyBookPhoto" src="" alt="">
+    <div class="mk-sticky-book-info">
+      <div class="mk-sticky-book-name" id="mkStickyBookName"></div>
+      <div class="mk-sticky-book-niche" id="mkStickyBookNiche"></div>
+    </div>
+    <button type="button" class="btn btn-primary mk-sticky-book-btn" id="mkStickyBookBtn">
+      <span id="mkStickyBookLabel">Book</span> <span class="arrow">→</span>
+    </button>
+  </div>
+</div>
+
+<!-- CASE STUDY / BLOG POST DETAIL VIEW — reuses the same fullscreen-panel
+     mechanic as the talent media kit above (.mediakit-overlay/.mk-back)
+     instead of introducing a second overlay system. -->
+<div class="mediakit-overlay" id="blogOverlay">
+  <button class="mk-back" id="blogBack">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back
+  </button>
+  <div class="wrap">
+    <div id="blogPostContent"></div>
+  </div>
+</div>
+
+<!-- GALLERY LIGHTBOX — editorial-style enlarged photo viewer with thumbnail rail -->
+<div class="gallery-lightbox" id="galleryLightbox">
+  <div class="gl-topleft">
+    <button class="gl-back" id="glBack">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back
+    </button>
+    <div class="gl-name" id="glName"></div>
+  </div>
+  <div class="gl-stage">
+    <button class="gl-nav gl-prev" id="glPrev" aria-label="Previous photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <img id="glMainImage" src="" alt="">
+    <button class="gl-nav gl-next" id="glNext" aria-label="Next photo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="gl-side">
+    <div class="gl-counter" id="glCounter">1 / 1</div>
+    <div class="gl-thumbs" id="glThumbs"></div>
+  </div>
+</div>
+
+<!-- VIDEO MODAL — plays a post's actual video inline instead of just linking out -->
+<div class="video-modal" id="videoModal">
+  <button class="video-modal-close" id="videoModalClose" aria-label="Close video">&times;</button>
+  <div class="video-modal-frame" id="videoModalFrame"></div>
+</div>
+
+<!-- QR SHARE MODAL — lets someone scan/copy a direct link to this talent's media kit -->
+<div class="qr-modal" id="qrModal">
+  <div class="qr-modal-card">
+    <button class="qr-modal-close" id="qrModalClose" aria-label="Close">&times;</button>
+    <p class="qr-modal-name" id="qrModalName"></p>
+    <img class="qr-modal-img" id="qrModalImg" src="" alt="QR code linking to this profile">
+    <p class="qr-modal-url" id="qrModalUrl"></p>
+    <button class="btn btn-ghost qr-modal-copy" id="qrModalCopy">Copy Link</button>
+  </div>
+</div>
+
+<!-- STATISTICS MODAL — deeper per-platform performance numbers, opened from the
+     "View statistics" button on TikTok / YouTube platform cards -->
+<div class="stats-modal" id="statsModal">
+  <div class="stats-modal-card">
+    <button class="stats-modal-close" id="statsModalClose" aria-label="Close">&times;</button>
+    <div class="stats-modal-head">
+      <div class="stats-modal-icon" id="statsModalIcon"></div>
+      <div>
+        <p class="stats-modal-platform" id="statsModalPlatform"></p>
+        <p class="stats-modal-name" id="statsModalName"></p>
+      </div>
+    </div>
+    <div class="stats-modal-grid" id="statsModalGrid"></div>
+    <p class="stats-modal-note">Stats are entered and updated by the BRXDGE team rather than pulled live from the platform.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- jsPDF is no longer loaded here as a blocking script tag — it's only
+     needed for the on-demand "download gallery as PDF" feature, so
+     script.js now loads it lazily, on first use, instead of making every
+     visitor's page load wait on a third-party CDN before anything (the
+     loader, the entrance animations) can even start. See loadJsPdfLib()
+     in script.js. -->
+<script src="config.js"></script>
+<script src="talent-wizard.js?v=1"></script>
+<script src="script.js?v=36"></script>
+<!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
+     failure can never take script.js's markup/roster/admin logic down
+     with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
+<script type="module" src="brand-orbit.js?v=5"></script>
+<!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
+     deliberately NOT shared with brand-orbit.js: the loader mark is a
+     one-shot ~6.25s render that must never compete with or be torn down
+     by the hero mark's setup, which starts around the same time. Timing
+     constants here are hardcoded to match script.js's loader interval —
+     see the comments in both files if that cadence ever changes. -->
+<script type="module" src="loader-bridge.js?v=6"></script>
+</body>
+</html>
+
