@@ -6467,23 +6467,32 @@ html.dark-mode .creator-panel::before{
 .bg-connector.in-view .bg-connector-caption{ opacity: 1; }
 
 /* ---- panel 1: manifesto pillars ---- */
+/* Client revision (round 2): the uniform 4-equal-box row read as flat and
+   repetitive even after the icon-badge/hover-lift pass. Restructured into
+   an asymmetric bento — Transparency First (the first pillar, and the
+   value prop that leads the rest of the manifesto copy) becomes a tall
+   featured tile on the left with its icon badge filled coral by default
+   instead of only on hover; the other three stack as a column beside it.
+   CSS Grid auto-placement does the work: the featured tile explicitly
+   spans all 3 row tracks in column 1, and the other three .bg-pillar
+   items — untouched, no explicit grid-row of their own — simply fall in
+   order into column 2's three rows because column 1 is already spoken
+   for. */
 .bg-pillars{
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-top: 34px;
+  grid-template-columns: 1.3fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 26px;
 }
-/* Client revision: these read as flat, low-contrast rectangles (a bare
-   border + barely-there background against an already-dark backdrop).
-   Same lift-on-hover + circular icon-badge treatment as .about-stats-bar
-   .stat elsewhere on the site (see that rule) — consistent with the rest
-   of the site's "card" language instead of a one-off plain box, and gives
-   the icon actual presence instead of floating loose above the title. */
+.bg-pillar:first-child{
+  grid-row: 1 / span 3;
+}
 .bg-pillar{
   border: 1px solid var(--panel-line);
   border-radius: var(--radius-md);
   background: var(--panel);
-  padding: 24px 20px;
+  padding: 18px 18px;
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .bg-pillar:hover{
@@ -6491,9 +6500,26 @@ html.dark-mode .creator-panel::before{
   border-color: var(--coral);
   box-shadow: 0 14px 34px rgba(0,0,0,0.28);
 }
+/* Featured tile: more room, content vertically centered in the taller
+   box, and a bigger/already-filled icon badge so it visually leads
+   rather than just being a taller copy of the same small card.
+   Padding/icon/type sizes here (and across .bg-pillar generally) are
+   deliberately kept modest rather than maximal — this tile already
+   spans 3 grid rows, so it's the tallest element in the panel, and the
+   whole panel has to fit inside .bg-stage's fixed 100vh/overflow:hidden
+   box with zero scroll fallback. Oversizing this tile ate the margin a
+   shorter-but-still-common desktop viewport (~800-900px tall laptop
+   screens) needs; see the max-height query below for the rest of that
+   safety margin. */
+.bg-pillar:first-child{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px 26px;
+}
 .bg-pillar-icon-wrap{
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -6501,7 +6527,7 @@ html.dark-mode .creator-panel::before{
   background: var(--ink);
   border: 1px solid var(--panel-line);
   color: var(--coral);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }
 .bg-pillar:hover .bg-pillar-icon-wrap{
@@ -6510,20 +6536,60 @@ html.dark-mode .creator-panel::before{
   color: var(--on-accent);
   transform: scale(1.08);
 }
+.bg-pillar:first-child .bg-pillar-icon-wrap{
+  width: 52px;
+  height: 52px;
+  background: var(--coral);
+  border-color: var(--coral);
+  color: var(--on-accent);
+  margin-bottom: 16px;
+}
 .bg-pillar-icon{
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
   color: inherit;
+}
+.bg-pillar:first-child .bg-pillar-icon{
+  width: 24px;
+  height: 24px;
 }
 .bg-pillar-title{
   font-weight: 700;
-  font-size: 14.5px;
-  margin-bottom: 6px;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+.bg-pillar:first-child .bg-pillar-title{
+  font-size: 20px;
+  margin-bottom: 8px;
 }
 .bg-pillar-desc{
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.5;
+}
+.bg-pillar:first-child .bg-pillar-desc{
+  font-size: 14px;
+  max-width: 340px;
+}
+
+/* Safety net for short-but-common desktop viewports (e.g. ~1366x768
+   laptops, which net well under 768px of actual browser viewport once
+   chrome/taskbar are subtracted). .bg-stage is a fixed 100vh box with
+   overflow:hidden and no internal scroll, so anything that doesn't fit
+   gets silently clipped rather than reflowing — compress the headline/
+   lede/pillars rhythm together here rather than let that happen. */
+@media (max-height: 860px){
+  .bg-headline{ font-size: clamp(32px, 5vw, 60px); line-height: 1.05; }
+  .bg-lede{ margin-top: 14px; font-size: 15px; line-height: 1.55; }
+  .bg-lede + .bg-lede{ margin-top: 8px; }
+  .bg-pillars{ margin-top: 18px; gap: 10px; }
+  .bg-pillar{ padding: 14px 16px; }
+  .bg-pillar:first-child{ padding: 20px 20px; }
+  .bg-pillar-icon-wrap{ width: 30px; height: 30px; margin-bottom: 8px; }
+  .bg-pillar:first-child .bg-pillar-icon-wrap{ width: 42px; height: 42px; margin-bottom: 10px; }
+  .bg-pillar-title{ margin-bottom: 3px; }
+  .bg-pillar:first-child .bg-pillar-title{ font-size: 18px; margin-bottom: 5px; }
+  .bg-pillar-desc{ line-height: 1.4; }
 }
 
 /* ---- panel 2: "Where We Are Now" stats ---- */
@@ -6617,11 +6683,18 @@ html.dark-mode .creator-panel::before{
   .bg-panel-content.bg-mobile-pending{ opacity: 0; transform: translateY(24px); }
   .bg-connector{ flex-basis: auto; height: 220px; }
   .bg-connector-caption{ writing-mode: horizontal-tb; bottom: 18px; left: 24px; transform: none; opacity: 1; }
-  .bg-pillars{ grid-template-columns: repeat(2, 1fr); }
+  /* Bento reset: the desktop layout's 3-row span (see .bg-pillar:first-
+     child above) only makes sense next to a stacked 3-item column at full
+     desktop width. Below 900px the featured tile becomes a full-width
+     banner instead, with the other three flowing into a plain 2-up grid
+     underneath it. */
+  .bg-pillars{ grid-template-columns: repeat(2, 1fr); grid-template-rows: none; }
+  .bg-pillar:first-child{ grid-row: auto; grid-column: 1 / -1; }
   .bg-stats-bar{ grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px){
   .bg-pillars{ grid-template-columns: 1fr; }
+  .bg-pillar:first-child{ grid-column: auto; }
   .bg-stats-bar{ grid-template-columns: 1fr; }
   .bg-headline{ font-size: clamp(30px, 9vw, 44px); line-height: 1.06; }
 }
