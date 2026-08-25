@@ -40,8 +40,9 @@
 
    Timing is hardcoded to match script.js's loader countdown exactly (see
    the comments there): the mark's CSS .show class lands at 150ms, the
-   percent count finishes at 3000ms, and the loader is fully gone from
-   the DOM by ~4550ms. This module keeps its own render loop alive a
+   percent count finishes at 4000ms, and the loader is fully gone from
+   the DOM by ~6500ms (slowed down + given a slower expand exit per a
+   client revision). This module keeps its own render loop alive a
    little past that (RENDER_LIFETIME_MS) and then disposes its GPU
    resources — the scene is never needed again once the loader unmounts.
 
@@ -58,8 +59,8 @@ import * as THREE from './assets/vendor/three.module.min.js';
   let renderer;
   try {
     // antialias off: MSAA is disproportionately expensive on software/
-    // low-power WebGL fallback paths, and at this mark's ~110px on-screen
-    // size the difference is barely perceptible.
+    // low-power WebGL fallback paths, and even at this mark's doubled
+    // ~220px on-screen size (client revision) the difference stays subtle.
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
   } catch (e) {
     return; // flat SVG fallback stays visible — nothing else to do
@@ -70,7 +71,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // comment. A much shorter timeout than brand-orbit.js's (which can
   // afford to wait up to 1500ms, since the hero mark is hidden behind
   // the loader the whole time anyway): the loader itself is only on
-  // screen for ~4.5s total, so this needs to fire fast.
+  // screen for ~6.5s total, so this needs to fire fast.
   if ('requestIdleCallback' in window) {
     requestIdleCallback(setup, { timeout: 60 });
   } else {
@@ -92,7 +93,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // because its setup is fully decoupled from anything time-sensitive;
   // this one isn't). A brighter, more directional light rig below makes
   // up the difference with bold specular highlights instead of full
-  // environment reflections — plenty convincing at the ~110px this mark
+  // environment reflections — plenty convincing at the ~220px this mark
   // renders at for its few seconds on screen.
   const chromeMat = new THREE.MeshPhysicalMaterial({
     color: 0xf0f1f3,
@@ -107,8 +108,9 @@ import * as THREE from './assets/vendor/three.module.min.js';
   deckMat.clearcoat = 0.25;
 
   // Fewer radial/tube segments than the hero mark's buildBridge() uses —
-  // this mark renders at ~110px on screen for a few seconds, so the extra
-  // smoothness is invisible; cutting it substantially reduces the
+  // even at this mark's doubled ~220px on-screen size the extra smoothness
+  // stays close to invisible for the few seconds it's up; cutting it
+  // substantially reduces the
   // triangle count (and first-render shader/rasterization cost) across
   // the ~20 separate meshes below.
   function makeStrut(p1, p2, radius){
@@ -245,10 +247,12 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   // Staggered left-to-right, mirroring the hero teardown's own left-to-
   // right bias (there: the structure lets go from one end; here: it
-  // builds itself the same direction).
-  const ASSEMBLE_SPAN_MS = 1100;
-  const FLY_MS_MIN = 650;
-  const FLY_MS_MAX = 1000;
+  // builds itself the same direction). Slowed down a little (client
+  // revision) from the original 1100/650/1000 so the assembly reads as
+  // more deliberate rather than a quick snap-together.
+  const ASSEMBLE_SPAN_MS = 1500;
+  const FLY_MS_MIN = 900;
+  const FLY_MS_MAX = 1400;
   {
     const xs = pieces.map((p) => p.restPos.x);
     const minX = Math.min.apply(null, xs);
@@ -331,7 +335,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   setPiecesToScattered();
 
-  const RENDER_LIFETIME_MS = 4600; // covers script.js's full ~4550ms loader lifecycle, plus a small buffer
+  const RENDER_LIFETIME_MS = 6800; // covers script.js's full ~6500ms loader lifecycle (slowed + slower expand exit), plus a small buffer
   let disposed = false;
   const start = performance.now();
   let rafId;
