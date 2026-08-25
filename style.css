@@ -723,8 +723,7 @@
    until a forced repaint. Opacity alone is cheap and reliable; the individual
    .stagger-item cards still animate in, so the reveal effect is preserved. */
 #roster.reveal,
-#categories.reveal,
-#managers.reveal{ transform: none !important; }
+#categories.reveal{ transform: none !important; }
 
 /* Staggered children inside a revealed section (manager cards, etc.) */
 .stagger-item{ opacity: 0; transform: translateY(46px) scale(0.92); transition: opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -1064,9 +1063,9 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .manager-card .role{ color: var(--coral); font-size: 13px; font-family: 'Space Mono',monospace; margin-top: 4px; display: block; }
   .manager-card p.bio{ color: var(--muted); font-size: 14.5px; margin-top: 12px; }
 
-  /* ---------- MANAGERS: two columns — cards on the left, the
-     hover-reactive photo as its own column on the right ---------- */
-  #managers{ position: relative; }
+  /* ---------- MANAGERS ("The Team" panel inside the background overlay):
+     two columns — cards on the left, the hover-reactive photo as its own
+     column on the right ---------- */
   .managers-section-inner{ position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch; }
   .managers-col-cards .managers-grid{ height: 100%; }
   .managers-col-photo{
@@ -3946,12 +3945,13 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* Same "maximize the screen" treatment as the roster grid and the
-   showcase slider above them — About Us and Managers get real room
-   instead of being capped at a narrow centered column. Still just a
-   max-width, so it has zero effect on mobile (viewport is already
-   narrower than this everywhere it matters). */
-#about .wrap,
-#managers .wrap{ max-width: 1720px; padding: 0 32px; }
+   showcase slider above them — About Us gets real room instead of being
+   capped at a narrow centered column. Still just a max-width, so it has
+   zero effect on mobile (viewport is already narrower than this everywhere
+   it matters). Managers moved into the background overlay's "The Team"
+   panel (see .bg-panel-inner's own copy of this same treatment) and no
+   longer has a standalone homepage section. */
+#about .wrap{ max-width: 1720px; padding: 0 32px; }
 
 .talent-card{
   width: calc(33.333% - 20px);
@@ -6351,11 +6351,16 @@ html.dark-mode .creator-panel::before{
   align-items: center;
   overflow: hidden;
 }
+/* Same "maximize the screen" treatment as #about .wrap on the homepage
+   (see that rule for the full rationale) — 980px read as a narrow column
+   stranded in the middle of a wide desktop viewport, especially once The
+   Team panel's two-column card+photo layout moved in here. Just a
+   max-width, so it has zero effect on mobile. */
 .bg-panel-inner{
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 980px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 0 60px;
 }
@@ -6455,7 +6460,7 @@ html.dark-mode .creator-panel::before{
 .bg-pillars{
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 20px;
   margin-top: 34px;
 }
 .bg-pillar{
@@ -6481,95 +6486,51 @@ html.dark-mode .creator-panel::before{
   line-height: 1.5;
 }
 
-/* ---- panel 2: history timeline ---- */
-.bg-timeline{
-  margin-top: 34px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.bg-timeline-row{
-  display: grid;
-  grid-template-columns: 90px 24px 1fr;
-  align-items: start;
-  min-height: 84px;
-}
-.bg-timeline-year{
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--coral);
-  padding-top: 2px;
-}
-.bg-timeline-rail{
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-.bg-timeline-rail::before{
-  content: '';
-  position: absolute;
-  top: 18px;
-  bottom: -18px;
-  width: 1px;
-  background: var(--panel-line);
-}
-.bg-timeline-row:last-child .bg-timeline-rail::before{ display: none; }
-.bg-timeline-dot{
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--coral);
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-.bg-timeline-title{
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 4px;
-}
-.bg-timeline-desc{
-  font-size: 13.5px;
-  color: var(--muted);
-  line-height: 1.6;
-  max-width: 460px;
+/* ---- panel 2: "Where We Are Now" stats ---- */
+/* Same .about-stats-bar used on the homepage's About section, plus this
+   modifier: a 4th tile (Years running) fits here since the panel got a lot
+   wider (see .bg-panel-inner above) and 3 stats alone left it looking
+   sparse. Scoped to this modal instance only — the homepage's own
+   3-stat bar is untouched. */
+.bg-stats-bar{
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
 }
 
-/* ---- panel 4: founders ---- */
-.bg-founders{
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 34px;
+/* ---- panel 3: the team ---- */
+/* .managers-section-inner, .managers-col-cards/-photo, .managers-grid, and
+   .manager-card are the same classes the homepage's old standalone
+   #managers section used — moved here as-is, so they keep the two-column
+   "cards left, hover-reactive photo right" layout without needing new CSS.
+
+   One thing DOES need overriding: initManagers() (script.js) renders each
+   card with both .manager-card and .stagger-item, and .stagger-item
+   defaults to opacity:0 until an ancestor carries BOTH .reveal and
+   .active (see .stagger-item further up) — classes from the homepage's
+   own scroll-reveal system, which the old #managers section had and this
+   panel doesn't (it fades in as one block via .bg-panel.in-view instead,
+   same as every other panel here). Without this override the cards would
+   never leave opacity:0. */
+.bg-panel .manager-card.stagger-item{
+  opacity: 1;
+  transform: none;
 }
-.bg-founder-card{
-  border: 1px solid var(--panel-line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-  overflow: hidden;
+
+/* ---- close button (panel-count-agnostic) ---- */
+/* #bgBack used to be a "Back to Site" pill sharing .mk-back with #mkBack's
+   "Back to Roster". Client revision: this one is now icon-only, so it just
+   needs to be forced into a circle — .mk-back's border-radius:100px already
+   makes a square box fully round, this only has to kill the text gap/padding
+   that made it pill-shaped in the first place. */
+.bg-back-close{
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
 }
-.bg-founder-photo{
-  width: 100%;
-  aspect-ratio: 4/5;
-  object-fit: cover;
-  display: block;
-  background: var(--avatar-bg);
-}
-.bg-founder-body{ padding: 16px 18px 20px; }
-.bg-founder-name{ font-weight: 700; font-size: 15.5px; }
-.bg-founder-title{
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--coral);
-  margin-top: 3px;
-}
-.bg-founder-bio{
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.55;
-  margin-top: 10px;
+@media (max-width: 480px){
+  .bg-back-close{ width: 38px; height: 38px; }
 }
 
 /* ---- scroll cue (first panel only) ---- */
@@ -6617,10 +6578,10 @@ html.dark-mode .creator-panel::before{
   .bg-connector{ flex-basis: auto; height: 220px; }
   .bg-connector-caption{ writing-mode: horizontal-tb; bottom: 18px; left: 24px; transform: none; opacity: 1; }
   .bg-pillars{ grid-template-columns: repeat(2, 1fr); }
-  .bg-founders{ grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; }
-  .bg-timeline-row{ grid-template-columns: 76px 20px 1fr; min-height: 76px; }
+  .bg-stats-bar{ grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px){
   .bg-pillars{ grid-template-columns: 1fr; }
+  .bg-stats-bar{ grid-template-columns: 1fr; }
   .bg-headline{ font-size: clamp(26px, 8vw, 36px); }
 }
