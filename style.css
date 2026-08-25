@@ -65,19 +65,16 @@
   to{ opacity: 1; transform: scaleX(1); }
 }
 
-/* Services section intro — "BRXDGE TO POSSIBILITIES" + the CTA buttons,
-   relocated here from the hero. .hero-title/.hero-title-mask/.hero-title-
-   line are reused for a matching look, but two things need re-hooking
-   since ".hero h1"/".hero h1 em" and the .hero-anim/.play entrance are
-   both scoped to .hero specifically and don't reach this element:
-     1. Typography (size/weight/chrome-gradient em) is redeclared here,
-        scoped to #services instead.
-     2. The per-line mask reveal is re-armed off THIS section's own
-        scroll-into-view .reveal/.active toggle (see the sectionObserver
-        in script.js) rather than .hero-anim.play — that trigger only
-        ever arms the first .hero-anim element in the document, so a
-        second copy of the title here would never fire and would stay
-        stuck at .hero-title-line's invisible at-rest state. */
+/* "BRIDGING CREATORS TO BIGGER OPPORTUNITIES" headline + the CTA buttons —
+   now inside #home (the first section again, per the client's requested
+   section swap). .hero-title/.hero-title-mask/.hero-title-line are reused
+   for a matching look; the per-line mask reveal is driven by the generic
+   .hero-anim.play .hero-title-line rule below (this is the first
+   .hero-anim in the document again), same as the 3D bridge mark used to
+   run when IT was first. Typography (size/weight/chrome-gradient em)
+   still needs redeclaring here, scoped to .services-intro instead of
+   ".hero h1"/".hero h1 em", since this markup sits one level deeper than
+   the mark section's does. */
 .services-intro{
   max-width: 960px;
   margin: 0 auto 56px;
@@ -98,11 +95,6 @@
   background-clip: text;
   color: transparent;
   animation: chrome-sweep 10s ease-in-out infinite alternate;
-}
-#services.reveal.active .services-intro .hero-title-line{
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  filter: blur(0px);
 }
 .services-intro .hero-actions{ margin-top: 44px; justify-content: center; }
 /* Sub-headline under "BRIDGING CREATORS TO BIGGER OPPORTUNITIES" — reuses
@@ -745,8 +737,7 @@
    .stagger-item cards still animate in, so the reveal effect is preserved. */
 #roster.reveal,
 #categories.reveal,
-#managers.reveal,
-#services.reveal{ transform: none !important; }
+#managers.reveal{ transform: none !important; }
 
 /* Staggered children inside a revealed section (manager cards, etc.) */
 .stagger-item{ opacity: 0; transform: translateY(46px) scale(0.92); transition: opacity 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -803,8 +794,6 @@
 .profiles-bolds { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: -0.02em; display: block; align-items: center; }
 
   #loader { position: fixed; inset: 0; background: var(--ink); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease, background 0.3s ease; }
-.bar { height: 4px; background: var(--panel-line); border-radius: 2px; overflow: hidden; }
-.fill { height: 100%; background: var(--coral); width: 0%; transition: width 0.2s ease; }
 
 
   :root{ --ink: #F3F3F3; --ink-2: #E7E7E7; --panel: #FFFFFF; --panel-line: rgba(103,103,103,0.18); --coral: #5A5A5A; --gold: #8A8A8A; --violet: #1A1A1A; --on-accent: #FFFFFF; --text: #111111; --muted: #616161; --radius-lg: 28px; --radius-md: 16px; --avatar-bg: #E7E7E7; --chrome: linear-gradient(135deg, #8A8A8A 0%, #FFFFFF 10%, #7A7A7A 20%, #1A1A1A 30%, #FFFFFF 40%, #3A3A3A 50%, #151515 60%, #FFFFFF 70%, #5A5A5A 80%, #FFFFFF 90%, #8A8A8A 100%); color-scheme: light; }
@@ -4416,11 +4405,10 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loader-mark, .loader-word, .loader-arc {
+  .loader-mark, .loader-word {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;
-    stroke-dashoffset: 0 !important;
   }
 }
 
@@ -5264,7 +5252,23 @@ html.dark-mode .creator-panel::before{
   margin: 0;
 }
 
-.loader-mark{ width: 110px; height: 110px; margin: 0 auto 26px; display: block; opacity: 0; transform: translateY(-170px) scale(0.88); transition: none; }
+/* The loader mark is now a real 3D bridge (loader-bridge.js / three.js) in
+   place of the old flat SVG. Same drop-in/shadow-bloom/expand-burst
+   choreography as before — that part of the design still reads great for
+   a canvas — just re-targeted at a canvas+fallback pair instead of an SVG,
+   mirroring the .hero-orbit-mark canvas/fallback swap pattern exactly. */
+.loader-mark{
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(-170px) scale(0.88);
+  transition: none;
+}
 .loader-mark.show{ opacity: 1; transform: scale(1); animation: loader-mark-drop 0.95s cubic-bezier(0.32, 0.1, 0.2, 1) forwards; }
 @keyframes loader-mark-drop{
   0%{ opacity: 0; transform: translateY(-170px) scale(0.88); }
@@ -5290,32 +5294,33 @@ html.dark-mode .creator-panel::before{
 .loader-mark-shadow{ position: absolute; left: 50%; bottom: -10px; width: 70px; height: 14px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .loader-content.exit .loader-mark-shadow{ opacity: 0 !important; }
 
-/* The percentage, bar, and wordmark step back out of the way so the
-   mark reads as the sole focus of the exit transition. */
+/* The percentage and wordmark step back out of the way so the mark reads
+   as the sole focus of the exit transition. */
 .loader-content.exit .percentage,
-.loader-content.exit .bar,
 .loader-content.exit .loader-word{ opacity: 0; transition: opacity 0.3s ease; }
 
-/* Cable arc: stays fully hidden until the mark has landed, then draws
-   itself in — this is "the bridge animation" the mark was dropping in
-   to perform. */
-.loader-mark .loader-arc{ stroke-dasharray: 120; stroke-dashoffset: 120; transition: stroke-dashoffset 0.75s cubic-bezier(0.65, 0, 0.35, 1) 0.8s; }
-.loader-mark.show .loader-arc{ stroke-dashoffset: 0; }
-
-/* Hangers: invisible until the cable has drawn, then drop into place
-   left-to-right like cables snapping taut under the finished span. */
-.loader-hanger{
-  opacity: 0;
-  transform: scaleY(0);
-  transform-origin: 50% 100%;
-  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Canvas/fallback swap — starts fallback-visible (flat SVG bridge) until
+   loader-bridge.js confirms WebGL works and adds .is-ready, exactly like
+   .hero-orbit-mark does for the hero mark. */
+.loader-mark canvas{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: none;
 }
-.loader-mark.show .loader-hanger{ opacity: 1; transform: scaleY(1); }
-.loader-mark.show .loader-hanger:nth-of-type(1){ transition-delay: 1.42s; }
-.loader-mark.show .loader-hanger:nth-of-type(2){ transition-delay: 1.49s; }
-.loader-mark.show .loader-hanger:nth-of-type(3){ transition-delay: 1.56s; }
-.loader-mark.show .loader-hanger:nth-of-type(4){ transition-delay: 1.63s; }
-.loader-mark.show .loader-hanger:nth-of-type(5){ transition-delay: 1.70s; }
+.loader-mark.is-ready canvas{ display: block; }
+.loader-mark-fallback{
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loader-mark-fallback svg{ width: 68%; height: 68%; }
+.loader-mark.is-ready .loader-mark-fallback{ display: none; }
 
 /* ---------- Wordmark: letter-by-letter reveal ---------- */
 .loader-word{ margin-top: 26px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 900; font-size: 38px; letter-spacing: -0.01em; text-transform: uppercase; color: var(--text); opacity: 0; transform: translateY(14px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; display: inline-flex; justify-content: center; }
@@ -5356,7 +5361,6 @@ html.dark-mode .creator-panel::before{
   .loader-mark.show,
   .loader-mark.expand,
   .loader-mark-shadow,
-  .loader-hanger,
   .lw-char,
   .lw-underline{
     animation: none !important;
@@ -5365,7 +5369,6 @@ html.dark-mode .creator-panel::before{
     filter: none !important;
     transform: none !important;
   }
-  .loader-mark .loader-arc{ stroke-dashoffset: 0 !important; }
   .loader-mark-shadow{ opacity: 0.7 !important; }
 }
 
