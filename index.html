@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=37">
+<link rel="stylesheet" href="style.css?v=38">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -666,37 +666,6 @@
   </div>
 </section>
 
-
-
-
-
-
-
-
-
-
-
-<!-- MANAGERS -->
-<section id="managers" class="reveal" data-reveal="up">
-  <div class="wrap">
-    <div class="section-head">
-      <div>
-        <span class="featured-italiccc">The Team</span>
-        <span class="profiles-bold">MANAGERS</span>
-      </div>
-    </div>
-    <div class="managers-section-inner">
-      <div class="managers-col managers-col-cards">
-        <div class="managers-grid" id="managersGrid"></div>
-      </div>
-
-      <div class="managers-col managers-col-photo">
-        <!-- Hover-reactive background layer: one .bg-layer per manager, cross-faded via JS -->
-        <div class="managers-bg" id="managersBg" aria-hidden="true"></div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- FOR BRANDS — the business proposition, spelled out as a 4-step process
      instead of leaving a brand visitor to infer it from the roster/contact
@@ -1491,23 +1460,25 @@
 
 <!-- COMPANY BACKGROUND — opened from the About section's "See Our
      Background" button (#viewBackgroundBtn). Horizontal-scroll story with
-     4 main panels (Manifesto / History / About Us / Founders) bridged by
-     3 narrow photo "connectors". See the big CSS comment above
+     3 main panels (Manifesto / Where We Are Now / The Team) bridged by
+     2 narrow photo "connectors". See the big CSS comment above
      ".background-overlay" in style.css for how the scroll mechanics work,
      and initBackground()/updateBgTrack() in script.js for the JS side.
-     PLACEHOLDER CONTENT: founder names/titles/bios and all photos in this
-     block are placeholders — swap in the real ones whenever ready. -->
+     The Team panel reuses the exact #managersGrid/#managersBg containers
+     and initManagers() render logic that used to live in the homepage's
+     standalone #managers section (moved here wholesale, in place of the
+     old placeholder Founders panel) — that function is purely
+     getElementById-driven, so relocating the markup was enough; no JS
+     changes were needed. -->
 <div class="mediakit-overlay background-overlay" id="backgroundOverlay">
-  <button class="mk-back" id="bgBack">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Back to Site
+  <button class="mk-back bg-back-close" id="bgBack" aria-label="Close">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
   </button>
 
   <div class="bg-progress" id="bgProgress" aria-hidden="true">
     <button type="button" class="bg-progress-dot" data-bg-dot="0" aria-label="Manifesto"></button>
-    <button type="button" class="bg-progress-dot" data-bg-dot="1" aria-label="History"></button>
-    <button type="button" class="bg-progress-dot" data-bg-dot="2" aria-label="About Us"></button>
-    <button type="button" class="bg-progress-dot" data-bg-dot="3" aria-label="Founders"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="1" aria-label="Where We Are Now"></button>
+    <button type="button" class="bg-progress-dot" data-bg-dot="2" aria-label="The Team"></button>
   </div>
 
   <div class="bg-scrollpad" id="bgScrollPad">
@@ -1554,74 +1525,15 @@
           <span class="bg-connector-caption">Where It Started</span>
         </div>
 
-        <!-- PANEL 2 — HISTORY -->
+        <!-- PANEL 2 — WHERE WE ARE NOW (formerly "About Us") -->
         <section class="bg-panel" data-bg-panel="1">
           <div class="bg-panel-inner">
             <div class="bg-panel-content">
-              <div class="bg-kicker">Our History</div>
-              <h2 class="bg-headline">From a group chat to a growing roster.</h2>
-              <p class="bg-lede">BRXDGE didn't start as a company. It started as three friends trying to help people they believed in.</p>
-              <div class="bg-timeline">
-                <div class="bg-timeline-row">
-                  <div class="bg-timeline-year">2021</div>
-                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
-                  <div>
-                    <div class="bg-timeline-title">Three friends, one group chat</div>
-                    <p class="bg-timeline-desc">What began as informal advice for a handful of local creators turned into something worth doing properly.</p>
-                  </div>
-                </div>
-                <div class="bg-timeline-row">
-                  <div class="bg-timeline-year">2022</div>
-                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
-                  <div>
-                    <div class="bg-timeline-title">First ten signings</div>
-                    <p class="bg-timeline-desc">Built out a real roster across TikTok, Instagram, and YouTube: a strategy for each creator, not a one-size pitch deck.</p>
-                  </div>
-                </div>
-                <div class="bg-timeline-row">
-                  <div class="bg-timeline-year">2023</div>
-                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
-                  <div>
-                    <div class="bg-timeline-title">Formalized brand partnerships</div>
-                    <p class="bg-timeline-desc">Standardized contracts, campaign management, and reporting, so creators could focus on making things instead of chasing invoices.</p>
-                  </div>
-                </div>
-                <div class="bg-timeline-row">
-                  <div class="bg-timeline-year">2024</div>
-                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
-                  <div>
-                    <div class="bg-timeline-title">Crossed 300M combined reach</div>
-                    <p class="bg-timeline-desc">Roster growth accelerated as brands started coming back for repeat campaigns.</p>
-                  </div>
-                </div>
-                <div class="bg-timeline-row">
-                  <div class="bg-timeline-year">Today</div>
-                  <div class="bg-timeline-rail"><span class="bg-timeline-dot"></span></div>
-                  <div>
-                    <div class="bg-timeline-title">47 creators, 128 deals closed</div>
-                    <p class="bg-timeline-desc">Still hands-on with every single one of them.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div class="bg-connector" data-bg-connector="1">
-          <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-2/700/1400" alt="" loading="lazy">
-          <div class="bg-connector-fade" aria-hidden="true"></div>
-          <span class="bg-connector-caption">Where We Are Now</span>
-        </div>
-
-        <!-- PANEL 3 — ABOUT US -->
-        <section class="bg-panel" data-bg-panel="2">
-          <div class="bg-panel-inner">
-            <div class="bg-panel-content">
-              <div class="bg-kicker">About Us</div>
+              <div class="bg-kicker">Where We Are Now</div>
               <h2 class="bg-headline">Hands-on management, without the corporate feel.</h2>
               <p class="bg-lede">We handle everything from content strategy and audience growth to contract negotiation and brand matchmaking, so our talent can spend their time making things people actually want to watch, not managing spreadsheets.</p>
               <p class="bg-lede">Every creator on our roster gets a strategy built around their actual audience, not a template pulled from someone else's playbook.</p>
-              <div class="about-stats-bar" style="margin-top:34px;">
+              <div class="about-stats-bar bg-stats-bar" style="margin-top:34px;">
                 <div class="stat">
                   <div class="stat-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -1643,48 +1555,43 @@
                   <span class="num" data-count-to="128">0</span>
                   <span class="lbl">Brand deals closed</span>
                 </div>
+                <div class="stat">
+                  <div class="stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  </div>
+                  <span class="num" data-count-to="5">0</span>
+                  <span class="lbl">Years running</span>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <div class="bg-connector" data-bg-connector="2">
+        <div class="bg-connector" data-bg-connector="1">
           <img class="bg-connector-img" src="https://picsum.photos/seed/brxdge-bg-connector-3/700/1400" alt="" loading="lazy">
           <div class="bg-connector-fade" aria-hidden="true"></div>
           <span class="bg-connector-caption">Who's Behind It</span>
         </div>
 
-        <!-- PANEL 4 — FOUNDERS (placeholder names/titles/bios/photos) -->
-        <section class="bg-panel" data-bg-panel="3">
+        <!-- PANEL 3 — THE TEAM (managers, moved in from the homepage's old
+             standalone #managers section; replaces the former placeholder
+             Founders panel). #managersGrid/#managersBg are the exact same
+             containers initManagers() in script.js already renders into —
+             see the top-of-file comment on #backgroundOverlay. -->
+        <section class="bg-panel" data-bg-panel="2">
           <div class="bg-panel-inner">
             <div class="bg-panel-content">
-              <div class="bg-kicker">The Founders</div>
-              <h2 class="bg-headline">Three friends who turned a group chat into a company.</h2>
-              <p class="bg-lede">Placeholder bios below. Swap in the real names, titles, and photos whenever you're ready.</p>
-              <div class="bg-founders">
-                <div class="bg-founder-card">
-                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-jordan/500/625" alt="Jordan Reyes" loading="lazy">
-                  <div class="bg-founder-body">
-                    <div class="bg-founder-name">Jordan Reyes</div>
-                    <div class="bg-founder-title">Co-Founder &amp; CEO</div>
-                    <p class="bg-founder-bio">Started BRXDGE by helping friends negotiate their first brand deals. Still reads every contract personally.</p>
-                  </div>
+              <div class="bg-kicker">The Team</div>
+              <h2 class="bg-headline">The managers behind every deal.</h2>
+              <p class="bg-lede">Not a ticket queue, a small team of people who actually pick up the phone. Hover a name to see who you'd be working with.</p>
+              <div class="managers-section-inner" style="margin-top:34px;">
+                <div class="managers-col managers-col-cards">
+                  <div class="managers-grid" id="managersGrid"></div>
                 </div>
-                <div class="bg-founder-card">
-                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-sam/500/625" alt="Sam Okafor" loading="lazy">
-                  <div class="bg-founder-body">
-                    <div class="bg-founder-name">Sam Okafor</div>
-                    <div class="bg-founder-title">Co-Founder &amp; Head of Talent</div>
-                    <p class="bg-founder-bio">Builds every creator's growth strategy from scratch, no templates, no shortcuts.</p>
-                  </div>
-                </div>
-                <div class="bg-founder-card">
-                  <img class="bg-founder-photo" src="https://picsum.photos/seed/brxdge-founder-priya/500/625" alt="Priya Shah" loading="lazy">
-                  <div class="bg-founder-body">
-                    <div class="bg-founder-name">Priya Shah</div>
-                    <div class="bg-founder-title">Co-Founder &amp; Head of Brand Partnerships</div>
-                    <p class="bg-founder-bio">Turns cold brand outreach into long-term partners who keep coming back.</p>
-                  </div>
+
+                <div class="managers-col managers-col-photo">
+                  <!-- Hover-reactive background layer: one .bg-layer per manager, cross-faded via JS -->
+                  <div class="managers-bg" id="managersBg" aria-hidden="true"></div>
                 </div>
               </div>
             </div>
