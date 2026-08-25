@@ -30,9 +30,23 @@
 ========================================================= */
 import * as THREE from './assets/vendor/three.module.min.js';
 
-(function initBrandOrbitMark(){
-  const mount = document.getElementById('heroOrbitMark');
-  const canvas = document.getElementById('heroOrbitCanvas');
+// Client revision: this used to be a one-off IIFE hardcoded to the hero's
+// #heroOrbitMark/#heroOrbitCanvas pair. Turned into a reusable function so
+// the same chrome bridge mark can also sit in the full roster overlay's
+// footer as a purely decorative centerpiece — same geometry/materials/
+// ambient turntable rotation, just mounted on a second, independent
+// mount+canvas pair with its own renderer/scene (so each only costs GPU
+// cycles while it's actually the one in view — see the IntersectionObserver
+// pause below, unchanged). `opts.interactive` (default true) gates the
+// click-to-cross teardown-and-scroll interaction: the footer instance
+// passes false so it's a still, non-clickable mark that never fires
+// launchBridge() / goToNextSection() — nothing happens on click, and it
+// never sends the visitor back up to the hero or anywhere else.
+function initBrandOrbitMark(mountId, canvasId, opts){
+  opts = opts || {};
+  const interactive = opts.interactive !== false;
+  const mount = document.getElementById(mountId);
+  const canvas = document.getElementById(canvasId);
   if (!mount || !canvas) return;
 
   function showFallback(){
@@ -642,7 +656,9 @@ import * as THREE from './assets/vendor/three.module.min.js';
     }, RESET_AT_MS);
   }
 
-  mount.addEventListener('click', launchBridge);
+  if (interactive) {
+    mount.addEventListener('click', launchBridge);
+  }
 
   if (reduceMotion) {
     return; // a single settled frame, no rotation loop
@@ -666,4 +682,16 @@ import * as THREE from './assets/vendor/three.module.min.js';
   }
   requestAnimationFrame(tick);
   } // end setup()
-})();
+}
+
+// Hero: the original interactive mark — click/Enter/Space tears the bridge
+// apart and carries the visitor down to "what-we-do".
+initBrandOrbitMark('heroOrbitMark', 'heroOrbitCanvas', { interactive: true });
+
+// Client revision: same mark, purely decorative, now also sitting in the
+// full roster overlay's footer (see .tr-footer-orbit / #footerOrbitMark in
+// the HTML and style.css) — just turns in place, never responds to a
+// click. Missing mount/canvas is a no-op (see the guard at the top of
+// initBrandOrbitMark), so this is safe on any page that doesn't have the
+// overlay footer markup.
+initBrandOrbitMark('footerOrbitMark', 'footerOrbitCanvas', { interactive: false });
