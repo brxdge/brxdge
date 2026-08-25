@@ -1286,6 +1286,10 @@ function buildBrandTile(){
 
 function renderRoster() {
   const grid = document.getElementById('rosterGrid');
+  // #roster (and its grid) only exists on talent.html now — index.html no
+  // longer renders the featured roster, so this is a no-op there instead
+  // of throwing and halting every top-level script below this point.
+  if (!grid) return;
   grid.innerHTML = '';
 
   const list = activeFilter === 'All' ? rosterData : rosterData.filter(t => t.niche === activeFilter);
@@ -1325,9 +1329,15 @@ function renderRoster() {
 const talentFilterOverlay = document.getElementById('talentFilterOverlay');
 const talentRosterOverlay = document.getElementById('talentRosterOverlay');
 
-document.getElementById('viewAllTalentBtn').addEventListener('click', () => {
-  talentFilterOverlay.classList.add('show');
-});
+// "View All Talent" lives inside #roster, which only exists on talent.html
+// now — guard it so index.html (which no longer has this button) doesn't
+// throw and halt every top-level script below this point.
+const viewAllTalentBtn = document.getElementById('viewAllTalentBtn');
+if (viewAllTalentBtn) {
+  viewAllTalentBtn.addEventListener('click', () => {
+    talentFilterOverlay.classList.add('show');
+  });
+}
 document.getElementById('talentFilterClose').addEventListener('click', () => talentFilterOverlay.classList.remove('show'));
 talentFilterOverlay.querySelectorAll('.gender-option').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -4215,7 +4225,12 @@ glStage.addEventListener('touchend', (e) => {
    Booking / Portfolio / Testimonials steps the admin dashboard has. */
 const talentOverlay = document.getElementById('talentOverlay');
 const talentModalBody = document.getElementById('talentModalBody');
-document.getElementById('addTalentBtn').addEventListener('click', () => openTalentModal(null));
+// "+ Add Talent" lives inside #roster's toolbar, which only exists on
+// talent.html now — guard it so index.html doesn't throw and halt every
+// top-level script below this point. Editing existing talent still works
+// on index.html via the full roster overlay's own [data-edit] buttons.
+const addTalentBtn = document.getElementById('addTalentBtn');
+if (addTalentBtn) addTalentBtn.addEventListener('click', () => openTalentModal(null));
 
 async function uploadTalentImage(file){
   const formData = new FormData();
