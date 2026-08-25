@@ -267,21 +267,24 @@
 
   let p = 0;
   let wordShown = false;
-  const COUNT_DURATION_MS = 3000;
+  // Client revision: slowed a little from the original 3000ms so the count
+  // (and the rotate+assemble animation it's paced against) doesn't feel
+  // rushed. Keep loader-bridge.js's assembly timing in sync if this changes.
+  const COUNT_DURATION_MS = 4000;
   const countStart = performance.now();
   // Driven off elapsed wall-clock time rather than a flat per-tick
   // increment: every integer 1..100 still gets shown, in order, none
   // skipped, at a steady 30ms cadence under normal conditions (30ms of
-  // elapsed time is exactly 1% of the 3000ms total). The difference only
-  // shows up if something else briefly blocks the main thread (a slow
-  // synchronous script elsewhere, a busy tab, etc.) — a flat "+1 per
-  // tick" counter would just pick up where it left off and run long,
-  // stretching the loader out past its intended 3000ms; computing p from
-  // real elapsed time instead means the very next tick jumps straight to
-  // wherever it should actually be, so the counter can't be stalled into
-  // running indefinitely. loader-bridge.js's render lifetime is
-  // hardcoded against this same 3000ms total; keep the two in sync if
-  // this duration ever changes.
+  // elapsed time is roughly 1% of the 4000ms total, so most ticks land on
+  // the very next integer). The difference only shows up if something else
+  // briefly blocks the main thread (a slow synchronous script elsewhere, a
+  // busy tab, etc.) — a flat "+1 per tick" counter would just pick up where
+  // it left off and run long, stretching the loader out past its intended
+  // 4000ms; computing p from real elapsed time instead means the very next
+  // tick jumps straight to wherever it should actually be, so the counter
+  // can't be stalled into running indefinitely. loader-bridge.js's render
+  // lifetime is hardcoded against this same 4000ms total (plus the exit
+  // sequence below); keep the two in sync if this duration ever changes.
   const interval = setInterval(() => {
     const elapsed = performance.now() - countStart;
     const next = Math.min(100, Math.floor((elapsed / COUNT_DURATION_MS) * 100));
@@ -300,18 +303,22 @@
 
     if (p === 100) {
       clearInterval(interval);
+      // Exit sequence slowed down (client revision — "don't be so fast")
+      // so the expand/burst transition has room to actually read before
+      // the hero page cuts in. Matches the lengthened CSS transition
+      // durations on .loader-mark.expand and #loader in style.css.
       setTimeout(() => {
         // Everything else steps back so the mark can take over the transition
         loader.querySelector('.loader-content').classList.add('exit');
         if (loaderMark) loaderMark.classList.add('expand');
         setTimeout(() => {
           loader.style.opacity = '0';
-          setTimeout(() => loader.style.display = 'none', 500);
+          setTimeout(() => loader.style.display = 'none', 700);
           // Straight into the hero content entrance
           if (heroAnim) heroAnim.classList.add('play');
           heroItems.forEach((item) => item.classList.add('play'));
-        }, 650);
-      }, 400);
+        }, 1300);
+      }, 500);
     }
   }, 30);
 });
