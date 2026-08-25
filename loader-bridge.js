@@ -1,14 +1,14 @@
 /* =========================================================
    BRXDGE LOADER MARK — 3D bridge, rotate + assemble entrance
    The loader's brand mark used to be a flat SVG bridge that drew its arc
-   and popped its hangers in via CSS. This is the real 3D twin lattice-
-   truss-arch bridge (same geometry family as the hero's #heroOrbitMark,
-   matching the client's reference bridge artwork) instead, doing a
-   single, unrepeatable "super incredible" entrance every time the site
-   loads: every truss chord segment, diagonal, hanger, railing post,
-   end-bearing block and deck plate starts scattered and invisible around
-   the finished bridge's shape, then flies inward — spinning, staggered
-   left-to-right — while the
+   and popped its hangers in via CSS. This is the real 3D twin lenticular-
+   truss-arch bridge (same geometry family as the hero's #heroOrbitMark —
+   ported from the client's own exact reference buildBridge() code, at a
+   lower poly count) instead, doing a single, unrepeatable "super
+   incredible" entrance every time the site loads: every chord, merged
+   lattice/guardrail/bracing chunk, hanger, foot anchor, rivet node and
+   deck piece starts scattered and invisible around the finished bridge's
+   shape, then flies inward — spinning, staggered left-to-right — while the
    whole rig turns fast on a turntable that spins down to a calm, steady
    rotation right as the last piece locks into place. It's the exact
    mirror of the hero mark's click-to-cross teardown (pieces converging
@@ -21,8 +21,9 @@
      Keeping them fully independent means this scene's teardown/disposal
      can never race with or interfere with the hero scene's setup, which
      starts around the very same moment.
-   - Like brand-orbit.js, the heavy part (building the ~80 separate truss/
-     hanger/rail/block/deck meshes and rendering the first frame) is
+   - Like brand-orbit.js, the heavy part (building the ~30 top-level
+     meshes — several of them merged batches of dozens of smaller
+     lattice/rail/bracing/rivet parts — and rendering the first frame) is
      deferred off the module's initial synchronous execution. This turned
      out to matter A LOT here specifically: running it synchronously at
      module-eval time was blocking script.js's loader countdown from
@@ -51,8 +52,9 @@
    scene is never needed again once
    the loader unmounts.
 
-   Same self-hosted-three.js / hand-built PMREM studio environment / SVG
-   fallback-on-WebGL-failure conventions as brand-orbit.js throughout.
+   Same self-hosted-three.js / geometry-merging / SVG fallback-on-WebGL-
+   failure conventions as brand-orbit.js throughout (no PMREM bake here —
+   see below).
 ========================================================= */
 import * as THREE from './assets/vendor/three.module.min.js';
 
@@ -112,15 +114,11 @@ import * as THREE from './assets/vendor/three.module.min.js';
   deckMat.roughness = 0.34;
   deckMat.clearcoat = 0.25;
 
-  // Fewer radial segments than the hero mark's buildBridge() uses — even
-  // at this mark's doubled ~220px on-screen size the extra smoothness
-  // stays close to invisible for the few seconds it's up; cutting it
-  // substantially reduces the triangle count (and first-render
-  // shader/rasterization cost). All struts also share ONE unit cylinder
-  // geometry (radius 1, height 1, scaled per-instance) rather than each
-  // baking its own — the lattice truss arches below need a few dozen of
-  // these, so reusing a single buffer keeps geometry/GPU-upload cost from
-  // scaling with strut count; only the transform differs per piece.
+  // Fewer radial/tube segments and fewer truss bays/posts than the hero
+  // mark's buildBridge() uses — even at this mark's doubled ~220px
+  // on-screen size the extra smoothness stays close to invisible for the
+  // few seconds it's up. Struts share ONE unit cylinder geometry (radius
+  // 1, height 1, scaled per-instance) rather than each baking its own.
   const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 6, 1);
   const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
   function makeStrut(p1, p2, radius, mat){
@@ -133,67 +131,223 @@ import * as THREE from './assets/vendor/three.module.min.js';
     return mesh;
   }
 
-  // Same twin lattice-truss-arch silhouette as the hero mark's
-  // buildBridge() (matching the client's reference bridge artwork), at a
-  // lower poly count and fewer truss bays/hangers/railing posts — still
-  // reads clearly as the same trussed bridge motif at this size, with
-  // meaningfully less to render.
+  // Same minimal hand-rolled geometry merge as brand-orbit.js (position +
+  // normal + index only) — bakes a family of small parts (lattice,
+  // guardrail posts, rivets) into one static BufferGeometry/draw call
+  // instead of one draw call per strut. Matters even more here than in
+  // the hero mark: this scene has to stand itself up fast, well inside
+  // the loader's short on-screen window.
+  function mergeGeoms(geoms){
+    let totalVerts = 0, totalIndices = 0;
+    geoms.forEach((g) => {
+      totalVerts += g.attributes.position.count;
+      totalIndices += g.index ? g.index.count : g.attributes.position.count;
+    });
+    const positions = new Float32Array(totalVerts * 3);
+    const normals = new Float32Array(totalVerts * 3);
+    const IndexArray = totalVerts > 65535 ? Uint32Array : Uint16Array;
+    const indices = new IndexArray(totalIndices);
+    let vOff = 0, iOff = 0;
+    geoms.forEach((g) => {
+      const count = g.attributes.position.count;
+      positions.set(g.attributes.position.array, vOff * 3);
+      if (g.attributes.normal) normals.set(g.attributes.normal.array, vOff * 3);
+      if (g.index) {
+        const idx = g.index.array;
+        for (let i = 0; i < idx.length; i++) indices[iOff + i] = idx[i] + vOff;
+        iOff += idx.length;
+      } else {
+        for (let i = 0; i < count; i++) indices[iOff + i] = i + vOff;
+        iOff += count;
+      }
+      vOff += count;
+    });
+    const merged = new THREE.BufferGeometry();
+    merged.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    merged.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    merged.setIndex(new THREE.BufferAttribute(indices, 1));
+    return merged;
+  }
+  // Bakes a throwaway mesh's transform directly into its geometry's
+  // vertices (world-space, matrix-applied), then discards the mesh —
+  // works the same whether the source mesh used its own sized geometry
+  // or (as with makeStrut() above) a shared unit geometry plus scale.
+  function bakedGeo(mesh){
+    mesh.updateMatrix();
+    const g = mesh.geometry.clone();
+    g.applyMatrix4(mesh.matrix);
+    if (mesh.geometry !== UNIT_CYL && mesh.geometry !== UNIT_BOX) mesh.geometry.dispose();
+    return g;
+  }
+  // Merges a batch of baked geometries into one mesh, re-centered on its
+  // own bounding-box center (with that offset moved onto mesh.position) —
+  // so a merged chunk (a lattice, a guardrail) still behaves like every
+  // other top-level piece below, and the assemble animation can fly it in
+  // as one rigid piece around its own middle.
+  function mergedMesh(geoBits, material){
+    const g = mergeGeoms(geoBits);
+    geoBits.forEach((geo) => geo.dispose());
+    g.computeBoundingBox();
+    const center = new THREE.Vector3();
+    g.boundingBox.getCenter(center);
+    g.translate(-center.x, -center.y, -center.z);
+    const mesh = new THREE.Mesh(g, material);
+    mesh.position.copy(center);
+    return mesh;
+  }
+
+  // Secondary steel tone, bearing-plate tone, rivet highlight and deck-
+  // marking tone — same material family/derivation as the hero mark's,
+  // just derived from this mark's own chromeMat/deckMat.
+  const steelMat = chromeMat.clone();
+  steelMat.color = new THREE.Color(0xd6d9dd);
+  steelMat.roughness = 0.24;
+  steelMat.clearcoat = 0.2;
+  steelMat.envMapIntensity = 1.3;
+  const anchorMat = deckMat.clone();
+  anchorMat.color = new THREE.Color(0xc7cad0);
+  anchorMat.roughness = 0.42;
+  const rivetMat = chromeMat.clone();
+  rivetMat.roughness = 0.04;
+  rivetMat.clearcoat = 0.7;
+  const markMat = new THREE.MeshPhysicalMaterial({
+    color: 0x26282d,
+    metalness: 0.35,
+    roughness: 0.6,
+    clearcoat: 0.1,
+    envMapIntensity: 0.8,
+  });
+
+  // Same twin lenticular-truss-arch silhouette as the hero mark's
+  // buildBridge() (matching the client's exact reference bridge code) —
+  // laced outer/inner chords, X-lattice bracing, a real guardrail, wind-
+  // bracing, foot anchors, rivet nodes and deck stringers — just at a
+  // lower poly count and fewer bays/posts, still reading as the same
+  // trussed bridge motif at this size with meaningfully less to render.
   function buildBridge(){
     const bridge = new THREE.Group();
     const half = 1.7, peak = 1.05, baseY = -0.15, deckY = -0.65, depth = 0.55;
-    const archSegs = 7; // truss bays per arch (hero: 12)
-    const trussDepth = 0.16; // perpendicular thickness of the lattice band
+    const archSegs = 18;       // hero: 64
+    const trussDepth = 0.24;   // max separation between an arch's two chords, at the crown
+    const LATTICE_BAYS = 7;    // hero: 15
+    const hangerXs = [-1.4, -0.8, -0.2, 0.2, 0.8, 1.4];
+    const crossTs = [-1.2, -0.4, 0.4, 1.2].map((x) => x / half);
 
-    function archOuter(t, z){
+    function archPoint(t, z){
       return new THREE.Vector3(t * half, peak * (1 - t * t) + baseY, z);
     }
-    // Perpendicular to the arch's tangent (half, -2*peak*t), pointing
-    // inward/downward through the truss band, so the inner chord traces a
-    // curve offset a constant distance inside the outer one.
-    function archNormal(t){
-      const nx = -2 * peak * t, ny = -half;
-      const len = Math.hypot(nx, ny) || 1;
-      return { x: nx / len, y: ny / len };
+    // Inner chord: zero separation at the springing (t = ±1, chords meet
+    // with no gap at the foot), largest at the crown — the lens-shaped
+    // truss-arch silhouette, matching the client's exact reference code.
+    function archPointInner(t, z){
+      const p = archPoint(t, z);
+      p.y -= trussDepth * (1 - t * t);
+      return p;
     }
-    function archInner(t, z){
-      const o = archOuter(t, z);
-      const n = archNormal(t);
-      return new THREE.Vector3(o.x + n.x * trussDepth, o.y + n.y * trussDepth, z);
+    function tubeAlong(pointFn, z, radius, radialSegs){
+      const pts = [];
+      for (let i = 0; i <= archSegs; i++) pts.push(pointFn(-1 + (2 * i / archSegs), z));
+      const curve = new THREE.CatmullRomCurve3(pts);
+      return new THREE.TubeGeometry(curve, archSegs, radius, radialSegs, false);
     }
 
-    // Outer + inner chord, X-braced between them every bay.
     [depth, -depth].forEach((z) => {
-      const outerPts = [], innerPts = [];
-      for (let i = 0; i <= archSegs; i++){
-        const t = -1 + (2 * i / archSegs);
-        outerPts.push(archOuter(t, z));
-        innerPts.push(archInner(t, z));
+      // Outer + inner chords
+      bridge.add(new THREE.Mesh(tubeAlong(archPoint, z, 0.058, 6), chromeMat));
+      bridge.add(new THREE.Mesh(tubeAlong(archPointInner, z, 0.038, 6), steelMat));
+
+      // X-lattice lacing the two chords together
+      const latticeBits = [];
+      for (let i = 1; i < LATTICE_BAYS; i++){
+        const t = -1 + (2 * i / LATTICE_BAYS);
+        latticeBits.push(bakedGeo(makeStrut(archPoint(t, z), archPointInner(t, z), 0.014)));
       }
-      for (let i = 0; i < archSegs; i++){
-        bridge.add(makeStrut(outerPts[i], outerPts[i + 1], 0.048));  // top chord
-        bridge.add(makeStrut(innerPts[i], innerPts[i + 1], 0.042));  // bottom chord
-        bridge.add(makeStrut(outerPts[i], innerPts[i + 1], 0.024));  // diagonal \
-        bridge.add(makeStrut(innerPts[i], outerPts[i + 1], 0.024));  // diagonal /
+      for (let i = 0; i < LATTICE_BAYS; i++){
+        const t0 = -1 + (2 * i / LATTICE_BAYS);
+        const t1 = -1 + (2 * (i + 1) / LATTICE_BAYS);
+        latticeBits.push(bakedGeo(makeStrut(archPoint(t0, z), archPointInner(t1, z), 0.012)));
+        latticeBits.push(bakedGeo(makeStrut(archPointInner(t0, z), archPoint(t1, z), 0.012)));
       }
+      bridge.add(mergedMesh(latticeBits, steelMat));
     });
 
-    // Chunky end-bearing blocks where each arch springs from the deck.
-    function makeEndBlock(x){
-      const w = 0.22, h = 0.34, d = depth * 2 + 0.14;
-      const mesh = new THREE.Mesh(UNIT_BOX, deckMat);
-      mesh.scale.set(w, h, d);
-      mesh.position.set(x, deckY + h / 2 - 0.06, 0);
-      return mesh;
-    }
-    [-half * 1.05, half * 1.05].forEach((x) => bridge.add(makeEndBlock(x)));
+    // Guardrail assembly (front + back): bottom rail flush with the deck,
+    // a second rail above it, and vertical posts tying them together.
+    [depth, -depth].forEach((z) => {
+      const railBits = [];
+      const zInset = z > 0 ? z - 0.03 : z + 0.03;
+      const topY = deckY + 0.16;
+      railBits.push(bakedGeo(makeStrut(
+        new THREE.Vector3(-half * 1.03, deckY, z), new THREE.Vector3(half * 1.03, deckY, z), 0.045
+      )));
+      railBits.push(bakedGeo(makeStrut(
+        new THREE.Vector3(-half * 1.03, topY, zInset), new THREE.Vector3(half * 1.03, topY, zInset), 0.028
+      )));
+      const POSTS = 6; // hero: 14
+      for (let i = 0; i <= POSTS; i++){
+        const x = -half * 1.03 + (2 * half * 1.03) * (i / POSTS);
+        railBits.push(bakedGeo(makeStrut(
+          new THREE.Vector3(x, deckY, z), new THREE.Vector3(x, topY, zInset), 0.015
+        )));
+      }
+      bridge.add(mergedMesh(railBits, chromeMat));
+    });
 
-    const hangerXs = [-1.3, -0.65, 0, 0.65, 1.3];
+    // Vertical hangers suspending the deck from each arch's outer chord
     [depth, -depth].forEach((z) => {
       hangerXs.forEach((x) => {
-        bridge.add(makeStrut(archOuter(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
+        bridge.add(makeStrut(archPoint(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
       });
     });
 
+    // Straight cross-ties plus X wind-bracing between the two arches
+    crossTs.forEach((t) => {
+      bridge.add(makeStrut(archPoint(t, depth), archPoint(t, -depth), 0.028));
+    });
+    {
+      const diagBits = [];
+      for (let i = 0; i < crossTs.length - 1; i++){
+        diagBits.push(bakedGeo(makeStrut(archPoint(crossTs[i], depth), archPoint(crossTs[i + 1], -depth), 0.018)));
+        diagBits.push(bakedGeo(makeStrut(archPoint(crossTs[i], -depth), archPoint(crossTs[i + 1], depth), 0.018)));
+      }
+      bridge.add(mergedMesh(diagBits, steelMat));
+    }
+
+    // Bearing-plate anchors where each arch foot lands
+    {
+      const anchorBits = [];
+      [1, -1].forEach((sign) => {
+        [depth, -depth].forEach((z) => {
+          const foot = archPoint(sign, z);
+          const m = new THREE.Mesh(UNIT_BOX);
+          m.scale.set(0.22, 0.14, 0.28);
+          m.position.copy(foot);
+          m.position.y -= 0.04;
+          anchorBits.push(bakedGeo(m));
+        });
+      });
+      bridge.add(mergedMesh(anchorBits, anchorMat));
+    }
+
+    // Rivet/gusset highlights at every hanger and cross-brace joint
+    {
+      const nodeBits = [];
+      function addNode(pos, r){
+        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 6, 4));
+        m.position.copy(pos);
+        nodeBits.push(bakedGeo(m));
+      }
+      [depth, -depth].forEach((z) => {
+        hangerXs.forEach((x) => addNode(archPoint(x / half, z), 0.032));
+      });
+      crossTs.forEach((t) => {
+        addNode(archPoint(t, depth), 0.036);
+        addNode(archPoint(t, -depth), 0.036);
+      });
+      bridge.add(mergedMesh(nodeBits, rivetMat));
+    }
+
+    // Flat deck plate, deck markings and longitudinal stringers underneath
     {
       const deckLength = half * 2 * 1.03;
       const deckSpan = depth * 2;
@@ -202,28 +356,31 @@ import * as THREE from './assets/vendor/three.module.min.js';
       deckMesh.scale.set(deckLength, deckThickness, deckSpan);
       deckMesh.position.set(0, deckY - deckThickness / 2 - 0.01, 0);
       bridge.add(deckMesh);
-    }
 
-    // Deck-edge railing — a top rail plus vertical balusters along each
-    // side (fewer than the hero mark's, matching this mark's lower
-    // overall detail level).
-    {
-      const railTopY = deckY + 0.15;
-      const balusterXs = [-1.5, -0.75, 0, 0.75, 1.5];
-      [depth, -depth].forEach((z) => {
-        bridge.add(makeStrut(
-          new THREE.Vector3(-half * 1.03, railTopY, z),
-          new THREE.Vector3(half * 1.03, railTopY, z),
-          0.026
-        ));
-        balusterXs.forEach((x) => {
-          bridge.add(makeStrut(
-            new THREE.Vector3(x, deckY, z),
-            new THREE.Vector3(x, railTopY, z),
-            0.014
-          ));
-        });
+      const deckTopY = deckY - 0.01;
+      const markBits = [];
+      const centerline = new THREE.Mesh(UNIT_BOX);
+      centerline.scale.set(deckLength * 0.97, 0.008, 0.03);
+      centerline.position.set(0, deckTopY + 0.006, 0);
+      markBits.push(bakedGeo(centerline));
+      const JOINTS = 4; // hero: 6
+      for (let i = 1; i < JOINTS; i++){
+        const x = -deckLength / 2 + deckLength * (i / JOINTS);
+        const joint = new THREE.Mesh(UNIT_BOX);
+        joint.scale.set(0.02, 0.006, deckSpan * 0.92);
+        joint.position.set(x, deckTopY + 0.005, 0);
+        markBits.push(bakedGeo(joint));
+      }
+      bridge.add(mergedMesh(markBits, markMat));
+
+      const stringerBits = [];
+      const underY = deckY - deckThickness - 0.03;
+      [depth * 0.92, depth * 0.4, -depth * 0.4, -depth * 0.92].forEach((z) => {
+        stringerBits.push(bakedGeo(makeStrut(
+          new THREE.Vector3(-half, underY, z), new THREE.Vector3(half, underY, z), 0.02
+        )));
       });
+      bridge.add(mergedMesh(stringerBits, steelMat));
     }
 
     return bridge;
@@ -246,7 +403,12 @@ import * as THREE from './assets/vendor/three.module.min.js';
   const accentLight = new THREE.DirectionalLight(0xdfe6f2, 1.3);
   accentLight.position.set(-2, 4, -5);
   const fillLight = new THREE.HemisphereLight(0xf5f6fa, 0x0b0b0d, 0.6);
-  scene.add(keyLight, rimLight, accentLight, fillLight);
+  // Soft upward bounce, as if off pavement below the bridge — matches the
+  // hero mark's addition, keeping the lattice/stringer undersides from
+  // reading as flat black voids now that there's real structure down there.
+  const bounceLight = new THREE.DirectionalLight(0xe7ecf6, 0.5);
+  bounceLight.position.set(1, -4, 3);
+  scene.add(keyLight, rimLight, accentLight, fillLight, bounceLight);
 
   function fitSize(){
     const rect = mount.getBoundingClientRect();
@@ -264,9 +426,11 @@ import * as THREE from './assets/vendor/three.module.min.js';
   fitSize();
 
   // ---------------- ROTATE + ASSEMBLE ENTRANCE ----------------
-  // Every piece (every truss chord/diagonal in both lattice arches, all
-  // 10 hangers, both end-bearing blocks, the flat deck plate, and every
-  // railing post) starts scattered around the bridge's finished shape and
+  // Every piece — each arch's outer/inner chord, the merged lattice and
+  // guardrail chunks per side, all 12 hangers, the cross-ties and merged
+  // wind-bracing, the merged foot anchors/rivet nodes, the deck plate,
+  // and the merged deck markings/stringers — starts scattered around the
+  // bridge's finished shape and
   // invisible, then flies inward to its resting position/rotation on a
   // staggered per-piece timeline — the
   // literal reverse of the hero mark's click-to-cross teardown, which
