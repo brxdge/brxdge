@@ -1058,7 +1058,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .managers-grid{ display: flex; flex-direction: column; gap: 22px; }
   .manager-card{ background: var(--panel); border: 1px solid var(--panel-line); border-radius: var(--radius-lg); padding: 26px; text-align: left; transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
   .manager-card:hover{ transform: translateY(-4px); border-color: var(--coral); box-shadow: 0 14px 34px rgba(0,0,0,0.12); }
-  .manager-card img{ width: 64px; height: 64px; border-radius: 50%; background: var(--avatar-bg); }
+  .manager-card img{ width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--avatar-bg); }
   .manager-card h3{ font-size: 19px; margin-top: 16px; }
   .manager-card .role{ color: var(--coral); font-size: 13px; font-family: 'Space Mono',monospace; margin-top: 4px; display: block; }
   .manager-card p.bio{ color: var(--muted); font-size: 14.5px; margin-top: 12px; }
@@ -1068,27 +1068,38 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
      column on the right ---------- */
   .managers-section-inner{ position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: stretch; }
   .managers-col-cards .managers-grid{ height: 100%; }
+  /* Client revision: background-size:cover on the photo layer was cropping
+     the top/bottom of real manager headshots to fill this box, which is
+     wider than a typical portrait photo. Sized down and decoupled from
+     align-items:stretch (align-self:start, fixed height instead of
+     min-height so it no longer grows to match the cards column) — a
+     smaller box that always shows the whole photo reads better than a
+     bigger one that cuts people's heads off. */
   .managers-col-photo{
     position: relative;
+    align-self: start;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    min-height: 420px;
+    height: 380px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
   }
   .managers-bg{ position: absolute; inset: 0; border-radius: var(--radius-lg); overflow: hidden; z-index: 0; pointer-events: none; }
   .managers-bg .bg-layer{
     position: absolute; inset: 0;
     background-image: var(--bg);
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center;
     opacity: 0;
-    transform: scale(1.06);
+    transform: scale(1.02);
     transition: opacity 0.7s ease, transform 1.4s ease;
   }
   .managers-bg .bg-layer.active{ opacity: 1; transform: scale(1); }
 
   @media (max-width: 860px){
     .managers-section-inner{ grid-template-columns: 1fr; }
-    .managers-col-photo{ min-height: 280px; order: -1; }
+    .managers-col-photo{ height: 320px; order: -1; }
   }
 
   /* ---------- ROSTER (photo cards) ---------- */
@@ -6533,6 +6544,7 @@ html.dark-mode .creator-panel::before{
    gets silently clipped rather than reflowing — compress the headline/
    lede/pillars rhythm together here rather than let that happen. */
 @media (max-height: 860px){
+  .bg-kicker{ margin-bottom: 10px; }
   .bg-headline{ font-size: clamp(32px, 5vw, 60px); line-height: 1.05; }
   .bg-lede{ margin-top: 14px; font-size: 15px; line-height: 1.55; }
   .bg-lede + .bg-lede{ margin-top: 8px; }
@@ -6542,14 +6554,46 @@ html.dark-mode .creator-panel::before{
 }
 
 /* ---- panel 2: "Where We Are Now" stats ---- */
-/* Same .about-stats-bar used on the homepage's About section, plus this
-   modifier: a 4th tile (Years running) fits here since the panel got a lot
-   wider (see .bg-panel-inner above) and 3 stats alone left it looking
-   sparse. Scoped to this modal instance only — the homepage's own
-   3-stat bar is untouched. */
+/* Same .about-stats-bar used on the homepage's About section (icon-badge
+   card row), but restyled here to match the manifesto panel's numbered-
+   row treatment instead — no boxes, a top rule, hairline dividers between
+   columns. The KPI number itself stands in for the "01/02/03/04" ordinal
+   the manifesto row uses, so the icon badge is dropped rather than kept
+   alongside it. Scoped to .bg-stats-bar only — the homepage's own 3-stat
+   card row (#about) is untouched. */
 .bg-stats-bar{
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  gap: 0;
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid var(--panel-line);
+}
+.bg-stats-bar .stat{
+  padding: 0 26px;
+  margin: 0;
+  border: none;
+  border-left: 1px solid var(--panel-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transition: transform 0.3s ease;
+}
+.bg-stats-bar .stat:first-child{
+  padding-left: 0;
+  border-left: none;
+}
+.bg-stats-bar .stat:hover{
+  transform: translateY(-3px);
+  box-shadow: none;
+}
+.bg-stats-bar .stat-icon{ display: none; }
+.bg-stats-bar .num{ font-size: clamp(32px, 3vw, 46px); }
+.bg-stats-bar .lbl{ margin-top: 12px; }
+
+@media (max-height: 860px){
+  .bg-stats-bar{ margin-top: 22px; padding-top: 18px; }
+  .bg-stats-bar .num{ font-size: clamp(26px, 2.4vw, 36px); }
+  .bg-stats-bar .lbl{ margin-top: 8px; }
 }
 
 /* ---- panel 3: the team ---- */
@@ -6569,6 +6613,24 @@ html.dark-mode .creator-panel::before{
 .bg-panel .manager-card.stagger-item{
   opacity: 1;
   transform: none;
+}
+.managers-section-inner{ margin-top: 34px; }
+
+/* Same short-viewport safety net as the other two panels: 3 stacked
+   manager cards is the tallest content in this whole overlay, so it's
+   the first thing to get clipped by .bg-stage's fixed 100vh/
+   overflow:hidden box on a shorter screen. Compress the header rhythm
+   (via the shared .bg-headline/.bg-lede rules above), the card padding,
+   and the photo box together rather than let that happen. */
+@media (max-height: 860px){
+  .managers-section-inner{ margin-top: 14px; gap: 26px; }
+  .managers-grid{ gap: 10px; }
+  .manager-card{ padding: 14px 16px; }
+  .manager-card img{ width: 44px; height: 44px; }
+  .manager-card h3{ margin-top: 8px; font-size: 16px; }
+  .manager-card .role{ margin-top: 2px; }
+  .manager-card p.bio{ margin-top: 6px; font-size: 13px; }
+  .managers-col-photo{ height: 260px; }
 }
 
 /* ---- close button (panel-count-agnostic) ---- */
@@ -6644,9 +6706,18 @@ html.dark-mode .creator-panel::before{
     border-top: 1px solid var(--panel-line);
   }
   .bg-pillar:first-child{ padding-top: 0; border-top: none; }
-  .bg-stats-bar{ grid-template-columns: repeat(2, 1fr); }
+  /* Same hairline-divider language as .bg-pillars above, reflowed for a
+     2-up grid: vertical dividers only between the two columns, horizontal
+     ones only between the two rows. */
+  .bg-stats-bar{ grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
+  .bg-stats-bar .stat{ border-left: 1px solid var(--panel-line); padding: 0 20px; }
+  .bg-stats-bar .stat:nth-child(odd){ border-left: none; padding-left: 0; }
+  .bg-stats-bar .stat:nth-child(n+3){ padding-top: 24px; border-top: 1px solid var(--panel-line); }
 }
 @media (max-width: 560px){
-  .bg-stats-bar{ grid-template-columns: 1fr; }
+  .bg-stats-bar{ grid-template-columns: 1fr; row-gap: 22px; }
+  .bg-stats-bar .stat{ border-left: none; padding: 22px 0 0; }
+  .bg-stats-bar .stat:first-child{ padding-top: 0; border-top: none; }
+  .bg-stats-bar .stat:nth-child(n+3){ padding-left: 0; }
   .bg-headline{ font-size: clamp(30px, 9vw, 44px); line-height: 1.06; }
 }
