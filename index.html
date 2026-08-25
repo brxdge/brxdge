@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=32">
+<link rel="stylesheet" href="style.css?v=33">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -177,6 +177,12 @@
          see .loader-mark / .loader-mark-fallback in style.css. The .show/
          .expand classes (drop-in bounce + expand-and-burst exit) are still
          driven by script.js exactly as before. -->
+    <!-- Percentage moved above the bridge mark (client revision) — was
+         between the mark and the wordmark. Fades/rises in on a short delay
+         (see .percentage/.percentage.show in style.css and the 150ms
+         setTimeout in script.js) instead of just appearing instantly with
+         the rest of the loader's first paint. -->
+    <div class="percentage" id="loadPercent">0%</div>
     <div class="loader-mark-drop-zone">
       <div class="loader-mark" id="loaderMark" aria-hidden="true">
         <canvas id="loaderCanvas" aria-hidden="true"></canvas>
@@ -197,7 +203,6 @@
       </div>
       <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
     </div>
-    <div class="percentage" id="loadPercent">0%</div>
     <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
       <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
       <span class="lw-underline" aria-hidden="true"></span>
@@ -1927,7 +1932,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=32"></script>
+<script src="script.js?v=33"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
