@@ -1,7 +1,8 @@
 /* =========================================================
    BRXDGE ANIMATED 3D MARK
-   The site's kinetic signature visual — a twin-arch suspension bridge
-   (arch + hangers + deck + cross-bracing), the same motif as the flat
+   The site's kinetic signature visual — a twin lattice-truss arch bridge
+   (trussed arch + railed deck + hangers + end-bearing blocks, matching
+   the client's reference bridge artwork), the same motif as the flat
    bridge-cable mark used everywhere else on this site (nav logo,
    loader, about section, footer), rebuilt in polished chrome as a real
    3D object turning slowly above the hero headline like a piece on
@@ -128,81 +129,123 @@ import * as THREE from './assets/vendor/three.module.min.js';
   deckMat.roughness = 0.34;
   deckMat.clearcoat = 0.25;
 
-  // A strut is a cylinder stretched and oriented between two points —
-  // used for every straight member (deck rails, hangers, cross-braces).
-  function makeStrut(p1, p2, radius){
+  // A strut is a cylinder stretched and oriented between two points — used
+  // for every straight member (truss chords/diagonals, hangers, rail
+  // posts). All struts share ONE unit cylinder geometry (radius 1, height
+  // 1, scaled per-instance) rather than each baking its own — the lattice
+  // truss arches below need well over a hundred of these, so reusing a
+  // single buffer keeps geometry/GPU-upload cost from scaling with strut
+  // count; only the transform differs per piece.
+  const UNIT_CYL = new THREE.CylinderGeometry(1, 1, 1, 10, 1);
+  const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
+  function makeStrut(p1, p2, radius, mat){
     const dir = new THREE.Vector3().subVectors(p2, p1);
-    const len = dir.length();
-    const geo = new THREE.CylinderGeometry(radius, radius, len, 10, 1);
-    const mesh = new THREE.Mesh(geo, chromeMat);
+    const len = Math.max(dir.length(), 0.0001);
+    const mesh = new THREE.Mesh(UNIT_CYL, mat || chromeMat);
+    mesh.scale.set(radius, len, radius);
     mesh.position.copy(p1).add(p2).multiplyScalar(0.5);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
     return mesh;
   }
 
-  // Twin parabolic arches (front + back, like a real box-arch/bowstring
-  // bridge — Sydney Harbour Bridge, New River Gorge) connected by cross
-  // bracing, with a deck slung below on vertical hangers. Same silhouette
-  // as the flat SVG bridge mark used elsewhere on the site (arc + hangers
-  // dropping to a roadway), just built as an actual 3D structure.
+  // Twin lattice-truss arches (front + back — a bowstring/lenticular truss
+  // bridge, matching the site's reference bridge artwork) with a railed
+  // deck slung below on vertical hangers and chunky end-bearing blocks
+  // where each arch springs from the deck. Same twin-arch-plus-deck
+  // silhouette as the flat SVG bridge mark used elsewhere on the site,
+  // just built as an actual trussed 3D structure instead of a smooth tube.
   function buildBridge(){
     const bridge = new THREE.Group();
     const half = 1.7, peak = 1.05, baseY = -0.15, deckY = -0.65, depth = 0.55;
-    const archSegs = 48;
+    const archSegs = 12; // truss bays per arch (real strut count now, not just tube smoothness)
+    const trussDepth = 0.16; // perpendicular thickness of the lattice band
 
-    function archPoint(t, z){
+    function archOuter(t, z){
       return new THREE.Vector3(t * half, peak * (1 - t * t) + baseY, z);
     }
+    // Perpendicular to the arch's tangent (half, -2*peak*t), pointing
+    // inward/downward through the truss band, so the inner chord traces a
+    // curve offset a constant distance inside the outer one.
+    function archNormal(t){
+      const nx = -2 * peak * t, ny = -half;
+      const len = Math.hypot(nx, ny) || 1;
+      return { x: nx / len, y: ny / len };
+    }
+    function archInner(t, z){
+      const o = archOuter(t, z);
+      const n = archNormal(t);
+      return new THREE.Vector3(o.x + n.x * trussDepth, o.y + n.y * trussDepth, z);
+    }
 
-    // The two arches
+    // Outer + inner chord, X-braced between them every bay — the lattice
+    // look, replacing the old single smooth tube.
     [depth, -depth].forEach((z) => {
-      const pts = [];
+      const outerPts = [], innerPts = [];
       for (let i = 0; i <= archSegs; i++){
-        pts.push(archPoint(-1 + (2 * i / archSegs), z));
+        const t = -1 + (2 * i / archSegs);
+        outerPts.push(archOuter(t, z));
+        innerPts.push(archInner(t, z));
       }
-      const curve = new THREE.CatmullRomCurve3(pts);
-      const geo = new THREE.TubeGeometry(curve, 100, 0.055, 10, false);
-      bridge.add(new THREE.Mesh(geo, chromeMat));
+      for (let i = 0; i < archSegs; i++){
+        bridge.add(makeStrut(outerPts[i], outerPts[i + 1], 0.048));  // top chord
+        bridge.add(makeStrut(innerPts[i], innerPts[i + 1], 0.042));  // bottom chord
+        bridge.add(makeStrut(outerPts[i], innerPts[i + 1], 0.024));  // diagonal \
+        bridge.add(makeStrut(innerPts[i], outerPts[i + 1], 0.024));  // diagonal /
+      }
     });
 
-    // Deck edge rails (front + back) — sit right at the deck plate's top
-    // surface, reading as a low guardrail running along each long edge
-    // rather than free-floating rods.
-    [depth, -depth].forEach((z) => {
-      bridge.add(makeStrut(
-        new THREE.Vector3(-half * 1.03, deckY, z),
-        new THREE.Vector3(half * 1.03, deckY, z),
-        0.045
-      ));
-    });
+    // Chunky end-bearing blocks where each arch springs from the deck — a
+    // solid abutment instead of the arch tapering off to a bare point.
+    function makeEndBlock(x){
+      const w = 0.22, h = 0.34, d = depth * 2 + 0.14;
+      const mesh = new THREE.Mesh(UNIT_BOX, deckMat);
+      mesh.scale.set(w, h, d);
+      mesh.position.set(x, deckY + h / 2 - 0.06, 0);
+      return mesh;
+    }
+    [-half * 1.05, half * 1.05].forEach((x) => bridge.add(makeEndBlock(x)));
 
-    // Vertical hangers suspending the deck from each arch
-    const hangerXs = [-1.4, -1.0, -0.6, -0.2, 0.2, 0.6, 1.0, 1.4];
+    // Vertical hangers suspending the deck from each arch's outer chord
+    const hangerXs = [-1.4, -0.85, -0.3, 0.3, 0.85, 1.4];
     [depth, -depth].forEach((z) => {
       hangerXs.forEach((x) => {
-        bridge.add(makeStrut(archPoint(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
+        bridge.add(makeStrut(archOuter(x / half, z), new THREE.Vector3(x, deckY, z), 0.022));
       });
     });
 
-    // Cross-bracing tying the two arches together
-    [-1.2, -0.4, 0.4, 1.2].forEach((x) => {
-      const t = x / half;
-      bridge.add(makeStrut(archPoint(t, depth), archPoint(t, -depth), 0.028));
-    });
-
-    // Flat deck plate spanning between the two edge rails — a real, solid
-    // roadway surface instead of the bare cross-beams that used to tie the
-    // rails together (those read as a ladder rather than a bridge deck).
-    // Its top face sits flush with the rails, so the rails read as a
-    // raised curb running along each edge of a continuous deck.
+    // Flat deck plate — a real, solid roadway surface. Its top face sits
+    // flush with the railing posts below, so the railing reads as rising
+    // straight up from the edge of a continuous deck.
     {
       const deckLength = half * 2 * 1.03;
       const deckSpan = depth * 2;
       const deckThickness = 0.09;
-      const deckGeo = new THREE.BoxGeometry(deckLength, deckThickness, deckSpan);
-      const deckMesh = new THREE.Mesh(deckGeo, deckMat);
+      const deckMesh = new THREE.Mesh(UNIT_BOX, deckMat);
+      deckMesh.scale.set(deckLength, deckThickness, deckSpan);
       deckMesh.position.set(0, deckY - deckThickness / 2 - 0.01, 0);
       bridge.add(deckMesh);
+    }
+
+    // Deck-edge railing — a top rail plus evenly spaced vertical balusters
+    // along each side, replacing the old bare curb-rail strut with an
+    // actual guardrail matching the reference artwork's railed deck.
+    {
+      const railTopY = deckY + 0.15;
+      const balusterXs = [-1.55, -1.05, -0.55, -0.05, 0.45, 0.95, 1.45];
+      [depth, -depth].forEach((z) => {
+        bridge.add(makeStrut(
+          new THREE.Vector3(-half * 1.03, railTopY, z),
+          new THREE.Vector3(half * 1.03, railTopY, z),
+          0.026
+        ));
+        balusterXs.forEach((x) => {
+          bridge.add(makeStrut(
+            new THREE.Vector3(x, deckY, z),
+            new THREE.Vector3(x, railTopY, z),
+            0.014
+          ));
+        });
+      });
     }
 
     return bridge;
@@ -307,9 +350,10 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // Enter, and Space for free. Full sequence:
   //   1. The turntable stops dead where it is — no ramp, no flourish —
   //      so the structure holds still and the teardown reads clearly.
-  //   2. Every individual piece (both arches, both deck rails, all 16
-  //      hangers, the 4 cross-braces, the flat deck plate) lets go on its
-  //      own staggered delay biased left-to-right, then falls under a
+  //   2. Every individual piece (every truss chord segment and diagonal in
+  //      both lattice arches, all 12 hangers, both end-bearing blocks, the
+  //      flat deck plate, and every railing post) lets go on its own
+  //      staggered delay biased left-to-right, then falls under a
   //      gentle gravity curve, drifting slightly and tumbling as it
   //      fades out — the bridge comes apart piece by piece rather than
   //      bursting all at once.
