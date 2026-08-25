@@ -4148,6 +4148,112 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   color: transparent;
 }
 
+/* Client revision: "enhance the BRXDGE text" — scoped to the overlay
+   footer only (.tr-footer .brand), so the shared .brand class's navbar
+   instance is untouched. Meaningfully bigger + wider-tracked than the
+   default 18px nav-style wordmark, closer in spirit to the masthead-scale
+   treatments used elsewhere on this page, without ballooning the whole
+   footer row's height. */
+.tr-footer .brand{
+  font-size: 32px;
+  letter-spacing: 0.13em;
+  gap: 14px;
+}
+.tr-footer .brand-mark{
+  width: 42px;
+  height: 42px;
+}
+@media (max-width: 680px){
+  .tr-footer .brand{ font-size: 26px; }
+  .tr-footer .brand-mark{ width: 36px; height: 36px; }
+}
+
+/* Client revision: "add the Bridge orbit at the middle" — the same chrome
+   3D bridge mark used in the hero (see brand-orbit.js), mounted a second
+   time as a small, still, purely decorative centerpiece between the brand
+   mark and the nav links. Restructured .footer-grid into the same
+   1fr/auto/1fr centered-middle-column technique already used for the
+   rebuilt toolbar above (.talent-search-wrap), so the mark sits at the
+   row's true visual center regardless of how wide the brand/links zones
+   are — scoped to .tr-footer specifically so the main site footer's plain
+   2-item flex layout is untouched. */
+/* Pre-existing quirk surfaced while building this: both .footer-grid and
+   .fineprint below also carry the shared .wrap class, which — inside this
+   overlay — picks up .talent-roster-overlay .wrap's 108px/80px top/bottom
+   padding (meant to clear the fixed header/back-button row at the TOP of
+   the overlay's main content, not the footer's own inner wraps). That
+   stacked on top of <footer>'s own 60px/40px padding to leave a huge dead
+   gap above and below the footer content. Reset back to just the
+   horizontal padding here — the outer <footer> padding already gives the
+   block sensible breathing room top and bottom. */
+.tr-footer .wrap.footer-grid,
+.tr-footer .fineprint.wrap{
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.tr-footer .footer-grid{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+/* grid-column:auto resets the shared .brand class's own grid-column:2
+   (set for its OTHER use as the navbar's centered logo, itself a 3-column
+   grid) — without this override here, that inherited placement fights
+   the auto-placement of the other two items and knocks .footer-links
+   into a phantom second row instead of sitting beside .brand in one. */
+.tr-footer .brand{ grid-column: auto; justify-self: start; }
+.tr-footer .footer-links{ justify-self: end; }
+.tr-footer-orbit{
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 680px){
+  .tr-footer .footer-grid{
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 22px;
+  }
+  .tr-footer .brand,
+  .tr-footer .footer-links{ justify-self: center; }
+}
+
+/* Purely decorative — not a button, no aria-label, no click handler (see
+   brand-orbit.js's `interactive:false` mount) — so it never intercepts a
+   click or sends the visitor anywhere, unlike the hero's version of the
+   same mark. Sized down to a footer-appropriate scale (the hero's version
+   is a headline-scale centerpiece; this is a quiet accent). Same
+   canvas/fallback swap pattern as .hero-orbit-mark: the flat SVG bridge
+   shows until brand-orbit.js confirms WebGL works and adds .is-ready. */
+.footer-orbit-mark{
+  position: relative;
+  width: clamp(90px, 9vw, 140px);
+  aspect-ratio: 2 / 1.05;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.footer-orbit-mark canvas{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+.footer-orbit-mark.is-ready canvas{ display: block; }
+.footer-orbit-fallback{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer-orbit-fallback svg{ width: 62%; height: 62%; }
+.footer-orbit-mark.is-ready .footer-orbit-fallback{ display: none; }
+
 /* ---------- BRAND TILE (sits in the middle slot, row 2, of the
    featured 3-per-row grid, in place of a 9th talent) ---------- */
 .brand-tile{
