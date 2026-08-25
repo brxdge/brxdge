@@ -482,12 +482,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       document.getElementById('passcodeInput').value = '';
       setManagerUI(true);
       renderRoster();
-      showToast('Signed in — manager tools unlocked');
+      showToast('Signed in, manager tools unlocked');
     } else {
       showToast(data.error || "That didn't match. Try again.");
     }
   } catch (err) {
-    showToast('Could not reach the server — is it running?');
+    showToast('Could not reach the server. Is it running?');
   } finally {
     submitBtn.disabled = false;
   }
@@ -750,7 +750,7 @@ async function saveRoster(){
       body: JSON.stringify(rosterData)
     });
     if(res.status === 401){
-      showToast('Your session expired — please sign in again');
+      showToast('Your session expired. Please sign in again');
       isManager = false;
       managerToken = null;
       try { sessionStorage.removeItem(MANAGER_SESSION_KEY); } catch (e) { /* ignore */ }
@@ -830,7 +830,7 @@ function buildTalentCard(t, index){
         <span class="cf-corner cf-bl"></span><span class="cf-corner cf-br"></span>
       </div>
       <div class="platform-list">
-        ${(t.socials||[]).map(s => `<div class="prow"><span>${escapeHtml(s.platform)}</span><span>${escapeHtml(s.followers || '—')}</span></div>`).join('')}
+        ${(t.socials||[]).map(s => `<div class="prow"><span>${escapeHtml(s.platform)}</span><span>${escapeHtml(s.followers || '-')}</span></div>`).join('')}
       </div>
     </div>
     <div class="talent-card-foot">
@@ -1277,7 +1277,7 @@ function buildBrandTile(){
   tile.className = 'talent-card brand-tile reveal-card';
   tile.innerHTML = `
     <div class="brand-tile-inner">
-      <img class="brand-tile-mark" src="brxdge.png" alt="BRXDGE — Brxdge to Possibilities">
+      <img class="brand-tile-mark" src="brxdge.png" alt="BRXDGE, Brxdge to Possibilities">
       <div class="brand-tile-glow" aria-hidden="true"></div>
     </div>
   `;
@@ -1825,7 +1825,7 @@ function closeMediakit(opts){
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
-  document.title = 'BRXDGE — Talent Management for Creators';
+  document.title = 'BRXDGE | Talent Management for Creators';
 }
 
 /* ---------------- MEDIA KIT AMBIENT WAVE BACKGROUND ----------------
@@ -1968,10 +1968,10 @@ function formatBlogBody(raw){
 function buildBlogCardStats(p){
   const chips = [];
   if(p.statFollowersBefore || p.statFollowersAfter){
-    chips.push(`Followers: ${escapeHtml(p.statFollowersBefore || '—')} → ${escapeHtml(p.statFollowersAfter || '—')}`);
+    chips.push(`Followers: ${escapeHtml(p.statFollowersBefore || '-')} → ${escapeHtml(p.statFollowersAfter || '-')}`);
   }
   if(p.statEngagementBefore || p.statEngagementAfter){
-    chips.push(`Engagement: ${escapeHtml(p.statEngagementBefore || '—')} → ${escapeHtml(p.statEngagementAfter || '—')}`);
+    chips.push(`Engagement: ${escapeHtml(p.statEngagementBefore || '-')} → ${escapeHtml(p.statEngagementAfter || '-')}`);
   }
   if(p.statRevenue) chips.push(`Revenue: ${escapeHtml(p.statRevenue)}`);
   if(!chips.length) return '';
@@ -2022,7 +2022,7 @@ async function openBlogPost(postSummary, opts){
   if(!opts || opts.updateUrl !== false){
     history.pushState({ blogSlug: postSummary.slug }, '', '?blog=' + postSummary.slug);
   }
-  document.title = `${postSummary.title} — BRXDGE`;
+  document.title = `${postSummary.title} | BRXDGE`;
 
   // The list endpoint only carries summary fields — fetch the full post
   // (body included) before rendering, but fall back to the summary object
@@ -2059,7 +2059,7 @@ function renderBlogPostContent(post){
       ${statRows.map(([label, before, after]) => `
         <div class="blog-stat-panel-item">
           <span class="blog-stat-panel-label">${label}</span>
-          <span class="blog-stat-panel-value">${escapeHtml(before || '—')} → ${escapeHtml(after || '—')}</span>
+          <span class="blog-stat-panel-value">${escapeHtml(before || '-')} → ${escapeHtml(after || '-')}</span>
         </div>
       `).join('')}
       ${post.statBrandDeals ? `
@@ -2109,7 +2109,7 @@ function closeBlogPost(opts){
   if(!opts || opts.updateUrl !== false){
     history.pushState({}, '', location.pathname);
   }
-  document.title = 'BRXDGE — Talent Management for Creators';
+  document.title = 'BRXDGE | Talent Management for Creators';
 }
 
 const blogBackBtn = document.getElementById('blogBack');
@@ -2457,11 +2457,11 @@ if(campaignBriefForm){
         `Brand: ${brandName}`,
         `Campaign Type: ${campaignType}`,
         `Selected Talent: ${talentNames.join(', ')}`,
-        `Deliverables: ${deliverables.length ? deliverables.join(', ') : '—'}`,
+        `Deliverables: ${deliverables.length ? deliverables.join(', ') : '-'}`,
         `Budget: ${budget || 'Not sure yet'}`,
-        `Timeline: ${timeline || '—'}`,
+        `Timeline: ${timeline || '-'}`,
         '',
-        details ? `Additional Information:\n${details}` : 'Additional Information: —',
+        details ? `Additional Information:\n${details}` : 'Additional Information: -',
       ].join('\n');
 
       const res = await fetch(API + '/api/contact', {
@@ -2476,7 +2476,7 @@ if(campaignBriefForm){
       });
       if(!res.ok) throw new Error('Request failed');
       campaignBriefOverlay.classList.remove('show');
-      showToast("Campaign request sent — we'll be in touch within 1 business day");
+      showToast("Campaign request sent. We'll be in touch within 1 business day");
       e.target.reset();
       resetBriefPills();
       castIds = [];
@@ -2485,7 +2485,7 @@ if(campaignBriefForm){
       renderAllCastWidgets();
     } catch(err){
       console.error(err);
-      showToast("Couldn't send right now — please try again in a moment");
+      showToast("Couldn't send right now. Please try again in a moment");
     } finally {
       btn.disabled = false; btn.textContent = originalLabel;
     }
@@ -2534,7 +2534,7 @@ function renderPostsSection(platformName, socials){
   const posts = social && social.posts ? social.posts : [];
   if(!posts.length) return '';
   return `
-    <div class="mk-section-title">Latest Posts — ${platformName}</div>
+    <div class="mk-section-title">Latest Posts: ${platformName}</div>
     <div class="mk-posts-grid">
       ${posts.map(p => {
         const embedUrl = getVideoEmbedUrl(p.link);
@@ -2970,7 +2970,7 @@ function renderBookingSection(t){
         <div class="mk-booking-pills">${bookingOptions.map(o => `<span class="mk-booking-pill">${escapeHtml(o)}</span>`).join('')}</div>
       </div>` : ''}
       <div class="mk-pricing-callout">
-        <p>Pricing is available on request — every booking starts with a short campaign brief.</p>
+        <p>Pricing is available on request. Every booking starts with a short campaign brief.</p>
         <button type="button" class="btn btn-primary mk-pricing-cta" data-open-campaign-pricing>Request Campaign Pricing <span class="arrow">→</span></button>
       </div>
     </div>
@@ -3143,7 +3143,7 @@ function openMediakit(id, opts){
   if(!opts || opts.updateUrl !== false){
     history.pushState({ talentId: id }, '', '?talent=' + slugify(t.name));
   }
-  document.title = `${t.name} — BRXDGE`;
+  document.title = `${t.name} | BRXDGE`;
 
   const reach = formatFollowers(totalReach(t.socials));
   const content = document.getElementById('mkContent');
@@ -3224,7 +3224,7 @@ function openMediakit(id, opts){
                   <div class="p-name">${escapeHtml(s.platform)}</div>
                 </div>
                 <div class="mk-metrics">
-                  <div class="m"><span class="v">${escapeHtml(s.followers || '—')}</span><span class="k"> Followers</span></div>
+                  <div class="m"><span class="v">${escapeHtml(s.followers || '-')}</span><span class="k"> Followers</span></div>
                 </div>
                 <div class="mk-platform-actions">
                   ${safeUrl(s.url) ? `<a class="visit" href="${escapeHtml(safeUrl(s.url))}" target="_blank" rel="noopener">Visit profile <span class="arrow">→</span></a>` : ''}
@@ -3486,12 +3486,12 @@ async function copyShareLink(url, message){
 async function shareProfile(name, url){
   if(navigator.share){
     try {
-      await navigator.share({ title: `${name} — BRXDGE`, text: `Check out ${name}'s media kit`, url });
+      await navigator.share({ title: `${name} | BRXDGE`, text: `Check out ${name}'s media kit`, url });
     } catch(err) {
       // User backed out of the share sheet — nothing to do
     }
   } else {
-    copyShareLink(url, 'Link copied — share it anywhere');
+    copyShareLink(url, 'Link copied, share it anywhere');
   }
 }
 
@@ -3578,7 +3578,7 @@ function openStatsModal(t, social){
   ];
   statsModalGrid.innerHTML = tiles.map(x => `
     <div class="stats-tile">
-      <span class="v">${x.v || '—'}</span>
+      <span class="v">${x.v || '-'}</span>
       <span class="k">${x.k}</span>
     </div>
   `).join('');
@@ -3641,7 +3641,7 @@ async function downloadGalleryAlbum(t){
   try {
     await loadJsPdfLib();
   } catch(err){
-    showToast('Download tool failed to load — check your connection');
+    showToast('Download tool failed to load. Check your connection');
     return;
   }
   try {
@@ -3663,7 +3663,7 @@ async function downloadGalleryAlbum(t){
     doc.text((t.niche || '').toUpperCase(), pageW / 2, pageH / 2 + 16, { align: 'center' });
     doc.setFontSize(10.5);
     doc.setTextColor(140, 140, 140);
-    doc.text('Photo Gallery — BRXDGE', pageW / 2, pageH - 44, { align: 'center' });
+    doc.text('Photo Gallery | BRXDGE', pageW / 2, pageH - 44, { align: 'center' });
 
     // One image per page, fit to the page with a margin, aspect preserved.
     for (const g of images) {
@@ -3684,7 +3684,7 @@ async function downloadGalleryAlbum(t){
     showToast('Download started');
   } catch(err) {
     console.error(err);
-    showToast('Could not create the PDF — try again');
+    showToast('Could not create the PDF. Try again');
   }
 }
 
@@ -3831,7 +3831,7 @@ async function downloadMediaKitPdf(t){
   try {
     await loadJsPdfLib();
   } catch(err){
-    showToast('Download tool failed to load — check your connection');
+    showToast('Download tool failed to load. Check your connection');
     return;
   }
   try {
@@ -3974,7 +3974,7 @@ async function downloadMediaKitPdf(t){
         doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(235, 235, 235);
         doc.text(s.platform || '', margin + 18, rowY + 12);
         doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(255, 255, 255);
-        doc.text(s.followers || '—', pageW - margin, rowY + 6, { align: 'right' });
+        doc.text(s.followers || '-', pageW - margin, rowY + 6, { align: 'right' });
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(140, 140, 140);
         doc.text('FOLLOWERS', pageW - margin, rowY + 18, { align: 'right' });
         doc.setDrawColor(40, 40, 40); doc.setLineWidth(0.6);
@@ -4042,7 +4042,7 @@ async function downloadMediaKitPdf(t){
     const campaignMatches = campaignsData.filter(c => (c.creatorName || '').trim().toLowerCase() === (t.name || '').trim().toLowerCase());
     if(!campaignMatches.length){
       doc.setFont('helvetica', 'italic'); doc.setFontSize(12); doc.setTextColor(140, 140, 140);
-      doc.text(`No campaign history yet — ${firstName} is available for your first.`, margin, y + 20);
+      doc.text(`No campaign history yet. ${firstName} is available for your first.`, margin, y + 20);
     } else {
       const shownCampaigns = campaignMatches.slice(0, 4);
       shownCampaigns.forEach((c, i) => {
@@ -4080,7 +4080,7 @@ async function downloadMediaKitPdf(t){
       });
       if(campaignMatches.length > shownCampaigns.length){
         doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-        doc.text(`+${campaignMatches.length - shownCampaigns.length} more campaigns — full history available on request.`, margin, y + 6);
+        doc.text(`+${campaignMatches.length - shownCampaigns.length} more campaigns. Full history available on request.`, margin, y + 6);
       }
     }
 
@@ -4127,7 +4127,7 @@ async function downloadMediaKitPdf(t){
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(240, 240, 240);
     doc.text(`Ready to book ${firstName}?`, margin, y); y += 20;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(190, 190, 190);
-    doc.text('Pricing is available on request — submit a campaign brief and the BRXDGE team will follow up within 1 business day.', margin, y, { maxWidth: contentW });
+    doc.text('Pricing is available on request. Submit a campaign brief and the BRXDGE team will follow up within 1 business day.', margin, y, { maxWidth: contentW });
     y += 34;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(220, 220, 220);
     doc.text(getTalentShareUrl(t), margin, y);
@@ -4136,7 +4136,7 @@ async function downloadMediaKitPdf(t){
     showToast('Download started');
   } catch(err) {
     console.error(err);
-    showToast('Could not create the media kit PDF — try again');
+    showToast('Could not create the media kit PDF. Try again');
   }
 }
 
@@ -4363,7 +4363,7 @@ contactForm.addEventListener('submit', async (e) => {
     if(contactSuccess) contactSuccess.style.display = 'block';
   } catch(err){
     console.error(err);
-    showToast("Couldn't send right now — please try again in a moment");
+    showToast("Couldn't send right now. Please try again in a moment");
   } finally {
     btn.disabled = false; label.textContent = originalLabel;
   }
@@ -4413,11 +4413,11 @@ document.getElementById('contactPopupForm').addEventListener('submit', async (e)
     });
     if(!res.ok) throw new Error('Request failed');
     contactOverlay.classList.remove('show');
-    showToast("Message sent — we'll get back to you soon");
+    showToast("Message sent. We'll get back to you soon");
     e.target.reset();
   } catch(err){
     console.error(err);
-    showToast("Couldn't send right now — please try again in a moment");
+    showToast("Couldn't send right now. Please try again in a moment");
   } finally {
     btn.disabled = false; btn.textContent = originalLabel;
   }
