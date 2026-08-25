@@ -369,12 +369,6 @@
     padding:40px;
   }
   .about-logo-mark{ width:100%; height:auto; }
-  .about-photo::before, .about-photo::after{
-    content:''; position:absolute; width:26px; height:26px; z-index:2;
-    border:2px solid var(--coral); pointer-events:none;
-  }
-  .about-photo::before{ top:-10px; left:-10px; border-right:none; border-bottom:none; }
-  .about-photo::after{ bottom:-10px; right:-10px; border-left:none; border-top:none; }
 
   /* Heavy uppercase eyebrow — same treatment as the site's other bold
      headline words (.profiles-bold), sized down to sit as a label above
@@ -477,9 +471,21 @@
 
 .slider-spacer{ position: relative; height: 100svh; }
 
-.slider-wrapper{ position: relative; height: 100%; width: 100%; overflow: visible; display: grid; grid-template-columns: 1fr 1.6fr var(--slide-center, 190px) 1.6fr 1fr; grid-template-rows: 1fr var(--slide-center, 190px) 1fr; grid-template-areas: "one   two    two    three four"
-    "one   six    center three eight"
-    "five  six    seven  seven eight"; gap: 14px; padding: 14px; }
+/* Client revision: dropped the center brand-icon tile that used to sit at
+   "center" (a fixed-size square cell reserved just for it — see the old
+   var(--slide-center, 190px) column/row below, now gone since nothing
+   needs that special sizing anymore). "six" expands to fill the gap,
+   growing from a single tall strip into a 2x2 block — the biggest tile in
+   the mosaic now, which reads as the natural place for the eye to land
+   where the icon used to be, rather than just quietly disappearing.
+   "seven" shrinks from a 2-wide strip down to the single cell it has
+   left. Every area below still has to stay a rectangle for
+   grid-template-areas to parse at all — that constraint is why "six" (not
+   "two" or "three", which don't share a full edge with where "center"
+   was) is the one that absorbs it. */
+.slider-wrapper{ position: relative; height: 100%; width: 100%; overflow: visible; display: grid; grid-template-columns: 1fr 1.6fr 1.6fr 1.6fr 1fr; grid-template-rows: 1fr 1fr 1fr; grid-template-areas: "one   two  two  three four"
+    "one   six  six  three eight"
+    "five  six  six  seven eight"; gap: 14px; padding: 14px; }
 
 /* Ambient twinkle: each photo blacks all the way out and back in on a
    loop, like a star field going fully dark rather than just dimming (see
@@ -575,30 +581,6 @@
 /* Tagline sits in the middle of the grid, always visible — no scroll-reveal needed now. */
 .float-up-text{ opacity: 1; }
 
-/* BRXDGE brand-mark tile — sits in the center grid cell in place of the
-   old tagline card. Square at every breakpoint via --slide-center. */
-.slide-center-icon{ grid-area: center; position: relative; z-index: 10; display: block; width: 100%; height: 100%; opacity: 0; transform: scale(0.82); filter: blur(10px); transition: opacity 0.9s cubic-bezier(0.19,1,0.22,1),
-    transform 0.9s cubic-bezier(0.19,1,0.22,1),
-    filter 0.9s ease; transition-delay: 0.1s; }
-.slider-wrapper.in-view .slide-center-icon{ opacity: 1; transform: scale(1); filter: blur(0); }
-.slider-wrapper.has-exited .slide-center-icon{ opacity: 0; transform: scale(0.88) translateY(-40px); filter: blur(12px); transition: opacity 0.85s cubic-bezier(0.32,0,0.67,0),
-    transform 0.85s cubic-bezier(0.32,0,0.67,0),
-    filter 0.85s ease-in; transition-delay: 0.05s; }
-
-.slide-center-icon-img{ display: block; width: 100%; height: 100%; border-radius: 22%; object-fit: cover; transform: scale(1.35); transform-origin: center; box-shadow: 0 20px 46px rgba(0,0,0,0.45); transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.45s ease,
-              filter 0.4s ease; }
-
-/* Pointer devices: full glow + expand on hover. */
-@media (hover: hover) and (pointer: fine){
-}
-
-/* Touch + keyboard: same glow/expand on tap or focus. */
-.slide-center-icon:active .slide-center-icon-img,
-.slide-center-icon:focus-visible .slide-center-icon-img{ transform: scale(1.45); filter: brightness(1.08); box-shadow: 0 20px 44px rgba(0,0,0,0.46),
-    0 0 45px 8px var(--coral, rgba(255,255,255,0.5)); }
-
-.slide-center-icon:focus-visible{ outline: none; }
 
 @keyframes slide-center-grow{
   0%, 15%{
@@ -614,44 +596,29 @@
 }
 
 @media (max-width: 760px){
-  .slider-wrapper{ grid-template-columns: 1fr 1fr var(--slide-center, 140px) 1fr 1fr; grid-template-rows: 1fr var(--slide-center, 140px) 1fr; gap: 8px; padding: 8px; }
+  .slider-wrapper{ grid-template-columns: 1fr 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 8px; padding: 8px; }
   .slide-box{ border-radius: 8px; }
   .slide-center{ width: min(78vw, 480px); }
 
   @media (hover: hover) and (pointer: fine){
   }
-  .slide-center-icon:active .slide-center-icon-img,
-  .slide-center-icon:focus-visible .slide-center-icon-img{ transform: scale(1.42); box-shadow: 0 14px 32px rgba(0,0,0,0.42),
-      0 0 26px 5px var(--coral, rgba(255,255,255,0.45)); }
 }
 
 /* Phones: side thumbnails shrink to slivers so the center card and its
    copy stay fully on-screen without any horizontal overflow. */
 @media (max-width: 480px){
-  .slider-wrapper{ grid-template-columns: 0.5fr 0.7fr var(--slide-center, 108px) 0.7fr 0.5fr; grid-template-rows: 0.6fr var(--slide-center, 108px) 0.6fr; gap: 6px; padding: 6px; }
+  .slider-wrapper{ grid-template-columns: 0.5fr 0.7fr 0.7fr 0.7fr 0.5fr; grid-template-rows: 0.6fr 0.6fr 0.6fr; gap: 6px; padding: 6px; }
   .slide-center{ width: min(82vw, 320px); padding: 14px; }
   .slide-center h2{ font-size: 19px; }
   .slide-center p{ font-size: 12px; max-width: 200px; }
   .slide-center .scroll-mouse{ bottom: 14px; width: 20px; height: 32px; }
 
-  .slide-center-icon-img{ border-radius: 26%; }
-
   @media (hover: hover) and (pointer: fine){
-    .slide-center-icon:hover .slide-center-icon-img{ transform: scale(1.46); filter: brightness(1.1); box-shadow: 0 12px 26px rgba(0,0,0,0.45),
-        0 0 22px 4px var(--coral, rgba(255,255,255,0.5)),
-        0 0 38px 8px var(--violet, rgba(255,255,255,0.22)); }
   }
-  .slide-center-icon:active .slide-center-icon-img,
-  .slide-center-icon:focus-visible .slide-center-icon-img{ transform: scale(1.4); box-shadow: 0 11px 22px rgba(0,0,0,0.42),
-      0 0 18px 4px var(--coral, rgba(255,255,255,0.45)); }
 }
 
 @media (prefers-reduced-motion: reduce){
-  .slide-box, .slide-center, .slide-center-icon{ animation: none !important; translate: 0 !important; transform: none !important; opacity: 1 !important; filter: none !important; }
-  .slide-center-icon-img{ transition: none !important; }
-  .slide-center-icon:hover .slide-center-icon-img,
-  .slide-center-icon:active .slide-center-icon-img,
-  .slide-center-icon:focus-visible .slide-center-icon-img{ transform: none !important; }
+  .slide-box, .slide-center{ animation: none !important; translate: 0 !important; transform: none !important; opacity: 1 !important; filter: none !important; }
   .slider-spacer{ height: auto; }
   .slider-wrapper{ position: relative; height: auto; min-height: 70vh; }
 }
@@ -3501,34 +3468,6 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   animation: lineGrow 3s linear infinite 1.5s;
 }
 
-.corner-elements span:nth-child(1) {
-  top: 10px;
-  left: 10px;
-  border-right: 0;
-  border-bottom: 0;
-}
-
-.corner-elements span:nth-child(2) {
-  top: 10px;
-  right: 10px;
-  border-left: 0;
-  border-bottom: 0;
-}
-
-.corner-elements span:nth-child(3) {
-  bottom: 10px;
-  left: 10px;
-  border-right: 0;
-  border-top: 0;
-}
-
-.corner-elements span:nth-child(4) {
-  bottom: 10px;
-  right: 10px;
-  border-left: 0;
-  border-top: 0;
-}
-
 .scan-line {
   position: absolute;
   inset: 0;
@@ -3569,13 +3508,6 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
 /* Modyfikacja istniejących styli */
 .tilt-card:hover .card-glare {
   opacity: 1;
-}
-
-.corner-elements span { position: absolute; width: 15px; height: 15px; border: 2px solid rgba(200, 200, 200, 0.3); transition: all 0.3s ease; }
-
-.tilt-card:hover .corner-elements span {
-  border-color: rgba(138, 138, 138, 0.85);
-  box-shadow: 0 0 10px rgba(138, 138, 138, 0.5);
 }
 
 /* =========================================================
