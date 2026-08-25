@@ -5199,8 +5199,17 @@ html.dark-mode .creator-panel::before{
 .tr-header .profiles-bold::before{
   content: attr(data-text);
   position: absolute;
-  left: 0.05em;
-  top: 0.08em;
+  /* left+right (not left+top alone) locks this to the exact same box width
+     as the real heading, so it line-wraps identically at every viewport —
+     a shrink-to-fit width here (the old left/top-only version) let it wrap
+     onto a different line than the real text at some widths, spilling a
+     stray duplicate line down into the filters row below. The offset that
+     creates the echo effect is done with transform instead, which shifts
+     the rendered text without changing the box's width/wrapping. */
+  left: 0;
+  right: 0;
+  top: 0;
+  transform: translate(0.05em, 0.08em);
   z-index: -1;
   color: transparent;
   -webkit-text-stroke: 1px var(--panel-line);
