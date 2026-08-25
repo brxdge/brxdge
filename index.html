@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=43">
+<link rel="stylesheet" href="style.css?v=44">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1464,12 +1464,12 @@
      2 narrow photo "connectors". See the big CSS comment above
      ".background-overlay" in style.css for how the scroll mechanics work,
      and initBackground()/updateBgTrack() in script.js for the JS side.
-     The Team panel reuses the exact #managersGrid/#managersBg containers
-     and initManagers() render logic that used to live in the homepage's
-     standalone #managers section (moved here wholesale, in place of the
-     old placeholder Founders panel) — that function is purely
-     getElementById-driven, so relocating the markup was enough; no JS
-     changes were needed. -->
+     The Team panel reuses the #managersGrid container and initManagers()
+     render logic that used to live in the homepage's standalone #managers
+     section (moved here wholesale, in place of the old placeholder
+     Founders panel) — see the top of the MANAGERS section in style.css
+     for how that render logic changed (single column, photo inside each
+     card) in a later revision. -->
 <div class="mediakit-overlay background-overlay" id="backgroundOverlay">
   <button class="mk-back bg-back-close" id="bgBack" aria-label="Close">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -1575,25 +1575,16 @@
 
         <!-- PANEL 3 — THE TEAM (managers, moved in from the homepage's old
              standalone #managers section; replaces the former placeholder
-             Founders panel). #managersGrid/#managersBg are the exact same
-             containers initManagers() in script.js already renders into —
-             see the top-of-file comment on #backgroundOverlay. -->
+             Founders panel). #managersGrid is the exact same container
+             initManagers() in script.js already renders into — see the
+             top-of-file comment on #backgroundOverlay. -->
         <section class="bg-panel" data-bg-panel="2">
           <div class="bg-panel-inner">
             <div class="bg-panel-content">
               <div class="bg-kicker">The Team</div>
               <h2 class="bg-headline">The managers behind every deal.</h2>
-              <p class="bg-lede">Not a ticket queue, a small team of people who actually pick up the phone. Hover a name to see who you'd be working with.</p>
-              <div class="managers-section-inner">
-                <div class="managers-col managers-col-cards">
-                  <div class="managers-grid" id="managersGrid"></div>
-                </div>
-
-                <div class="managers-col managers-col-photo">
-                  <!-- Hover-reactive background layer: one .bg-layer per manager, cross-faded via JS -->
-                  <div class="managers-bg" id="managersBg" aria-hidden="true"></div>
-                </div>
-              </div>
+              <p class="bg-lede">Not a ticket queue, a small team of people who actually pick up the phone.</p>
+              <div class="managers-grid" id="managersGrid"></div>
             </div>
           </div>
         </section>
@@ -1796,7 +1787,7 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=34"></script>
+<script src="script.js?v=35"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
