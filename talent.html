@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=52">
+<link rel="stylesheet" href="style.css?v=53">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -861,6 +861,33 @@
         </svg>
         <span class="brand-name">BRXDGE</span>
       </div>
+
+      <!-- Client revision: the same chrome 3D bridge mark from the hero
+           (brand-orbit.js), mounted a second time here as a quiet,
+           purely-decorative centerpiece — no aria-label, not a button,
+           and brand-orbit.js mounts it with interactive:false, so it never
+           wires a click handler and clicking it does nothing at all (it
+           does NOT scroll/navigate anywhere, unlike the hero's version). -->
+      <div class="tr-footer-orbit" aria-hidden="true">
+        <div class="footer-orbit-mark" id="footerOrbitMark">
+          <canvas id="footerOrbitCanvas" aria-hidden="true"></canvas>
+          <div class="footer-orbit-fallback" aria-hidden="true">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#footerFallbackGradTr)" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="8" cy="67" r="5" fill="url(#footerFallbackGradTr)"/>
+              <circle cx="92" cy="67" r="5" fill="url(#footerFallbackGradTr)"/>
+              <defs>
+                <linearGradient id="footerFallbackGradTr" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#F5F5F5"/>
+                  <stop offset="50%" stop-color="#9A9A9A"/>
+                  <stop offset="100%" stop-color="#F5F5F5"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+      </div>
+
       <div class="footer-links">
         <a href="index.html#home">Home</a><a href="index.html#about">About</a>
         <a href="index.html#what-we-do">Services</a><a href="index.html#contact">Contact</a>
@@ -1203,7 +1230,7 @@
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
-<script type="module" src="brand-orbit.js?v=5"></script>
+<script type="module" src="brand-orbit.js?v=6"></script>
 <!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
      deliberately NOT shared with brand-orbit.js: the loader mark is a
      one-shot ~6.25s render that must never compete with or be torn down
