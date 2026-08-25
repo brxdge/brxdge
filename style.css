@@ -4050,6 +4050,104 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .talent-card-head .name{ font-size: 17px; }
 }
 
+/* ---------- VIEW TOGGLE LAYOUTS (full roster overlay only) ----------
+   Scoped to #talentRosterGrid specifically — the featured homepage-style
+   grid (#rosterGrid) has no view toggle and always stays the default
+   3-per-row .talent-card layout. Wrapped in min-width:681px so neither
+   variant can ever apply on mobile, matching .tr-view-toggle's own
+   display:none below that width (see the Filters-row CSS above) — the
+   grid quietly falls back to the plain responsive .talent-card rules
+   above regardless of which view was last picked on a wider screen. */
+@media (min-width: 681px){
+  /* Showcase: same card, just 2-per-row instead of 3 — bigger photos,
+     same everything else. */
+  #talentRosterGrid.tr-view-comfort .talent-card{
+    width: calc(50% - 15px);
+  }
+
+  /* Client revision: default Grid density bumped from 3-per-row to
+     5-per-row on wide screens, matching the client's reference screenshots
+     of the competitor roster page. Scoped to #talentRosterGrid's default
+     state (i.e. neither Showcase nor List is active) and gated to a wide
+     min-width so it only kicks in once there's room for 5 real columns —
+     below that it falls back through the plain .talent-card cascade above
+     (3-per-row, then 2-per-row at <=960px, then 1-per-row at <=680px)
+     rather than jumping straight to a cramped 5-up grid. Left scoped to
+     the full overlay only — the featured homepage grid (#rosterGrid) is a
+     curated 9-item highlight strip, not the "browse everything" view this
+     density is meant for, so it stays at 3-per-row. */
+  @media (min-width: 1401px){
+    #talentRosterGrid:not(.tr-view-comfort):not(.tr-view-list) .talent-card{
+      width: calc(20% - 24px);
+    }
+  }
+
+  /* List: small square thumbnail on the left, name/reach up top right and
+     tags/details below it — same buildTalentCard() markup, rearranged
+     with CSS grid instead of the default top-to-bottom stack. The photo's
+     always-on overlays (platform stats list, decorative corner frame)
+     only make sense at portrait-card size, so they're hidden here rather
+     than shrunk down to illegible. */
+  #talentRosterGrid.tr-view-list{
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 18px;
+  }
+  #talentRosterGrid.tr-view-list .talent-card{
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 24px;
+    row-gap: 6px;
+    width: 100%;
+    align-items: start;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--panel-line);
+  }
+  #talentRosterGrid.tr-view-list .talent-photo{
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 160px;
+    aspect-ratio: 1 / 1;
+  }
+  #talentRosterGrid.tr-view-list .talent-card-head{
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 0;
+  }
+  #talentRosterGrid.tr-view-list .talent-card-foot{
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 0;
+  }
+  #talentRosterGrid.tr-view-list .platform-list,
+  #talentRosterGrid.tr-view-list .card-frame{
+    display: none;
+  }
+}
+
+/* ---------- LOAD MORE (full roster overlay pagination) ---------- */
+.tr-load-more-wrap{
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+.tr-load-more-btn{ padding: 14px 36px; font-size: 13.5px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* ---------- OVERLAY FOOTER ---------- */
+/* .brand-name's default gradient is fixed-light (meant for the navbar,
+   which is always dark regardless of site theme — see the comment above
+   its rule). This footer sits on the theme-aware .mediakit-overlay
+   background instead, so in light mode that fixed-light gradient all but
+   disappears. Swap in the theme-flipping --chrome var here specifically,
+   same technique otherwise (background-clip:text). */
+.tr-footer .brand-name{
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* ---------- BRAND TILE (sits in the middle slot, row 2, of the
    featured 3-per-row grid, in place of a 9th talent) ---------- */
 .brand-tile{
@@ -4129,11 +4227,53 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .talent-roster-overlay .wrap{ padding: 0 20px 48px; }
 }
 
-/* ---------- TALENT SEARCH (shown only in "View All Talent" mode) ---------- */
+/* ---------- TALENT SEARCH (shown only in "View All Talent" mode) ----------
+   Client revision: rebuilt as a minimal 3-zone toolbar (left: Show Filters
+   + search — center: live profile count — right: Sort by + View toggle)
+   over a full-width divider, matching the client's reference screenshots.
+   See .tr-toolbar-left/-center/-right, .tr-toolbar-count, .tr-toolbar-divider
+   and .tr-sort* below. */
 .talent-search-wrap{
+  position: relative;
+  z-index: 5; /* own stacking context above the roster grid below, so the
+                 absolutely-positioned .tr-sort-menu (z-index:20, scoped
+                 within this context) always paints above talent cards —
+                 without this, .talent-photo's tilt transform + .talent-card's
+                 perspective each establish their own auto/z-index:0 stacking
+                 contexts that can otherwise paint over a menu whose z-index
+                 only "wins" locally rather than against the grid as a whole. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 0;
+}
+.tr-toolbar-left{
   display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-self: start;
+}
+.tr-toolbar-center{ justify-self: center; }
+.tr-toolbar-count{
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tr-toolbar-right{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-self: end;
+}
+.tr-toolbar-divider{
+  height: 1px;
+  background: var(--panel-line);
+  margin: 24px 0 30px;
 }
 .talent-search{
   position: relative;
@@ -4192,7 +4332,6 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
    audience size / location / availability), collapsed behind a
    "Filters" toggle next to the search box so the default view stays
    as uncluttered as the old gender-chips-only layout. ---------- */
-.talent-search-wrap{ gap: 12px; flex-wrap: wrap; }
 
 .tr-filters-toggle{
   display: inline-flex; align-items: center; gap: 8px;
@@ -4203,11 +4342,104 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 .tr-filters-toggle:hover{ border-color: var(--coral); }
 .tr-filters-toggle.active{ background: var(--panel); border-color: var(--coral); color: var(--coral); }
+
+/* ---------- VIEW TOGGLE (Grid / Showcase / List) ----------
+   Segmented control sitting next to the Filters button. Desktop/tablet
+   only by design — the layout variants it switches between (see
+   .tr-view-comfort/.tr-view-list further down) are themselves wrapped in
+   a min-width:681px query, so this control is hidden below that same
+   width rather than offering a choice that would have no effect. */
+.tr-view-toggle{
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--panel-line);
+  border-radius: 999px;
+}
+.tr-view-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tr-view-btn:hover{ color: var(--text); }
+.tr-view-btn.active{ background: var(--text); color: var(--on-accent); }
+@media (max-width: 680px){
+  .tr-view-toggle{ display: none; }
+}
 .tr-filters-badge{
   display: none; align-items: center; justify-content: center;
   min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
   background: var(--coral); color: var(--on-accent, #fff);
   font-size: 11px; font-weight: 700; line-height: 1;
+}
+
+/* ---------- SORT BY (rebuilt minimal toolbar, right zone) ----------
+   A small popover menu, same pill styling family as .tr-filters-toggle.
+   Positioned relative to .tr-sort so the menu can anchor off it. */
+.tr-sort{ position: relative; }
+.tr-sort-toggle{
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border-radius: 999px;
+  border: 1px solid var(--panel-line); background: var(--ink-2);
+  color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.tr-sort-toggle:hover{ border-color: var(--coral); }
+.tr-sort-toggle #trSortLabel{ color: var(--text); font-weight: 700; }
+.tr-sort-toggle svg{ transition: transform 0.25s ease; color: var(--muted); }
+.tr-sort-toggle[aria-expanded="true"] svg{ transform: rotate(180deg); }
+
+.tr-sort-menu{
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-line);
+  background: var(--panel);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+.tr-sort-menu.show{ opacity: 1; visibility: visible; transform: translateY(0); }
+.tr-sort-option{
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.tr-sort-option:hover{ background: var(--ink-2); }
+.tr-sort-option.active{ color: var(--coral); font-weight: 700; }
+
+@media (max-width: 680px){
+  .talent-search-wrap{ grid-template-columns: 1fr; gap: 14px; }
+  .tr-toolbar-left{ order: 1; justify-self: stretch; }
+  .tr-toolbar-right{ order: 2; justify-self: stretch; flex-wrap: wrap; }
+  .tr-toolbar-center{ order: 3; justify-self: start; }
+  .tr-sort-menu{ left: 0; right: auto; }
+  .tr-toolbar-divider{ margin: 20px 0 24px; }
 }
 
 .tr-filters-panel{
@@ -6036,9 +6268,16 @@ html.dark-mode .creator-panel::before{
 ========================================================= */
 .talent-card-foot{
   margin-top: 14px;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.22,1,0.36,1), margin-top 0.45s ease, opacity 0.3s ease;
+}
+.talent-card-foot .tcf-inner{
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow: hidden;
+  min-height: 0;
 }
 .tcf-tags{
   display: flex;
@@ -6167,6 +6406,44 @@ html.dark-mode .creator-panel::before{
 .tcf-addcast.added:hover{ color: #fff; opacity: 0.9; }
 .tcf-addcast.added .cast-icon-plus{ display: none; }
 .tcf-addcast.added .cast-icon-check{ display: inline-flex; }
+
+/* =========================================================
+   MINIMAL CARD TREATMENT — client reference: a competitor roster grid
+   showing just a name + "Social Reach" header over a bare, full-bleed
+   photo — no tags, no location line, no buttons, no overlay stats. On
+   hover-capable/pointer-fine devices, the tag/location/availability/CTA
+   footer and the platform-stat overlay collapse away by default and
+   reveal on hover or keyboard focus. Scoped to `.roster-grid:not(.tr-view-list)`
+   so it reaches BOTH the featured homepage grid (#rosterGrid) and the full
+   roster overlay's Grid/Showcase views, but not List view — List already
+   lays these same elements out inline (see the min-width:681px view-toggle
+   block above) and always shows them. Wrapped in
+   `@media (hover: hover) and (pointer: fine)` — same guard already used
+   for the card's photo-zoom-on-hover above — so touch devices, which have
+   no reliable hover, keep everything always visible instead of hidden
+   behind an interaction they can't reliably trigger.
+========================================================= */
+@media (hover: hover) and (pointer: fine){
+  .roster-grid:not(.tr-view-list) .talent-card-foot{
+    grid-template-rows: 0fr;
+    margin-top: 0;
+    opacity: 0;
+  }
+  .roster-grid:not(.tr-view-list) .talent-card:hover .talent-card-foot,
+  .roster-grid:not(.tr-view-list) .talent-card:focus-within .talent-card-foot{
+    grid-template-rows: 1fr;
+    margin-top: 14px;
+    opacity: 1;
+  }
+  .roster-grid:not(.tr-view-list) .platform-list{
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .roster-grid:not(.tr-view-list) .talent-card:hover .platform-list,
+  .roster-grid:not(.tr-view-list) .talent-card:focus-within .platform-list{
+    opacity: 1;
+  }
+}
 
 /* NAV TALENTS — top-navbar button + dropdown showing the current campaign
    cast (talent added via the "+ Add to Campaign" button on each talent
