@@ -4156,6 +4156,31 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   .talent-search{ max-width: 100%; }
 }
 
+/* ---------- BUILD YOUR PREFERRED TALENTS (popup) ----------
+   Reuses .tr-filter-group/.tr-filter-label/.tr-filter-select/.tr-chip-multi
+   as-is from the collapsible Filters panel above — only the grid wrapper
+   is its own class, since .tr-filters-panel's grid rules double as its
+   collapse animation (max-height/opacity) which this modal doesn't need;
+   .modal-overlay/.modal already handle this popup's own show/hide. */
+.trb-modal{ max-width: 620px; }
+.trb-filters-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 24px;
+  margin-top: 22px;
+}
+.trb-filters-grid .tr-filter-group--wide{ grid-column: span 3; }
+.trb-modal .modal-actions{ margin-top: 28px; }
+@media (max-width: 640px){
+  .trb-filters-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trb-filters-grid .tr-filter-group--wide{ grid-column: span 2; }
+}
+@media (max-width: 480px){
+  .trb-filters-grid{ grid-template-columns: 1fr; }
+  .trb-filters-grid .tr-filter-group--wide{ grid-column: span 1; }
+  .trb-modal .modal-actions{ flex-direction: column-reverse; }
+}
+
 /* ---------- VIEW ALL TALENT ---------- */
 .view-all-wrap{
   display: flex;
