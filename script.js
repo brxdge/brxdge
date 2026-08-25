@@ -296,7 +296,11 @@
     if (next === p) return;
     p = next;
 
-    loadPercent.textContent = p + '%';
+    // talent.html removes the percentage readout and wordmark from its
+    // loader (keeps only the bridge mark animation), so both are guarded —
+    // the counting/timing logic itself still runs unchanged everywhere so
+    // it stays in sync with loader-bridge.js's assembly animation.
+    if (loadPercent) loadPercent.textContent = p + '%';
 
     // Wordmark reveals letter-by-letter once loading is nearly finished,
     // not mid-way through — it should feel like the last flourish before
@@ -644,12 +648,13 @@ function safeUrl(str){
   return /^https?:\/\//i.test(s) ? s : '';
 }
 
-// "Featured" homepage view shows a capped grid with the BRXDGE brand tile
-// dropped into the middle slot. "View All Talent" opens a full-page
-// overlay (like the media kit) with the complete, gender-filterable,
-// searchable roster — no cap, no brand tile.
-const FEATURED_CAP = 8;
-const BRAND_TILE_POSITION = 4; // 0-based index -> 5th card, middle of row 2 in a 3-col grid
+// "Featured" view (talent.html's roster grid) shows a capped grid of real
+// talent cards only — the BRXDGE brand tile that used to occupy the middle
+// slot has been retired in favor of showing one more actual talent there
+// instead (bumped from 8 to 9 to keep the same grid size). "View All
+// Talent" opens a full-page overlay (like the media kit) with the
+// complete, gender-filterable, searchable roster — no cap.
+const FEATURED_CAP = 9;
 let trGenderFilter = 'All';   // gender filter, scoped to the full talent-roster overlay
 let trSearchQuery = '';       // name search, scoped to the full talent-roster overlay
 
@@ -1269,21 +1274,6 @@ function revealTalentCards(container, opts){
   cards.forEach(card => io.observe(card));
 }
 
-// The BRXDGE brand tile that sits in the middle slot of the featured grid
-// (row 2, center column in the 3-per-row layout) instead of a 9th talent.
-// It's a static visual element, not a link/button.
-function buildBrandTile(){
-  const tile = document.createElement('div');
-  tile.className = 'talent-card brand-tile reveal-card';
-  tile.innerHTML = `
-    <div class="brand-tile-inner">
-      <img class="brand-tile-mark" src="brxdge.png" alt="BRXDGE, Brxdge to Possibilities">
-      <div class="brand-tile-glow" aria-hidden="true"></div>
-    </div>
-  `;
-  return tile;
-}
-
 function renderRoster() {
   const grid = document.getElementById('rosterGrid');
   // #roster (and its grid) only exists on talent.html now — index.html no
@@ -1299,16 +1289,12 @@ function renderRoster() {
     return;
   }
 
-  // Featured homepage view: cap at 8 cards, with the BRXDGE mark dropped
-  // into the middle slot.
+  // Featured talent.html view: cap at FEATURED_CAP real talent cards.
   const displayList = list.slice(0, FEATURED_CAP);
 
   displayList.forEach((t, i) => {
-    if (i === BRAND_TILE_POSITION) grid.appendChild(buildBrandTile());
     grid.appendChild(buildTalentCard(t, i));
   });
-  // If the list is too short to reach the middle slot, still show the mark at the end.
-  if (displayList.length <= BRAND_TILE_POSITION) grid.appendChild(buildBrandTile());
 
   // Attach click handlers for manager controls
   grid.querySelectorAll('[data-edit]').forEach(btn =>
@@ -4318,9 +4304,12 @@ const contactFormBackBtn = document.getElementById('contactFormBack');
 // value — there's no separate backend category for it, and "Brand"/
 // company-side is what that value already means downstream).
 function showContactForm(type){
+  // #contact (and its form) lives only on index.html now — talent.html
+  // routes its own CTAs there via a cross-page link, so this is guarded
+  // rather than assuming the form is on the current page.
   if(contactChooser) contactChooser.style.display = 'none';
   if(contactSuccess) contactSuccess.style.display = 'none';
-  contactForm.style.display = 'flex';
+  if(contactForm) contactForm.style.display = 'flex';
   if(type){
     if(contactInquiryType) contactInquiryType.value = type;
     if(contactMessageField) contactMessageField.placeholder = INQUIRY_MESSAGE_PLACEHOLDERS[type] || DEFAULT_MESSAGE_PLACEHOLDER;
@@ -4328,7 +4317,7 @@ function showContactForm(type){
 }
 
 function showContactChooser(){
-  contactForm.style.display = 'none';
+  if(contactForm) contactForm.style.display = 'none';
   if(contactSuccess) contactSuccess.style.display = 'none';
   if(contactChooser) contactChooser.style.display = 'block';
 }
@@ -4349,40 +4338,45 @@ if(contactFormBackBtn){
   });
 }
 
-contactForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  const label = btn.querySelector('span');
-  const originalLabel = label.textContent;
-  btn.disabled = true; label.textContent = 'Sending…';
-  try {
-    const inquiryType = contactInquiryType ? contactInquiryType.value : '';
-    const rawMessage = document.getElementById('contactMessage').value.trim();
-    const res = await fetch(API + '/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: document.getElementById('contactName').value.trim(),
-        email: document.getElementById('contactEmail').value.trim(),
-        // Inquiry type is folded into the message text itself, rather than
-        // sent as a new field, so this works with the existing /api/contact
-        // endpoint as-is — no backend or database change required.
-        message: inquiryType ? `[Inquiry type: ${inquiryType}]\n\n${rawMessage}` : rawMessage,
-        talent: '',
-      }),
-    });
-    if(!res.ok) throw new Error('Request failed');
-    // Swap the whole form for an inline confirmation — more reassuring
-    // than a toast alone for something as high-stakes as a lead form.
-    contactForm.style.display = 'none';
-    if(contactSuccess) contactSuccess.style.display = 'block';
-  } catch(err){
-    console.error(err);
-    showToast("Couldn't send right now. Please try again in a moment");
-  } finally {
-    btn.disabled = false; label.textContent = originalLabel;
-  }
-});
+// #contact only exists on index.html now — guarded so talent.html (which
+// no longer has this form) doesn't throw and halt every top-level script
+// below this point.
+if(contactForm){
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const label = btn.querySelector('span');
+    const originalLabel = label.textContent;
+    btn.disabled = true; label.textContent = 'Sending…';
+    try {
+      const inquiryType = contactInquiryType ? contactInquiryType.value : '';
+      const rawMessage = document.getElementById('contactMessage').value.trim();
+      const res = await fetch(API + '/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('contactName').value.trim(),
+          email: document.getElementById('contactEmail').value.trim(),
+          // Inquiry type is folded into the message text itself, rather than
+          // sent as a new field, so this works with the existing /api/contact
+          // endpoint as-is — no backend or database change required.
+          message: inquiryType ? `[Inquiry type: ${inquiryType}]\n\n${rawMessage}` : rawMessage,
+          talent: '',
+        }),
+      });
+      if(!res.ok) throw new Error('Request failed');
+      // Swap the whole form for an inline confirmation — more reassuring
+      // than a toast alone for something as high-stakes as a lead form.
+      contactForm.style.display = 'none';
+      if(contactSuccess) contactSuccess.style.display = 'block';
+    } catch(err){
+      console.error(err);
+      showToast("Couldn't send right now. Please try again in a moment");
+    } finally {
+      btn.disabled = false; label.textContent = originalLabel;
+    }
+  });
+}
 
 const contactSendAnotherBtn = document.getElementById('contactSendAnother');
 if(contactSendAnotherBtn){
@@ -4455,6 +4449,16 @@ function scrollToContactAs(type){
   scrollToSection('contact');
   showContactForm(type);
 }
+
+// Deep link: ?contactAs=Creator (etc.) — used by talent.html's "Apply for
+// Representation" CTA now that #contact only lives on index.html. It
+// navigates to index.html?contactAs=Creator#contact; the URL's own #contact
+// fragment handles the scroll natively, this just pre-selects the inquiry
+// type and skips straight to the form, same as the same-page CTAs above.
+// showContactForm() is guarded, so this is a safe no-op on any page (or in
+// the rare case #contact is somehow still missing) rather than throwing.
+const requestedContactAs = new URLSearchParams(location.search).get('contactAs');
+if(requestedContactAs) showContactForm(requestedContactAs);
 
 // ---------------- FAQ ACCORDION ----------------
 // Independent items rather than a strict single-open accordion — opening
