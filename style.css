@@ -4155,10 +4155,18 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
    which is always dark regardless of site theme — see the comment above
    its rule). This footer sits on the theme-aware .mediakit-overlay
    background instead, so in light mode that fixed-light gradient all but
-   disappears. Swap in the theme-flipping --chrome var here specifically,
-   same technique otherwise (background-clip:text). */
+   disappears.
+   Client revision: "BRXDGE text should be readable" — var(--chrome)'s
+   dark stops (near-black, meant to read as an etched/engraved highlight
+   against a light backdrop) were sinking straight into the near-black
+   .mediakit-overlay background in dark mode, so parts of the wordmark
+   were vanishing entirely. Swapped for a gradient built from the same
+   --text/--muted pair every other line of copy in this overlay already
+   relies on for guaranteed contrast against --ink in both themes, kept
+   light→dark→light so it still reads as a brushed-metal wordmark rather
+   than flat text. */
 .tr-footer .brand-name{
-  background: var(--chrome);
+  background: linear-gradient(135deg, var(--text) 0%, var(--muted) 50%, var(--text) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
