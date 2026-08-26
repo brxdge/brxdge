@@ -535,14 +535,34 @@ function initBrandOrbitMark(mountId, canvasId, opts){
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    renderer.render(scene, camera); // re-render at the corrected resolution immediately, don't wait for the next rAF/reduced-motion-gated tick
   }
   fitSize();
 
+  // Client revision: the footer instance of this mark lives inside the
+  // full roster overlay, which is `display:none` until opened — so the
+  // very first fitSize() call above (fired the moment this script runs,
+  // on page load) sees a mount with zero width/height, clamps to the
+  // 120x80 floor, and locks the renderer into that tiny internal
+  // resolution. CSS then stretches that low-res render up to fill the
+  // full-size mark once the overlay opens, which is what read as
+  // "blurry" — the canvas itself never got a chance to redraw at its
+  // real, much larger, on-screen size. A plain window "resize" listener
+  // never catches this, since the *window* never resizes when the
+  // overlay opens — only the mount's own box does. ResizeObserver does
+  // catch that, so it replaces the old resize-only wiring here (still
+  // covers actual window resizes too, since those change the mount's
+  // box as well).
   let resizeTimer;
-  window.addEventListener('resize', () => {
+  const scheduleFit = () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(fitSize, 150);
-  });
+  };
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(scheduleFit).observe(mount);
+  } else {
+    window.addEventListener('resize', scheduleFit);
+  }
 
   // Only spend GPU/CPU cycles rotating and re-rendering while the mark
   // is actually on screen.
