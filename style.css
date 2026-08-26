@@ -4239,18 +4239,25 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 /* Purely decorative — not a button, no aria-label, no click handler (see
    brand-orbit.js's `interactive:false` mount) — so it never intercepts a
    click or sends the visitor anywhere, unlike the hero's version of the
-   same mark. Sized down to a footer-appropriate scale (the hero's version
-   is a headline-scale centerpiece; this is a quiet accent). Same
-   canvas/fallback swap pattern as .hero-orbit-mark: the flat SVG bridge
-   shows until brand-orbit.js confirms WebGL works and adds .is-ready. */
+   same mark. Same canvas/fallback swap pattern as .hero-orbit-mark: the
+   flat SVG bridge shows until brand-orbit.js confirms WebGL works and
+   adds .is-ready.
+   Client revision: "make it the same as what is on the main page" — sizing
+   (width clamp + the sub-640px shrink + fallback SVG scale) now matches
+   .hero-orbit-mark exactly. Only the size carries over, not the hero's
+   click-glow/burst styling below — those are tied to the click-to-cross
+   interaction this mount deliberately doesn't have. */
 .footer-orbit-mark{
   position: relative;
-  width: clamp(90px, 9vw, 140px);
+  width: clamp(320px, 42vw, 640px);
   aspect-ratio: 2 / 1.05;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+}
+@media (max-width: 640px){
+  .footer-orbit-mark{ width: clamp(280px, 88vw, 420px); }
 }
 .footer-orbit-mark canvas{
   position: relative;
@@ -4267,7 +4274,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   align-items: center;
   justify-content: center;
 }
-.footer-orbit-fallback svg{ width: 62%; height: 62%; }
+.footer-orbit-fallback svg{ width: 58%; height: 58%; }
 .footer-orbit-mark.is-ready .footer-orbit-fallback{ display: none; }
 
 /* ---------- BRAND TILE (sits in the middle slot, row 2, of the
