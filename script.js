@@ -667,6 +667,32 @@ let trAudienceSizeFilter = 'All';
 let trPlatformFilters = new Set();
 let trAvailabilityFilters = new Set();
 
+// Client revision: the full roster overlay used to render every matching
+// talent at once, unbounded — fine for a handful of cards, but it meant
+// scrolling through dozens with no pacing and a dead-empty stretch below
+// the last row. Paginated in batches of 6 instead, with a "Load More"
+// button revealing the next batch; resets back to the first page whenever
+// the *filtered set itself* changes (new gender/search/filter), but NOT
+// on every render (admin add/edit/delete, cast-toggle refreshes, and the
+// Load More click itself all re-render without losing your place).
+const TR_PAGE_SIZE = 6;
+let trVisibleCount = TR_PAGE_SIZE;
+
+// Client revision: added a Grid / Showcase / List view toggle for the full
+// roster overlay — purely a display preference (which CSS layout the same
+// .talent-card markup renders as), so it lives as one piece of state read
+// by renderTalentRosterGrid() below and doesn't need to survive anywhere
+// beyond this page load. Deliberately NOT reset on filter changes or on
+// reopening the overlay — once picked, it stays picked for the session.
+let trViewMode = 'grid'; // 'grid' | 'comfort' | 'list'
+
+// Client revision: "Sort by" menu in the rebuilt minimal toolbar — same
+// sticky-for-the-session treatment as trViewMode above (not reset on
+// filter changes or reopening the overlay). getFilteredTrList() applies
+// it last, after every filter, on a copy of the list so rosterData itself
+// is never mutated by .sort().
+let trSortMode = 'featured'; // 'featured' | 'name-asc' | 'name-desc' | 'reach-desc' | 'reach-asc'
+
 // Preset combined-reach buckets for the "Audience Size" filter — computed
 // from totalReach(t.socials) rather than a stored field, since reach is
 // already derived from each platform's follower count.
@@ -848,19 +874,21 @@ function buildTalentCard(t, index){
       </div>
     </div>
     <div class="talent-card-foot">
-      ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
-      ${t.location ? `<p class="tcf-line"><span class="tcf-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
-      ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${escapeHtml(audience)}</p>` : ''}
-      ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${escapeHtml(availableFor.join(' • '))}</p>` : ''}
-      <div class="tcf-actions">
-        <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
-          View Media Kit
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button type="button" class="tcf-addcast${castIds.includes(t.id) ? ' added' : ''}" data-cast-toggle="${t.id}" aria-pressed="${castIds.includes(t.id)}">
-          ${castCheckSvg}${castPlusSvg}
-          <span>${castIds.includes(t.id) ? 'Added' : 'Add to Campaign'}</span>
-        </button>
+      <div class="tcf-inner">
+        ${cats.length ? `<div class="tcf-tags">${cats.map(c => `<span class="tcf-tag">${escapeHtml(c)}</span>`).join('')}</div>` : ''}
+        ${t.location ? `<p class="tcf-line"><span class="tcf-label">Location</span>${escapeHtml(t.location)}</p>` : ''}
+        ${audience ? `<p class="tcf-line"><span class="tcf-label">Audience</span>${escapeHtml(audience)}</p>` : ''}
+        ${availableFor.length ? `<p class="tcf-line"><span class="tcf-label">Available for</span>${escapeHtml(availableFor.join(' • '))}</p>` : ''}
+        <div class="tcf-actions">
+          <button type="button" class="tcf-viewmk" data-view-mk="${t.id}">
+            View Media Kit
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="tcf-addcast${castIds.includes(t.id) ? ' added' : ''}" data-cast-toggle="${t.id}" aria-pressed="${castIds.includes(t.id)}">
+            ${castCheckSvg}${castPlusSvg}
+            <span>${castIds.includes(t.id) ? 'Added' : 'Add to Campaign'}</span>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -1343,6 +1371,7 @@ talentFilterOverlay.querySelectorAll('.gender-option').forEach(btn => {
 
 function openTalentRosterOverlay(gender){
   resetTrFilters();
+  trVisibleCount = TR_PAGE_SIZE; // always start browsing from page 1
   trGenderFilter = gender || 'All';
   const searchInput = document.getElementById('talentSearchInput');
   if (searchInput) searchInput.value = '';
@@ -1565,6 +1594,7 @@ function renderTrGenderFilters(){
     chip.addEventListener('click', () => {
       if (g === trGenderFilter) return;
       trGenderFilter = g;
+      trVisibleCount = TR_PAGE_SIZE; // new filter set — start from page 1
       renderTrGenderFilters();
       renderTalentRosterGrid();
       updateTrFiltersUI();
@@ -1683,6 +1713,7 @@ function renderTrExpandedFilters(){
 // state: re-renders the grid, then rebuilds both control sets so neither
 // can ever show a value/active-state the other doesn't agree with.
 function applyTrFilterChange(){
+  trVisibleCount = TR_PAGE_SIZE; // new filter set — start from page 1
   renderTalentRosterGrid();
   renderTrExpandedFilters();
 }
@@ -1743,6 +1774,7 @@ const trClearFiltersBtn = document.getElementById('trClearFilters');
 if (trClearFiltersBtn) {
   trClearFiltersBtn.addEventListener('click', () => {
     resetTrFilters();
+    trVisibleCount = TR_PAGE_SIZE; // new filter set — start from page 1
     const searchInput = document.getElementById('talentSearchInput');
     if (searchInput) searchInput.value = '';
     renderTrGenderFilters();
@@ -1787,6 +1819,65 @@ if (trBuildSkip) {
   });
 }
 
+// Shared by renderTalentRosterGrid() below and nothing else (yet) — pulled
+// out on its own so the pagination slicing in doRender() has a clean "full
+// filtered set" to work from before cutting it down to trVisibleCount.
+function getFilteredTrList(){
+  let list = trGenderFilter === 'All' ? rosterData : rosterData.filter(t => (t.gender || '').toLowerCase() === trGenderFilter.toLowerCase());
+  if (trSearchQuery.trim()) {
+    const q = trSearchQuery.trim().toLowerCase();
+    list = list.filter(t => (t.name || '').toLowerCase().includes(q));
+  }
+  if (trNicheFilter !== 'All') {
+    list = list.filter(t => t.niche === trNicheFilter);
+  }
+  if (trLocationFilter !== 'All') {
+    list = list.filter(t => t.location === trLocationFilter);
+  }
+  if (trAudienceSizeFilter !== 'All') {
+    const bucket = AUDIENCE_SIZE_BUCKETS.find(b => b.key === trAudienceSizeFilter);
+    if (bucket && bucket.test) list = list.filter(t => bucket.test(totalReach(t.socials)));
+  }
+  if (trPlatformFilters.size) {
+    // Match talent with a profile on ANY of the selected platforms (OR
+    // within this filter), same relationship used for availability below.
+    list = list.filter(t => (t.socials || []).some(s => trPlatformFilters.has(s.platform)));
+  }
+  if (trAvailabilityFilters.size) {
+    list = list.filter(t => (t.availableFor || []).some(a => trAvailabilityFilters.has(a)));
+  }
+
+  // Sort last, on a copy — list may still be the original rosterData
+  // reference at this point (e.g. no filters active at all), so .slice()
+  // before .sort() to avoid silently reordering the source data itself.
+  if (trSortMode !== 'featured') {
+    list = list.slice();
+    if (trSortMode === 'name-asc') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    else if (trSortMode === 'name-desc') list.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+    else if (trSortMode === 'reach-desc') list.sort((a, b) => totalReach(b.socials) - totalReach(a.socials));
+    else if (trSortMode === 'reach-asc') list.sort((a, b) => totalReach(a.socials) - totalReach(b.socials));
+  }
+
+  return list;
+}
+
+// Shows/hides the "Load More" button and updates its label with however
+// many are left, given how many cards are currently on screen vs. how many
+// match the active filters in total.
+function updateTrLoadMoreUI(shownCount, totalCount){
+  const wrap = document.getElementById('trLoadMoreWrap');
+  if (!wrap) return;
+  const remaining = totalCount - shownCount;
+  if (remaining <= 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  const btn = document.getElementById('trLoadMoreBtn');
+  const label = btn ? btn.querySelector('span') : null;
+  if (label) label.textContent = `Load ${Math.min(TR_PAGE_SIZE, remaining)} More Talent`;
+}
+
 // Bumped on every call so a slow-arriving fade-out from a previous filter
 // change can't clobber a newer one (e.g. rapid search typing).
 let trRenderToken = 0;
@@ -1800,30 +1891,10 @@ function renderTalentRosterGrid(){
     if (token !== trRenderToken) return; // a newer change has since taken over
     grid.classList.remove('grid-swapping');
     grid.innerHTML = '';
+    grid.classList.toggle('tr-view-comfort', trViewMode === 'comfort');
+    grid.classList.toggle('tr-view-list', trViewMode === 'list');
 
-    let list = trGenderFilter === 'All' ? rosterData : rosterData.filter(t => (t.gender || '').toLowerCase() === trGenderFilter.toLowerCase());
-    if (trSearchQuery.trim()) {
-      const q = trSearchQuery.trim().toLowerCase();
-      list = list.filter(t => (t.name || '').toLowerCase().includes(q));
-    }
-    if (trNicheFilter !== 'All') {
-      list = list.filter(t => t.niche === trNicheFilter);
-    }
-    if (trLocationFilter !== 'All') {
-      list = list.filter(t => t.location === trLocationFilter);
-    }
-    if (trAudienceSizeFilter !== 'All') {
-      const bucket = AUDIENCE_SIZE_BUCKETS.find(b => b.key === trAudienceSizeFilter);
-      if (bucket && bucket.test) list = list.filter(t => bucket.test(totalReach(t.socials)));
-    }
-    if (trPlatformFilters.size) {
-      // Match talent with a profile on ANY of the selected platforms (OR
-      // within this filter), same relationship used for availability below.
-      list = list.filter(t => (t.socials || []).some(s => trPlatformFilters.has(s.platform)));
-    }
-    if (trAvailabilityFilters.size) {
-      list = list.filter(t => (t.availableFor || []).some(a => trAvailabilityFilters.has(a)));
-    }
+    const list = getFilteredTrList();
 
     const sub = document.getElementById('trSub');
     if (sub) {
@@ -1836,6 +1907,13 @@ function renderTalentRosterGrid(){
       sub.classList.add('pulse');
     }
 
+    // Client revision: terse "N Profiles" count centered in the rebuilt
+    // toolbar, matching the reference screenshots — separate element from
+    // #trSub above (which keeps its own richer "Showing X of Y" copy up in
+    // the header) so neither design has to compromise for the other.
+    const toolbarCount = document.getElementById('trToolbarCount');
+    if (toolbarCount) toolbarCount.textContent = `${list.length} Profile${list.length === 1 ? '' : 's'}`;
+
     const clearBtn = document.getElementById('talentSearchClear');
     if (clearBtn) clearBtn.style.display = trSearchQuery ? 'flex' : 'none';
 
@@ -1845,10 +1923,16 @@ function renderTalentRosterGrid(){
       if (safeQuery) emptyMsg = `No talent matching "${safeQuery}".`;
       else if (trHasActiveFilters()) emptyMsg = 'No talent matches these filters.';
       grid.innerHTML = `<div class="roster-empty">${emptyMsg}</div>`;
+      updateTrLoadMoreUI(0, 0);
       return;
     }
 
-    list.forEach((t, i) => grid.appendChild(buildTalentCard(t, i)));
+    // Paginated: only the first trVisibleCount of the filtered list actually
+    // get built as cards. Card index (i) stays relative to the full filtered
+    // list, not just the visible slice, so numbering/reveal-delay stays
+    // consistent as more pages load in.
+    const visibleList = list.slice(0, trVisibleCount);
+    visibleList.forEach((t, i) => grid.appendChild(buildTalentCard(t, i)));
 
     grid.querySelectorAll('[data-edit]').forEach(btn =>
       btn.addEventListener('click', (e) => { e.stopPropagation(); openTalentModal(btn.dataset.edit); })
@@ -1858,6 +1942,7 @@ function renderTalentRosterGrid(){
     );
 
     revealTalentCards(grid, { immediate: true });
+    updateTrLoadMoreUI(visibleList.length, list.length);
   };
 
   // First paint (overlay just opened): no old cards to transition out of,
@@ -1871,12 +1956,100 @@ function renderTalentRosterGrid(){
   }
 }
 
+/* ---------------- LOAD MORE (full roster overlay pagination) ----------------
+   Just bumps trVisibleCount and re-renders — goes through the same
+   fade-and-swap as a filter change (renderTalentRosterGrid sees the grid
+   already has children, so it's never the "isFirstRender" instant-paint
+   path). Keeping one render path instead of a separate append-only one
+   means there's nowhere for the visible cards / index numbers / Load More
+   label to drift out of sync with the underlying filtered list. */
+const trLoadMoreBtn = document.getElementById('trLoadMoreBtn');
+if (trLoadMoreBtn) {
+  trLoadMoreBtn.addEventListener('click', () => {
+    trVisibleCount += TR_PAGE_SIZE;
+    renderTalentRosterGrid();
+  });
+}
+
+/* ---------------- VIEW TOGGLE (Grid / Showcase / List, full roster overlay) ----------------
+   Purely a display-mode switch — same buildTalentCard() markup, different
+   CSS (see .tr-view-comfort/.tr-view-list in style.css). Doesn't reset
+   pagination or any filter; renderTalentRosterGrid() just reads trViewMode
+   each time it rebuilds the grid. */
+const trViewToggle = document.getElementById('trViewToggle');
+if (trViewToggle) {
+  const trViewBtns = Array.from(trViewToggle.querySelectorAll('.tr-view-btn'));
+  trViewBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.view;
+      if (!mode || mode === trViewMode) return;
+      trViewMode = mode;
+      trViewBtns.forEach(b => {
+        const active = b === btn;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      renderTalentRosterGrid();
+    });
+  });
+}
+
+/* ---------------- SORT BY (full roster overlay, rebuilt minimal toolbar) ----------------
+   A small popover menu next to the View toggle — picks trSortMode, which
+   getFilteredTrList() applies last (see above). Resets pagination back to
+   page 1 on change (new order, same idea as a new filter) but — like
+   trViewMode — is NOT reset by filter changes or reopening the overlay;
+   once picked, the chosen order sticks for the session. */
+const trSortToggle = document.getElementById('trSortToggle');
+const trSortMenu = document.getElementById('trSortMenu');
+if (trSortToggle && trSortMenu) {
+  const trSortLabelEl = document.getElementById('trSortLabel');
+  const trSortOptions = Array.from(trSortMenu.querySelectorAll('.tr-sort-option'));
+
+  const closeTrSortMenu = () => {
+    trSortMenu.classList.remove('show');
+    trSortToggle.setAttribute('aria-expanded', 'false');
+  };
+
+  trSortToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = trSortMenu.classList.toggle('show');
+    trSortToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  trSortOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const mode = opt.dataset.sort;
+      if (!mode) return;
+      trSortOptions.forEach(o => o.classList.toggle('active', o === opt));
+      if (trSortLabelEl) trSortLabelEl.textContent = opt.textContent.trim();
+      closeTrSortMenu();
+      if (mode === trSortMode) return;
+      trSortMode = mode;
+      trVisibleCount = TR_PAGE_SIZE; // new order — start from page 1
+      renderTalentRosterGrid();
+    });
+  });
+
+  // Outside click / Escape closes the menu, same pattern as other popovers
+  // on this page (nav-talents dropdown, etc).
+  document.addEventListener('click', (e) => {
+    if (!trSortMenu.classList.contains('show')) return;
+    if (trSortToggle.contains(e.target) || trSortMenu.contains(e.target)) return;
+    closeTrSortMenu();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && trSortMenu.classList.contains('show')) closeTrSortMenu();
+  });
+}
+
 /* ---------------- VIEW ALL TALENT: search box (lives inside the overlay) ---------------- */
 const talentSearchInput = document.getElementById('talentSearchInput');
 const talentSearchClear = document.getElementById('talentSearchClear');
 if (talentSearchInput) {
   talentSearchInput.addEventListener('input', (e) => {
     trSearchQuery = e.target.value;
+    trVisibleCount = TR_PAGE_SIZE; // new filter set — start from page 1
     renderTalentRosterGrid();
     updateTrFiltersUI();
   });
@@ -1884,6 +2057,7 @@ if (talentSearchInput) {
 if (talentSearchClear) {
   talentSearchClear.addEventListener('click', () => {
     trSearchQuery = '';
+    trVisibleCount = TR_PAGE_SIZE; // new filter set — start from page 1
     if (talentSearchInput) { talentSearchInput.value = ''; talentSearchInput.focus(); }
     renderTalentRosterGrid();
     updateTrFiltersUI();
