@@ -40,7 +40,8 @@ db.exec(`
     audienceAgeBreakdown TEXT NOT NULL DEFAULT '[]',
     audienceTopLocations TEXT NOT NULL DEFAULT '[]',
     audienceInterests    TEXT NOT NULL DEFAULT '[]',
-    whyCards              TEXT NOT NULL DEFAULT '[]'
+    whyCards              TEXT NOT NULL DEFAULT '[]',
+    hidden                INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS gallery_images (
@@ -201,6 +202,15 @@ for (const [col, def] of Object.entries(talentRevampColumns)) {
   if (!talentColumns.includes(col)) {
     db.exec(`ALTER TABLE talents ADD COLUMN ${col} ${def}`);
   }
+}
+
+// Client revision ("Major revisions"): a Hide/Show toggle in admin lets a
+// talent be pulled from public view (roster grid + full roster overlay)
+// without deleting their record — same "add the column if it's missing"
+// migration as above, so existing talents just default to visible
+// (hidden = 0) until an admin hides one.
+if (!talentColumns.includes('hidden')) {
+  db.exec(`ALTER TABLE talents ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`);
 }
 
 // Same idea for gallery_images: `category` (e.g. "Lifestyle", "UGC") and
