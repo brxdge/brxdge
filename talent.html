@@ -75,8 +75,8 @@
      Combined into one stylesheet request and added the missing preconnect. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=55">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=59">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1226,11 +1226,11 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=41"></script>
+<script src="script.js?v=43"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
-<script type="module" src="brand-orbit.js?v=6"></script>
+<script type="module" src="brand-orbit.js?v=7"></script>
 <!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
      deliberately NOT shared with brand-orbit.js: the loader mark is a
      one-shot ~6.25s render that must never compete with or be torn down
