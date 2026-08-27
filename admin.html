@@ -274,11 +274,26 @@ a{ color:inherit; }
 /* ---------- TALENT GRID ---------- */
 .talent-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; }
 .talent-card{
+  position:relative;
   border:1px solid var(--border); border-radius:14px; overflow:hidden;
   transition:transform 0.15s ease, box-shadow 0.15s ease;
 }
 .talent-card:hover{ transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,0.08); }
 .talent-card img{ width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#f1f2f5; }
+/* Hide/Show toggle (client revision, "Major revisions"): a hidden talent
+   keeps their full record — nothing is deleted — but is pulled from the
+   public roster/roster overlay. Dimmed thumbnail + a small badge so a
+   hidden card still reads clearly at a glance in this grid, without
+   being confused for a talent that's about to be deleted. */
+.talent-card--hidden img{ opacity:0.45; filter:grayscale(0.4); }
+.talent-card-hidden-badge{
+  position:absolute; top:10px; left:10px; z-index:1;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 10px; border-radius:100px;
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+  background:#14161A; color:#fff;
+}
+.talent-card-hidden-badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:#F59E0B; flex-shrink:0; }
 .talent-card-body{ padding:14px 16px 16px; }
 .talent-card-name{ font-weight:700; font-size:15px; }
 .talent-card-niche{ color:var(--muted); font-size:12.5px; margin-top:2px; }
@@ -523,13 +538,16 @@ a{ color:inherit; }
 </div>
 
 <script src="config.js"></script>
-<!-- Versioned (?v=N) like index.html's script tags — the backend now
-     serves static JS/CSS with a 1-year immutable Cache-Control header, so
-     without a version query string here, a browser that already loaded
-     these files would keep serving the old cached copy forever after any
-     future update. Bump the number whenever talent-wizard.js or admin.js
-     changes and gets redeployed. -->
-<script src="talent-wizard.js?v=1"></script>
+<!-- Cache-busting added here for the first time (this file previously
+     loaded these with no version query string at all — under this site's
+     Cache-Control: max-age=1yr, immutable policy for non-HTML assets, that
+     meant any browser that had ever loaded the admin dashboard before
+     would be permanently stuck on whatever version it first cached,
+     with no way to pick up future changes to either file). Bump these
+     version numbers whenever admin.js or talent-wizard.js content
+     changes, same convention already used for these on index.html/
+     talent.html. -->
+<script src="talent-wizard.js?v=2"></script>
 <script src="admin.js?v=1"></script>
 </body>
 </html>
