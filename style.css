@@ -6473,7 +6473,22 @@ html.dark-mode .creator-panel::before{
   overflow: hidden;
   min-height: 340px;
 }
+/* Bug fix: this used to be height:100% on a normal-flow <img>, sized
+   against .result-card-media's height. But .result-card-media only ever
+   declares a min-height, not a real height — its actual height comes
+   from CSS Grid stretching it to match the row (i.e. .result-card-body's
+   content), which isn't resolved until *after* percentages are computed.
+   With nothing definite to resolve 100% against, browsers fell back to
+   the image's own intrinsic size, so a tall portrait cover photo (like
+   the "SERVICIOS" case study) rendered at its full native height and
+   blew the card out to match — see the reported screenshot.
+   Taking the image out of normal flow with absolute positioning sidesteps
+   the whole resolution-order problem: it just fills whatever box
+   .result-card-media ends up being, at grid-stretch time, no percentage
+   height involved. */
 .result-card-cover{
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
