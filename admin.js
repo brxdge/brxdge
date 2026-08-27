@@ -606,7 +606,7 @@ function openBrandModal(index){
 function renderBlogPage(){
   document.getElementById('page-blog').innerHTML = `
     <h1 class="page-title">Blog &amp; Case Studies</h1>
-    <p class="page-sub">Articles and case studies shown in the "Blog &amp; Case Studies" section on the public site.</p>
+    <p class="page-sub">One post library, two destinations: Articles show in the Blog section on the public site; Case Studies show in the "Case Studies" group of the Campaign Results &amp; Case Studies section instead. Set which one a post is with the Type field below.</p>
 
     <div class="panel">
       <div class="panel-head">
@@ -665,7 +665,7 @@ function openBlogModal(index){
   document.getElementById('blogModal').innerHTML = `
     <button class="modal-close" data-close>&times;</button>
     <h3>${existing ? 'Edit Post' : 'Add Post'}</h3>
-    <p class="sub">Shown in the Blog &amp; Case Studies section on the public site.</p>
+    <p class="sub">Articles show in the Blog section; Case Studies show in the Campaign Results &amp; Case Studies section instead — set which with Type below.</p>
     <form id="blogForm">
       <div class="field"><label>Title</label><input type="text" id="pTitle" value="${escapeHtml(existing?.title)}" required></div>
       <div class="field">
@@ -761,7 +761,7 @@ function openBlogModal(index){
 function renderCampaignsPage(){
   document.getElementById('page-campaigns').innerHTML = `
     <h1 class="page-title">Campaigns</h1>
-    <p class="page-sub">Brand &times; creator campaign case studies shown in the "Campaigns" section on the public site.</p>
+    <p class="page-sub">Brand &times; creator campaign results — shown in the "Campaigns" group of the Campaign Results &amp; Case Studies section on the public site (alongside Case Studies, which are managed from Blog &amp; Case Studies instead).</p>
 
     <div class="panel">
       <div class="panel-head">
@@ -818,7 +818,7 @@ function openCampaignModal(index){
   document.getElementById('campaignModal').innerHTML = `
     <button class="modal-close" data-close>&times;</button>
     <h3>${existing ? 'Edit Campaign' : 'Add Campaign'}</h3>
-    <p class="sub">Shown in the Campaigns section on the public site.</p>
+    <p class="sub">Shown in the "Campaigns" group of the Campaign Results &amp; Case Studies section on the public site.</p>
     <form id="campaignForm">
       <div class="field"><label>Brand Name</label><input type="text" id="cBrandName" value="${escapeHtml(existing?.brandName)}" required></div>
       <div class="field"><label>Creator (optional)</label><input type="text" id="cCreatorName" value="${escapeHtml(existing?.creatorName)}"></div>
