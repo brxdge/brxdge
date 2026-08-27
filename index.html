@@ -801,38 +801,52 @@
   </div>
 </section>
 
-<!-- CASE STUDIES & BLOG — the site's "proof" section: real creator growth
-     stories (followers/engagement/brand-deals/revenue, before vs. after)
-     alongside general BRXDGE writing, in one feed. Case-study cards get a
-     Before → After stat strip; regular posts read like a normal article
-     card. This whole section hides itself (see loadBlog() in script.js)
-     when there's no published content yet, rather than showing an empty
-     "proof" section with nothing in it — that would undercut the point. -->
+<!-- RESULTS — the site's merged "proof" section: real creator case studies
+     (followers/engagement/brand-deals/revenue, before vs. after) and brand ×
+     creator campaign results, combined into one filterable showcase feed
+     instead of two separate, overlapping sections. Cards are built from the
+     same blogData (postType === 'case-study' entries only) and campaignsData
+     used elsewhere on the site — see getResultsItems()/renderResultsGrid()/
+     buildResultCard() in script.js. The filter pills (All / Case Studies /
+     Campaigns) just toggle which cards are visible; they don't refetch
+     anything. This whole section hides itself when there's no published
+     case study or campaign yet, rather than showing an empty "proof"
+     section with nothing in it — that would undercut the point. -->
+<section id="results" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center;">
+      <div style="text-align:center; width:100%;">
+        <span class="featured-italic featured-grotesque">REAL</span>
+        <span class="profiles-bold">RESULTS</span>
+        <p class="category-sub">Creator growth stories and brand × creator campaigns from the BRXDGE roster — the numbers, the objective, and what it drove.</p>
+      </div>
+    </div>
+    <div class="results-filter" id="resultsFilter" role="tablist" aria-label="Filter results">
+      <button type="button" class="results-filter-btn is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+      <button type="button" class="results-filter-btn" data-filter="case-study" role="tab" aria-selected="false">Case Studies</button>
+      <button type="button" class="results-filter-btn" data-filter="campaign" role="tab" aria-selected="false">Campaigns</button>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+</section>
+
+<!-- BLOG — general BRXDGE writing that isn't tied to one creator's before/
+     after numbers: perspective, playbooks, announcements. Deliberately
+     separate from RESULTS above — this is editorial content, not proof.
+     Reuses the existing .blog-grid/.blog-card styling and the blogOverlay
+     detail view. Populated by renderBlogGrid() in script.js, filtered to
+     blogData entries with postType !== 'case-study'. Hides itself when
+     there are no published articles yet. -->
 <section id="blog" class="reveal" data-reveal="up">
   <div class="wrap">
     <div class="section-head" style="justify-content:center;">
       <div style="text-align:center; width:100%;">
-        <span class="featured-italic featured-grotesque">CASE STUDIES</span>
-        <span class="profiles-bold">&amp; INSIGHTS</span>
-        <p class="category-sub">Real creator growth stories from the BRXDGE roster: followers, engagement, and revenue, before and after.</p>
+        <span class="featured-italic featured-grotesque">FROM THE</span>
+        <span class="profiles-bold">BLOG</span>
+        <p class="category-sub">Perspective on creator growth, brand partnerships, and the business of influence.</p>
       </div>
     </div>
     <div class="blog-grid" id="blogGrid"></div>
-  </div>
-</section>
-
-<!-- CAMPAIGNS — Brand x Creator results grid. Same "hides itself if empty"
-     rule as Case Studies above. -->
-<section id="campaigns" class="reveal" data-reveal="up">
-  <div class="wrap">
-    <div class="section-head" style="justify-content:center;">
-      <div style="text-align:center; width:100%;">
-        <span class="featured-italic featured-grotesque">CAMPAIGN</span>
-        <span class="profiles-bold">RESULTS</span>
-        <p class="category-sub">A look at real brand × creator campaigns BRXDGE has run: the objective, the deliverables, and what they drove.</p>
-      </div>
-    </div>
-    <div class="campaigns-grid" id="campaignsGrid"></div>
   </div>
 </section>
 
