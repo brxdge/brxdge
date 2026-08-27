@@ -271,7 +271,8 @@ function renderTalentPage(){
     return;
   }
   grid.innerHTML = rosterData.map(t => `
-    <div class="talent-card">
+    <div class="talent-card${t.hidden ? ' talent-card--hidden' : ''}">
+      ${t.hidden ? '<span class="talent-card-hidden-badge">Hidden</span>' : ''}
       <img src="${photoOrFallback(t)}" alt="${escapeHtml(t.name)}" onerror="this.style.background='#eee'">
       <div class="talent-card-body">
         <div class="talent-card-name">${escapeHtml(t.name)}</div>
@@ -279,6 +280,7 @@ function renderTalentPage(){
         <div class="platform-row">${(t.socials||[]).slice(0,5).map(s => `<span class="p-pill">${platformIconColor(s.platform)}</span>`).join('')}</div>
         <div class="talent-card-actions">
           <button class="btn btn-ghost btn-sm" data-edit="${t.id}">Edit Media Kit</button>
+          <button class="btn btn-ghost btn-sm" data-toggle-hidden="${t.id}">${t.hidden ? 'Show' : 'Hide'}</button>
           <button class="btn btn-danger btn-sm" data-delete="${t.id}">Delete</button>
         </div>
       </div>
@@ -287,6 +289,9 @@ function renderTalentPage(){
 
   grid.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', () => openTalentModal(btn.dataset.edit));
+  });
+  grid.querySelectorAll('[data-toggle-hidden]').forEach(btn => {
+    btn.addEventListener('click', () => toggleTalentHidden(btn.dataset.toggleHidden));
   });
   grid.querySelectorAll('[data-delete]').forEach(btn => {
     btn.addEventListener('click', () => deleteTalent(btn.dataset.delete));
@@ -300,6 +305,29 @@ async function deleteTalent(id){
   try {
     await api('/api/roster', { method: 'POST', body: JSON.stringify(rosterData) });
     showToast('Talent removed');
+    renderTalentPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+// Hide/Show (client revision, "Major revisions"): unlike Delete, this never
+// removes the talent's record — it only flips a `hidden` flag that the
+// public site's GET /api/roster filters on, so a hidden talent's data
+// never even reaches a visitor's browser (see the isSignedIn() check in
+// talent-backend/index.js) while staying fully intact and editable here.
+// Same "mutate rosterData, then POST the whole array" pattern as every
+// other roster edit in this file (openTalentModal's onSave, deleteTalent
+// above) rather than a dedicated endpoint, since the backend already only
+// knows how to replace the whole roster at once.
+async function toggleTalentHidden(id){
+  const t = rosterData.find(x => x.id === id);
+  if(!t) return;
+  const willHide = !t.hidden;
+  rosterData = rosterData.map(x => x.id === id ? { ...x, hidden: willHide } : x);
+  try {
+    await api('/api/roster', { method: 'POST', body: JSON.stringify(rosterData) });
+    showToast(willHide ? `"${t.name}" is now hidden from the public site` : `"${t.name}" is visible on the public site again`);
     renderTalentPage();
   } catch(err){
     showToast(err.message);
