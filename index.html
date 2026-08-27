@@ -75,8 +75,8 @@
      Combined into one stylesheet request and added the missing preconnect. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=55">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=59">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -801,49 +801,53 @@
   </div>
 </section>
 
-<!-- RESULTS — the site's merged "proof" section: real creator case studies
-     (followers/engagement/brand-deals/revenue, before vs. after) and brand ×
-     creator campaign results, combined into one filterable showcase feed
-     instead of two separate, overlapping sections. Cards are built from the
-     same blogData (postType === 'case-study' entries only) and campaignsData
-     used elsewhere on the site — see getResultsItems()/renderResultsGrid()/
-     buildResultCard() in script.js. The filter pills (All / Case Studies /
-     Campaigns) just toggle which cards are visible; they don't refetch
-     anything. This whole section hides itself when there's no published
-     case study or campaign yet, rather than showing an empty "proof"
-     section with nothing in it — that would undercut the point. -->
-<section id="results" class="reveal" data-reveal="up">
+<!-- CAMPAIGN RESULTS & CASE STUDIES — merged "proof" section. Client
+     revision: this used to be two separate sections (Campaign Results,
+     Case Studies & Insights) stacked back to back — the client felt that
+     looked redundant, so they're now one section with two labeled
+     sub-groups (Campaigns / Case Studies) instead of two headings in a
+     row. Blog articles (postType !== 'case-study', previously mixed into
+     the old Case Studies feed) have been pulled out into their own new
+     #blog section below, per the client's separate "add a BLOG section"
+     request — see renderArticlesGrid() in script.js.
+     Each sub-group hides itself independently when it has no content
+     (renderCampaignsGrid()/renderCaseStudiesGrid()), and the whole
+     section hides itself only when BOTH are empty
+     (updateProofSectionVisibility()) — same no-fake-data rule as before,
+     just applied per sub-group instead of per section. -->
+<section id="proof" class="reveal" data-reveal="up">
   <div class="wrap">
     <div class="section-head" style="justify-content:center;">
       <div style="text-align:center; width:100%;">
-        <span class="featured-italic featured-grotesque">REAL</span>
-        <span class="profiles-bold">RESULTS</span>
-        <p class="category-sub">Creator growth stories and brand × creator campaigns from the BRXDGE roster — the numbers, the objective, and what it drove.</p>
+        <span class="featured-italic featured-grotesque">CAMPAIGN RESULTS</span>
+        <span class="profiles-bold">&amp; CASE STUDIES</span>
+        <p class="category-sub">Real brand × creator campaigns and creator growth stories from the BRXDGE roster — the objective, the deliverables, and what they drove.</p>
       </div>
     </div>
-    <div class="results-filter" id="resultsFilter" role="tablist" aria-label="Filter results">
-      <button type="button" class="results-filter-btn is-active" data-filter="all" role="tab" aria-selected="true">All</button>
-      <button type="button" class="results-filter-btn" data-filter="case-study" role="tab" aria-selected="false">Case Studies</button>
-      <button type="button" class="results-filter-btn" data-filter="campaign" role="tab" aria-selected="false">Campaigns</button>
+
+    <div class="proof-subsection" id="campaignsSubsection">
+      <span class="eyebrow proof-subhead">Campaigns</span>
+      <div class="campaigns-grid" id="campaignsGrid"></div>
     </div>
-    <div class="results-grid" id="resultsGrid"></div>
+
+    <div class="proof-subsection" id="caseStudiesSubsection">
+      <span class="eyebrow proof-subhead">Case Studies</span>
+      <div class="blog-grid" id="caseStudiesGrid"></div>
+    </div>
   </div>
 </section>
 
-<!-- BLOG — general BRXDGE writing that isn't tied to one creator's before/
-     after numbers: perspective, playbooks, announcements. Deliberately
-     separate from RESULTS above — this is editorial content, not proof.
-     Reuses the existing .blog-grid/.blog-card styling and the blogOverlay
-     detail view. Populated by renderBlogGrid() in script.js, filtered to
-     blogData entries with postType !== 'case-study'. Hides itself when
-     there are no published articles yet. -->
+<!-- BLOG — general BRXDGE articles (postType !== 'case-study'), split out
+     of the old mixed Case Studies feed above per client revision "New
+     section: BLOG section." Same "hides itself if empty" rule as every
+     other proof section — see renderArticlesGrid() in script.js. -->
 <section id="blog" class="reveal" data-reveal="up">
   <div class="wrap">
     <div class="section-head" style="justify-content:center;">
       <div style="text-align:center; width:100%;">
         <span class="featured-italic featured-grotesque">FROM THE</span>
         <span class="profiles-bold">BLOG</span>
-        <p class="category-sub">Perspective on creator growth, brand partnerships, and the business of influence.</p>
+        <p class="category-sub">News, guides, and BRXDGE's take on the creator economy.</p>
       </div>
     </div>
     <div class="blog-grid" id="blogGrid"></div>
@@ -951,50 +955,45 @@
   </div>
 </section>
 
-<!-- CONTACT -->
+<!-- CONTACT — Client revision: "merge as one the Get in touch section and
+     the 'I'm reaching out as a'... Improve visuals." These used to be two
+     visually separate blocks — a plain, borderless intro (heading/lede/
+     trust stats/socials) sitting on the bare section background, then a
+     completely separate bordered/shadowed card floating below it for the
+     chooser/form — which read as two disconnected sections stacked on top
+     of each other even though they were technically one <section>. Now
+     everything lives inside one shared card (.contact-form-panel), with a
+     thin .contact-panel-divider marking the transition from "here's who
+     we are" to "pick one to continue" instead of a big empty gap. -->
 <section id="contact" class="reveal" data-reveal="left">
   <div class="wrap contact-grid">
-    <div class="contact-info">
-      <span class="featured-italiccc">Get In Touch</span>
-      <h2>Let's work together.</h2>
-      <p class="lede">Brand looking to book talent, or a creator looking for representation? Send us a message. A real human on the team will get back to you.</p>
-
-      <!-- Same approved numbers already shown in About, resurfaced here as a
-           quick trust signal right where someone's deciding whether to
-           actually fill out the form. The reply-time badge is a real
-           commitment, not a stat — keep it honest to whatever your actual
-           turnaround is. -->
-      <div class="contact-trust">
-        <div class="trust-item">
-          <span class="trust-num" data-count-to="47">0</span>
-          <span class="trust-lbl">Creators repped</span>
-        </div>
-        <div class="trust-divider" aria-hidden="true"></div>
-        <div class="trust-item">
-          <span class="trust-num" data-count-to="128">0</span>
-          <span class="trust-lbl">Brand deals closed</span>
-        </div>
-        <div class="trust-divider" aria-hidden="true"></div>
-        <div class="trust-item">
-          <span class="trust-num trust-num-static">24h</span>
-          <span class="trust-lbl">Avg. reply time</span>
-        </div>
-      </div>
-
-      <div class="socials">
-        <a class="social-btn" href="#" aria-label="Instagram" onclick="return false;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"/></svg>
-        </a>
-        <a class="social-btn" href="#" aria-label="TikTok" onclick="return false;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 3v11.2a3.4 3.4 0 1 1-2.6-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3c.6 3 2.6 4.7 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </a>
-        <a class="social-btn" href="#" aria-label="YouTube" onclick="return false;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
-        </a>
-      </div>
-    </div>
-
     <div class="contact-form-panel">
+      <div class="contact-info">
+        <span class="featured-italiccc">Get In Touch</span>
+        <h2>Let's work together.</h2>
+        <p class="lede">Brand looking to book talent, or a creator looking for representation? Send us a message. A real human on the team will get back to you.</p>
+
+        <!-- Client revision: removed the trust-stat strip (47 Creators
+             repped / 128 Brand deals closed / 24h Avg. reply time) that
+             used to sit here — the client felt it was redundant, since
+             the same numbers already appear in the About section above.
+             See initContactTrustCounters() removal in script.js and the
+             .contact-trust/.trust-* rules removed from style.css. -->
+        <div class="socials">
+          <a class="social-btn" href="#" aria-label="Instagram" onclick="return false;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor"/></svg>
+          </a>
+          <a class="social-btn" href="#" aria-label="TikTok" onclick="return false;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 3v11.2a3.4 3.4 0 1 1-2.6-3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 3c.6 3 2.6 4.7 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </a>
+          <a class="social-btn" href="#" aria-label="YouTube" onclick="return false;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-panel-divider" aria-hidden="true"></div>
+
       <!-- Chooser gate: shown first instead of the form. Two photo tiles —
            Creator and Management (mapped to the existing "Brand" pill
            value, since that's the pill the rest of the form/backend
@@ -1881,11 +1880,11 @@
      in script.js. -->
 <script src="config.js"></script>
 <script src="talent-wizard.js?v=1"></script>
-<script src="script.js?v=41"></script>
+<script src="script.js?v=43"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
-<script type="module" src="brand-orbit.js?v=6"></script>
+<script type="module" src="brand-orbit.js?v=7"></script>
 <!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
      deliberately NOT shared with brand-orbit.js: the loader mark is a
      one-shot ~6.25s render that must never compete with or be torn down
