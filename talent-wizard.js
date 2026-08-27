@@ -649,6 +649,13 @@
           socials,
           gallery,
           testimonials,
+          // Preserve the admin's Hide/Show choice across an edit — this
+          // wizard rebuilds `entry` from scratch rather than spreading
+          // `existing`, so without this an edited talent would silently
+          // come back out of the save as visible again even if an admin
+          // had hidden them. New talents (no `existing`) default to
+          // visible, matching the database column's own default.
+          hidden: existing ? !!existing.hidden : false,
         };
         await opts.onSave(entry, !!existing);
       } catch (err) {
