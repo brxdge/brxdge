@@ -757,7 +757,21 @@ const defaultRoster = [
 // Replace your existing loadRoster function
 async function loadRoster(){
   try {
-    const response = await fetch(API + '/api/roster');
+    // Send the manager's token here too (already sent by saveRoster()
+    // below) so a signed-in manager's rosterData includes hidden talents,
+    // not just what's shown publicly. Without this, a manager browsing
+    // the live site would only ever load the already-filtered public
+    // list — and since add/edit/delete all save by POSTing the *entire*
+    // rosterData array back as a full replace (see saveRoster()), any
+    // hidden talent missing from that in-memory list would get silently
+    // deleted from the database the next time they saved anything at all.
+    // Hidden talents are still kept out of what's actually rendered
+    // publicly — see the `!t.hidden` filters in renderRoster() and
+    // getFilteredTrList() — this only affects what saveRoster() has
+    // available to send back.
+    const response = await fetch(API + '/api/roster', {
+      headers: managerToken ? { Authorization: `Bearer ${managerToken}` } : {},
+    });
     rosterData = await response.json();
   } catch(err) {
     rosterData = defaultRoster; // Fallback to defaults
@@ -1293,6 +1307,29 @@ function revealTalentCards(container, opts){
   cards.forEach(card => io.observe(card));
 }
 
+// Client revision: "If there are no Talent showing at the Talent html,
+// Just add a visual emphasizing the thought of 'Coming Soon'..." — a
+// bigger, more deliberate empty state for when the roster is genuinely
+// empty (no talent published at all, or everyone's currently hidden),
+// distinct from the smaller "no results for your search/filter" message
+// (see renderTalentRosterGrid() below) which stays a plain one-liner
+// since that's a normal, expected outcome of searching/filtering, not
+// something that should read as a big content gap.
+function buildComingSoonEmptyState(){
+  return `
+    <div class="roster-empty roster-empty--coming-soon">
+      <span class="roster-empty-icon" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.4"/>
+          <path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/>
+        </svg>
+      </span>
+      <span class="roster-empty-title">Coming Soon</span>
+      <p class="roster-empty-sub">We're building out the BRXDGE talent roster${isManager ? ' — add the first profile with the button above.' : '. Check back soon.'}</p>
+    </div>
+  `;
+}
+
 function renderRoster() {
   const grid = document.getElementById('rosterGrid');
   // #roster (and its grid) only exists on talent.html now — index.html no
@@ -1301,10 +1338,21 @@ function renderRoster() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  const list = activeFilter === 'All' ? rosterData : rosterData.filter(t => t.niche === activeFilter);
+  // Hidden talents (see the admin Hide/Show toggle) stay out of every
+  // public-facing grid, even for a signed-in manager previewing their own
+  // site — rosterData itself still has them (see loadRoster()'s comment)
+  // so saving from here never drops them, but they only ever render in
+  // the dedicated admin Talents page.
+  const visibleRoster = rosterData.filter(t => !t.hidden);
+  const list = activeFilter === 'All' ? visibleRoster : visibleRoster.filter(t => t.niche === activeFilter);
 
   if (list.length === 0) {
-    grid.innerHTML = `<div class="roster-empty">No talent here yet. ${isManager ? 'Add the first one with the button above.' : 'Check back soon.'}</div>`;
+    // activeFilter never actually changes away from 'All' anywhere in this
+    // file (no category-tab UI sets it) — this grid's empty state is
+    // always the "genuinely nothing published" case, so it always gets
+    // the full Coming Soon treatment rather than needing to distinguish
+    // a "no results" variant the way the full roster overlay below does.
+    grid.innerHTML = buildComingSoonEmptyState();
     return;
   }
 
@@ -1805,7 +1853,10 @@ if (trBuildSkip) {
 // out on its own so the pagination slicing in doRender() has a clean "full
 // filtered set" to work from before cutting it down to trVisibleCount.
 function getFilteredTrList(){
-  let list = trGenderFilter === 'All' ? rosterData : rosterData.filter(t => (t.gender || '').toLowerCase() === trGenderFilter.toLowerCase());
+  // Same rule as renderRoster(): hidden talents never appear in the
+  // full-roster overlay either, regardless of who's viewing it.
+  const visibleRoster = rosterData.filter(t => !t.hidden);
+  let list = trGenderFilter === 'All' ? visibleRoster : visibleRoster.filter(t => (t.gender || '').toLowerCase() === trGenderFilter.toLowerCase());
   if (trSearchQuery.trim()) {
     const q = trSearchQuery.trim().toLowerCase();
     list = list.filter(t => (t.name || '').toLowerCase().includes(q));
@@ -1880,7 +1931,11 @@ function renderTalentRosterGrid(){
 
     const sub = document.getElementById('trSub');
     if (sub) {
-      const total = rosterData.length;
+      // rosterData itself can include hidden talents for a signed-in
+      // manager (see loadRoster()'s comment) — this count is public-facing
+      // copy, so it should match what's actually being shown, not a
+      // manager-only total that includes talent nobody else can see.
+      const total = rosterData.filter(t => !t.hidden).length;
       sub.textContent = !trHasActiveFilters()
         ? `Showing all ${total} talent`
         : `Showing ${list.length} of ${total} talent`;
@@ -1900,11 +1955,18 @@ function renderTalentRosterGrid(){
     if (clearBtn) clearBtn.style.display = trSearchQuery ? 'flex' : 'none';
 
     if (list.length === 0) {
-      const safeQuery = trSearchQuery.trim().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-      let emptyMsg = 'No talent here yet.';
-      if (safeQuery) emptyMsg = `No talent matching "${safeQuery}".`;
-      else if (trHasActiveFilters()) emptyMsg = 'No talent matches these filters.';
-      grid.innerHTML = `<div class="roster-empty">${emptyMsg}</div>`;
+      // A search/filter turning up nothing is a normal, expected outcome —
+      // that stays the plain small message it always was. Only a
+      // genuinely empty roster (no search, no filters active at all, and
+      // still nothing to show) gets the bigger Coming Soon treatment —
+      // see buildComingSoonEmptyState() above renderRoster().
+      if (!trHasActiveFilters()) {
+        grid.innerHTML = buildComingSoonEmptyState();
+      } else {
+        const safeQuery = trSearchQuery.trim().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const emptyMsg = safeQuery ? `No talent matching "${safeQuery}".` : 'No talent matches these filters.';
+        grid.innerHTML = `<div class="roster-empty">${emptyMsg}</div>`;
+      }
       updateTrLoadMoreUI(0, 0);
       return;
     }
@@ -2529,7 +2591,10 @@ function toggleCast(id){
 }
 
 function castTalents(){
-  return castIds.map(id => rosterData.find(t => t.id === id)).filter(Boolean);
+  // Also drops a talent hidden after they were already added to someone's
+  // shortlist — same "hidden means hidden everywhere public" rule as the
+  // roster grids and openMediakit() above.
+  return castIds.map(id => rosterData.find(t => t.id === id && !t.hidden)).filter(Boolean);
 }
 
 // Shared row renderer — builds the same removable talent row (photo, name,
@@ -3423,7 +3488,11 @@ function initPlatformCarousel(content){
 
 function openMediakit(id, opts){
   const t = rosterData.find(x => x.id === id);
-  if(!t) return;
+  // A hidden talent's media kit doesn't open publicly at all — this is the
+  // one choke point every path funnels through (card clicks, the ?talent=
+  // deep link, nav search, the cast/shortlist tray), so guarding here
+  // covers all of them instead of needing a check at each call site.
+  if(!t || t.hidden) return;
 
   startMediakitLinesParallax();
 
