@@ -569,6 +569,12 @@ function getFullRoster() {
       audienceTopLocations: parseJsonArray(t.audienceTopLocations),
       audienceInterests: parseJsonArray(t.audienceInterests),
       whyCards: parseJsonArray(t.whyCards),
+      // Hide/Show (client revision, "Major revisions"): a hidden talent
+      // keeps their full record — nothing is deleted — but is pulled from
+      // public view. SQLite has no real boolean type, so this column comes
+      // back as 0/1; normalize it here so every consumer (admin.js,
+      // script.js) gets a real boolean.
+      hidden: !!t.hidden,
       testimonials: testimonialsStmt.all(t.id),
       socials,
     };
@@ -579,9 +585,9 @@ const insertTalent = db.prepare(`
   INSERT INTO talents (
     id, name, niche, gender, photo, coverPhoto, bio, location, availableFor, sortOrder,
     contentFormats, bookingOptions, audienceAgeRange, audienceGenderMale, audienceGenderFemale,
-    audienceAgeBreakdown, audienceTopLocations, audienceInterests, whyCards
+    audienceAgeBreakdown, audienceTopLocations, audienceInterests, whyCards, hidden
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, category, mediaType, sortOrder) VALUES (?, ?, ?, ?, ?)`);
 const insertSocial = db.prepare(`
@@ -611,7 +617,8 @@ const replaceRoster = db.transaction((roster) => {
       JSON.stringify(Array.isArray(t.audienceAgeBreakdown) ? t.audienceAgeBreakdown : []),
       JSON.stringify(Array.isArray(t.audienceTopLocations) ? t.audienceTopLocations : []),
       JSON.stringify(Array.isArray(t.audienceInterests) ? t.audienceInterests : []),
-      JSON.stringify(Array.isArray(t.whyCards) ? t.whyCards : [])
+      JSON.stringify(Array.isArray(t.whyCards) ? t.whyCards : []),
+      t.hidden ? 1 : 0
     );
     // Gallery items are normally {url, category, mediaType} objects — the
     // plain-string fallback keeps this working if anything still sends the
@@ -638,9 +645,24 @@ const replaceRoster = db.transaction((roster) => {
   });
 });
 
-// Get Roster — public, the whole site's talent roster is meant to be seen
+// Get Roster — public, the whole site's talent roster is meant to be seen,
+// EXCEPT talents an admin has hidden (see the Hide/Show toggle in
+// admin.js). A hidden talent's full record must never reach a visitor's
+// browser at all — filtering only in the frontend wouldn't be enough,
+// since the data would still be sitting in the page's JS. The admin
+// dashboard is the one exception: it needs to see hidden talents too, so
+// it can un-hide them — signed-in requests (a valid Bearer token, same
+// check as requireAuth() but non-blocking, since this route stays public
+// for logged-out visitors) get the unfiltered list instead.
+function isSignedIn(req) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const session = token ? sessions.get(token) : null;
+  return !!(session && session.expiresAt >= Date.now());
+}
 app.get('/api/roster', (req, res) => {
-  res.json(getFullRoster());
+  const roster = getFullRoster();
+  res.json(isSignedIn(req) ? roster : roster.filter(t => !t.hidden));
 });
 
 // Save Roster — requires a signed-in manager. The frontend always sends the
