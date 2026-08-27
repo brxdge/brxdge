@@ -6396,6 +6396,241 @@ html.dark-mode .creator-panel::before{
 }
 
 /* =========================================================
+   RESULTS — merged Case Studies + Campaigns showcase (replaces the old,
+   overlapping "Case Studies & Insights" / "Campaign Results" sections with
+   one filterable feed). Cards reuse the alternating full-width showcase
+   layout from .campaign-card above (same tokens: --panel/--panel-line/
+   --coral/--violet/--radius-lg, the Space Mono stat-number treatment) so
+   the section matches the rest of the page, then layers on a kind badge,
+   a cover zoom-on-hover, and a gradient-filled filter bar for a more
+   editorial, "enhanced" feel than a plain grid of cards.
+========================================================= */
+.results-filter{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 30px 0 6px;
+}
+.results-filter-btn{
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-line);
+  background: var(--ink-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.results-filter-btn:hover{ border-color: var(--coral); color: var(--text); }
+.results-filter-btn.is-active{
+  background: linear-gradient(135deg, var(--coral), var(--violet));
+  border-color: transparent;
+  color: var(--on-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.results-grid{
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 48px;
+}
+.results-empty{ color: var(--muted); font-size: 14.5px; text-align: center; padding: 40px 0; }
+
+.result-card{
+  display: grid;
+  grid-template-columns: 44% 1fr;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.result-card--case-study{ cursor: pointer; }
+.result-card:hover{
+  transform: translateY(-4px);
+  border-color: var(--coral);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.12);
+}
+/* Alternate the image side every other card, same trick as .campaign-card:
+   Grid placement rather than flex row-reverse so the image and text column
+   reliably match height across browsers. */
+.result-card:nth-child(even){ grid-template-columns: 1fr 44%; }
+.result-card:nth-child(even) .result-card-media{ grid-column: 2; grid-row: 1; }
+.result-card:nth-child(even) .result-card-body{ grid-column: 1; grid-row: 1; }
+
+.result-card-media{
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  overflow: hidden;
+  min-height: 340px;
+}
+.result-card-cover{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.result-card:hover .result-card-cover{ transform: scale(1.06); }
+.result-card-logo{
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+}
+.result-card-badge{
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.result-card-badge::before{
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.result-card-badge--case-study{ color: #fff; }
+.result-card-badge--campaign{ color: #fff; }
+
+.result-card-body{
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  padding: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+}
+.result-card-heading{
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.result-card-subheading{
+  margin-top: -8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.result-card-desc{
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0;
+}
+.result-card-tags{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.result-tag{
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-line);
+  color: var(--text);
+  background: rgba(0,0,0,0.02);
+}
+.result-card-stats{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-top: 6px;
+}
+.result-stat-chip{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.result-stat-value{
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(16px, 1.6vw, 20px);
+  font-weight: 700;
+  color: var(--coral);
+  line-height: 1.2;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.result-card-footer{
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  padding-top: 14px;
+  border-top: 1px solid var(--panel-line);
+  margin: 4px 0 0;
+}
+.result-card-cta{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 4px;
+}
+.result-card-cta svg{ transition: transform 0.25s ease; }
+.result-card:hover .result-card-cta svg{ transform: translateX(4px); }
+
+@media (max-width: 860px){
+  .result-card,
+  .result-card:nth-child(even){
+    grid-template-columns: 1fr;
+  }
+  .result-card-media,
+  .result-card:nth-child(even) .result-card-media{
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 220px;
+  }
+  .result-card-body,
+  .result-card:nth-child(even) .result-card-body{
+    grid-column: 1;
+    grid-row: 2;
+    padding: 26px;
+  }
+  .result-card-stats{ gap: 22px; }
+}
+
+/* =========================================================
    TALENT CARD — media-kit teaser footer (categories / audience /
    available-for / "View Media Kit" CTA), plus the media-kit header's
    multi-category tag row. Purely additive: new selectors only, sitting
