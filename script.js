@@ -602,7 +602,6 @@ let activeFilter = 'All';
 /* ---------------- BLOG / CASE STUDIES + CAMPAIGNS (proof sections) ---------------- */
 let blogData = [];
 let campaignsData = [];
-let resultsFilter = 'all';
 
 // Turns a talent's name into a URL-safe slug, e.g. "Mark Ramirez" -> "mark-ramirez"
 function slugify(str){
@@ -966,24 +965,6 @@ function animateCountUp(el, duration){
    when the About stat tiles scroll into view. */
 (function initAboutStatCounters(){
   const nums = document.querySelectorAll('.about-stats-bar [data-count-to]');
-  if(!nums.length) return;
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if(!entry.isIntersecting) return;
-      animateCountUp(entry.target, 1400);
-      io.unobserve(entry.target);
-    });
-  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.4 });
-  nums.forEach((el) => io.observe(el));
-})();
-
-/* ---------------- CONTACT: TRUST STRIP COUNT-UP ----------------
-   Same treatment, separate tiny observer — kept independent of
-   initAboutStatCounters above rather than widening its selector, so this
-   section's animation timing/threshold can be tuned on its own later
-   without touching About. */
-(function initContactTrustCounters(){
-  const nums = document.querySelectorAll('.contact-trust [data-count-to]');
   if(!nums.length) return;
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -2178,8 +2159,15 @@ async function loadBlog(){
   } catch(err) {
     blogData = [];
   }
-  renderBlogGrid();
-  renderResultsGrid();
+  // blogData holds both post types from one feed — split it here rather
+  // than at fetch time so both grids always reflect the latest fetch.
+  // Case studies render inside the merged #proof section (see
+  // renderCaseStudiesGrid()); everything else (postType !== 'case-study',
+  // which also covers plain articles with no postType set) is a Blog
+  // article and renders in the separate #blog section below
+  // (renderArticlesGrid()).
+  renderCaseStudiesGrid();
+  renderArticlesGrid();
 
   const requestedSlug = new URLSearchParams(location.search).get('blog');
   if(requestedSlug){
@@ -2256,18 +2244,54 @@ function buildBlogCard(p){
   return card;
 }
 
-function renderBlogGrid(){
+// The merged #proof section (Campaign Results & Case Studies) hides
+// itself only when BOTH sub-groups have nothing to show — each sub-group
+// hides/shows itself independently (renderCampaignsGrid()/
+// renderCaseStudiesGrid()), then calls this to reconcile the outer
+// section's visibility against whichever sub-groups are currently
+// visible. Safe to call from either render function in either order.
+function updateProofSectionVisibility(){
+  const section = document.getElementById('proof');
+  if(!section) return;
+  const campaignsSub = document.getElementById('campaignsSubsection');
+  const caseStudiesSub = document.getElementById('caseStudiesSubsection');
+  const campaignsHidden = !campaignsSub || campaignsSub.style.display === 'none';
+  const caseStudiesHidden = !caseStudiesSub || caseStudiesSub.style.display === 'none';
+  section.style.display = (campaignsHidden && caseStudiesHidden) ? 'none' : '';
+}
+
+// Case-study half of the old mixed blog feed — renders into the
+// "Case Studies" sub-group inside the merged #proof section.
+function renderCaseStudiesGrid(){
+  const sub = document.getElementById('caseStudiesSubsection');
+  const grid = document.getElementById('caseStudiesGrid');
+  if(!sub || !grid) return;
+
+  const caseStudies = blogData.filter(p => p.postType === 'case-study');
+  if(!caseStudies.length){
+    sub.style.display = 'none';
+  } else {
+    sub.style.display = '';
+    grid.innerHTML = '';
+    caseStudies.forEach(p => grid.appendChild(buildBlogCard(p)));
+    revealTalentCards(grid);
+  }
+  updateProofSectionVisibility();
+}
+
+// Everything else in the feed (plain articles — postType !== 'case-study')
+// — renders into the standalone #blog section, split out of the old
+// mixed feed per the client's "add a BLOG section" request.
+function renderArticlesGrid(){
   const section = document.getElementById('blog');
   const grid = document.getElementById('blogGrid');
   if(!section || !grid) return;
 
-  // Case studies now live in the merged RESULTS section (see
-  // getResultsItems()) alongside campaigns — this grid is editorial
-  // articles only.
   const articles = blogData.filter(p => p.postType !== 'case-study');
 
-  // No published articles yet — hide the whole section rather than show an
-  // empty "Blog" heading with nothing under it.
+  // No published articles yet — hide the whole section rather than show
+  // a placeholder/fake post. Real content only, added via the admin
+  // dashboard.
   if(!articles.length){
     section.style.display = 'none';
     return;
@@ -2380,7 +2404,7 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && overlay && overlay.classList.contains('show')) closeBlogPost();
 });
 
-/* ---------------- CAMPAIGNS (Brand × Creator proof data) ---------------- */
+/* ---------------- CAMPAIGNS (Brand × Creator proof section) ---------------- */
 async function loadCampaigns(){
   try {
     const response = await fetch(API + '/api/campaigns');
@@ -2388,13 +2412,9 @@ async function loadCampaigns(){
   } catch(err) {
     campaignsData = [];
   }
-  renderResultsGrid();
+  renderCampaignsGrid();
 }
 
-// Reused as-is by the talent media kit's "Campaign Portfolio" grid (see
-// renderCampaignPortfolioSection() below) — kept independent of the public
-// RESULTS section's own card markup (buildResultCard()) so a redesign of
-// one never silently breaks the other.
 function buildCampaignCard(c){
   const card = document.createElement('div');
   card.className = 'campaign-card reveal-card';
@@ -2422,134 +2442,24 @@ function buildCampaignCard(c){
   return card;
 }
 
-/* ---------------- RESULTS (merged Case Studies + Campaigns showcase) ----------------
-   Combines case-study posts (blogData entries with postType === 'case-study')
-   and campaignsData into one feed, interleaved so the section reads as a
-   single mixed "proof" stream rather than "all case studies, then all
-   campaigns". The three filter pills (All / Case Studies / Campaigns) just
-   hide/show already-rendered cards by kind — see the click handler below.
-   Rendered any time either data source loads (loadBlog() and loadCampaigns()
-   both call this), so whichever resolves first still shows immediately and
-   the grid quietly fills in once the other arrives. */
-function getResultsItems(){
-  const caseStudies = blogData.filter(p => p.postType === 'case-study').map(p => ({ kind: 'case-study', data: p }));
-  const campaigns = campaignsData.map(c => ({ kind: 'campaign', data: c }));
-  const merged = [];
-  const max = Math.max(caseStudies.length, campaigns.length);
-  for(let i = 0; i < max; i++){
-    if(campaigns[i]) merged.push(campaigns[i]);
-    if(caseStudies[i]) merged.push(caseStudies[i]);
+function renderCampaignsGrid(){
+  const sub = document.getElementById('campaignsSubsection');
+  const grid = document.getElementById('campaignsGrid');
+  if(!sub || !grid) return;
+
+  // Same rule as the case-studies sub-group: no real campaigns yet means
+  // this sub-group doesn't show, never placeholder brand results. The
+  // merged #proof section itself only disappears if Case Studies is also
+  // empty — see updateProofSectionVisibility().
+  if(!campaignsData.length){
+    sub.style.display = 'none';
+  } else {
+    sub.style.display = '';
+    grid.innerHTML = '';
+    campaignsData.forEach(c => grid.appendChild(buildCampaignCard(c)));
+    revealTalentCards(grid);
   }
-  return merged;
-}
-
-// Renders a row of stat chips, skipping any pair with no value so a
-// partially-filled case study/campaign never shows an empty "→" chip.
-// Pass countTo (a plain number) on a chip to have it count up from 0 when
-// the card scrolls into view (see revealTalentCards()/animateCountUp()).
-function buildResultStatChips(pairs){
-  const chips = pairs.filter(p => p.value);
-  if(!chips.length) return '';
-  return `<div class="result-card-stats">${chips.map(p => `
-    <div class="result-stat-chip">
-      <span class="result-stat-label">${escapeHtml(p.label)}</span>
-      <span class="result-stat-value">${p.countTo != null ? `<span data-count-to="${p.countTo}">0</span>` : escapeHtml(p.value)}</span>
-    </div>
-  `).join('')}</div>`;
-}
-
-function buildResultCard(item){
-  const isCaseStudy = item.kind === 'case-study';
-  const d = item.data;
-  const card = document.createElement(isCaseStudy ? 'a' : 'div');
-  if(isCaseStudy) card.href = 'javascript:void(0)';
-  card.className = `result-card result-card--${item.kind} reveal-card`;
-
-  const cover = (d.coverImage && d.coverImage.trim()) ? d.coverImage.trim()
-    : `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(d.id || d.slug || d.brandName || d.title || '')}&backgroundColor=c8302c,f0c239,fff8e9`;
-  const coverAlt = isCaseStudy ? (d.talentName || d.title || '') : (d.brandName || '');
-
-  const heading = isCaseStudy
-    ? escapeHtml(d.talentName || d.title)
-    : `${escapeHtml(d.brandName)}${d.creatorName ? ` × ${escapeHtml(d.creatorName)}` : ''}`;
-  const subheading = isCaseStudy && d.talentName ? d.title : '';
-  const description = isCaseStudy ? (d.excerpt || '') : (d.objective || '');
-  const tags = isCaseStudy ? [] : (Array.isArray(d.deliverables) ? d.deliverables : []);
-
-  const stats = isCaseStudy ? buildResultStatChips([
-    { label: 'Followers', value: (d.statFollowersBefore || d.statFollowersAfter) ? `${d.statFollowersBefore || '—'} → ${d.statFollowersAfter || '—'}` : '' },
-    { label: 'Engagement', value: (d.statEngagementBefore || d.statEngagementAfter) ? `${d.statEngagementBefore || '—'} → ${d.statEngagementAfter || '—'}` : '' },
-    { label: 'Revenue', value: d.statRevenue || '' },
-    { label: 'Brand Deals', value: d.statBrandDeals || '' },
-  ]) : buildResultStatChips([
-    { label: 'Reach', value: d.reach || '', countTo: d.reach ? parseFollowers(d.reach) : null },
-    { label: 'Engagement', value: d.engagement || '' },
-  ]);
-
-  const footerText = !isCaseStudy && d.results ? `<p class="result-card-footer">${escapeHtml(d.results)}</p>` : '';
-  const cta = isCaseStudy ? `<span class="result-card-cta">Read Full Story <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>` : '';
-
-  card.innerHTML = `
-    <div class="result-card-media">
-      <img class="result-card-cover" src="${escapeHtml(cover)}" alt="${escapeHtml(coverAlt)}" loading="lazy">
-      ${!isCaseStudy && d.brandLogo ? `<img class="result-card-logo" src="${escapeHtml(d.brandLogo)}" alt="${escapeHtml(d.brandName)} logo" loading="lazy">` : ''}
-      <span class="result-card-badge result-card-badge--${item.kind}">${isCaseStudy ? 'Case Study' : 'Campaign'}</span>
-    </div>
-    <div class="result-card-body">
-      <span class="result-card-heading">${heading}</span>
-      ${subheading ? `<span class="result-card-subheading">${escapeHtml(subheading)}</span>` : ''}
-      ${description ? `<p class="result-card-desc">${escapeHtml(description)}</p>` : ''}
-      ${tags.length ? `<div class="result-card-tags">${tags.map(t => `<span class="result-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
-      ${stats}
-      ${footerText}
-      ${cta}
-    </div>
-  `;
-
-  if(isCaseStudy) card.addEventListener('click', () => openBlogPost(d));
-  return card;
-}
-
-function renderResultsGrid(){
-  const section = document.getElementById('results');
-  const grid = document.getElementById('resultsGrid');
-  if(!section || !grid) return;
-
-  const items = getResultsItems();
-
-  // No case study or campaign published yet — hide the whole section
-  // rather than show an empty "proof" section with nothing in it.
-  if(!items.length){
-    section.style.display = 'none';
-    return;
-  }
-  section.style.display = '';
-
-  const filtered = resultsFilter === 'all' ? items : items.filter(i => i.kind === resultsFilter);
-
-  grid.innerHTML = '';
-  if(!filtered.length){
-    grid.innerHTML = `<p class="results-empty">Nothing here yet.</p>`;
-    return;
-  }
-  filtered.forEach(item => grid.appendChild(buildResultCard(item)));
-  revealTalentCards(grid);
-}
-
-const resultsFilterBar = document.getElementById('resultsFilter');
-if(resultsFilterBar){
-  resultsFilterBar.addEventListener('click', (e) => {
-    const btn = e.target.closest('.results-filter-btn');
-    if(!btn || btn.classList.contains('is-active')) return;
-    resultsFilterBar.querySelectorAll('.results-filter-btn').forEach(b => {
-      b.classList.remove('is-active');
-      b.setAttribute('aria-selected', 'false');
-    });
-    btn.classList.add('is-active');
-    btn.setAttribute('aria-selected', 'true');
-    resultsFilter = btn.dataset.filter;
-    renderResultsGrid();
-  });
+  updateProofSectionVisibility();
 }
 
 /* ---------------- CAST / CAMPAIGN BRIEF ----------------
