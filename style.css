@@ -1177,7 +1177,29 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter:blur(4px);
   }
   .icon-btn:hover{ background:rgba(14,14,14,0.7); }
-  .roster-empty{ text-align:center; padding:60px 20px; color:var(--muted); border:1px dashed var(--panel-line); border-radius:var(--radius-lg); grid-column:1/-1; }
+  .roster-empty{ width:100%; box-sizing:border-box; text-align:center; padding:60px 20px; color:var(--muted); border:1px dashed var(--panel-line); border-radius:var(--radius-lg); grid-column:1/-1; }
+  /* Client revision: a genuinely empty roster (nothing published yet, or
+     everyone currently hidden) gets a bigger, more deliberate "Coming
+     Soon" treatment instead of the same quiet one-liner used for "no
+     results for your search/filter" — see buildComingSoonEmptyState() and
+     its two call sites (renderRoster(), renderTalentRosterGrid()) in
+     script.js for exactly which case gets which. */
+  .roster-empty--coming-soon{
+    padding:72px 24px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    border-style:solid;
+    background:linear-gradient(180deg, var(--panel) 0%, transparent 100%);
+  }
+  .roster-empty-icon{
+    width:64px; height:64px; margin-bottom:10px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--avatar-bg); color:var(--coral);
+  }
+  .roster-empty-title{
+    font-family:'Montserrat',sans-serif; font-weight:900; font-size:clamp(22px,3vw,30px);
+    text-transform:uppercase; letter-spacing:0.01em; color:var(--text);
+  }
+  .roster-empty-sub{ max-width:380px; font-size:14.5px; color:var(--muted); line-height:1.55; }
 
   /* ---------- CONTACT ---------- */
   /* Single centered column instead of the old two-column split: the
