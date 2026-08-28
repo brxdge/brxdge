@@ -1138,7 +1138,7 @@ function renderCreatorsEditor(){
       <div class="report-creator-box">
         <div class="report-creator-head">
           <select class="report-pick-talent" data-creator="${ci}">
-            <option value="">Fill in from talent roster (optional)…</option>
+            <option value="">Auto-fill from talent roster (pulls their photo + socials)…</option>
             ${rosterData.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('')}
           </select>
           <button type="button" class="btn btn-danger btn-sm" data-remove-creator="${ci}">Remove</button>
@@ -1165,13 +1165,29 @@ function renderCreatorsEditor(){
         <div class="report-links-block">
           <label>Post Links</label>
           ${(c.posts||[]).map((p, pi) => `
-            <div class="report-link-row">
-              <select class="report-post-platform" data-creator="${ci}" data-idx="${pi}">
-                ${REPORT_PLATFORMS.map(pl => `<option value="${pl}" ${p.platform===pl?'selected':''}>${pl}</option>`).join('')}
-              </select>
-              <input type="text" class="report-post-url" data-creator="${ci}" data-idx="${pi}" placeholder="https://instagram.com/p/..." value="${escapeHtml(p.url)}">
-              <input type="text" class="report-post-label" data-creator="${ci}" data-idx="${pi}" placeholder="Label (optional)" value="${escapeHtml(p.label)}" style="flex:0 0 120px;">
-              <button type="button" class="btn btn-ghost btn-sm" data-remove-post="${ci}:${pi}">&times;</button>
+            <div class="report-post-box">
+              <div class="report-link-row">
+                <select class="report-post-platform" data-creator="${ci}" data-idx="${pi}">
+                  ${REPORT_PLATFORMS.map(pl => `<option value="${pl}" ${p.platform===pl?'selected':''}>${pl}</option>`).join('')}
+                </select>
+                <input type="text" class="report-post-url" data-creator="${ci}" data-idx="${pi}" placeholder="https://instagram.com/p/..." value="${escapeHtml(p.url)}">
+                <input type="text" class="report-post-label" data-creator="${ci}" data-idx="${pi}" placeholder="Label (optional)" value="${escapeHtml(p.label)}" style="flex:0 0 120px;">
+                <button type="button" class="btn btn-ghost btn-sm" data-remove-post="${ci}:${pi}">&times;</button>
+              </div>
+              <div class="report-post-thumb-row">
+                ${p.thumbnail
+                  ? `<img class="report-post-thumb-preview" src="${p.thumbnail}" alt="">`
+                  : `<div class="report-post-thumb-preview report-post-thumb-empty">No thumbnail</div>`}
+                <div class="report-post-thumb-actions">
+                  ${(p.platform === 'TikTok' || p.platform === 'YouTube')
+                    ? `<button type="button" class="btn btn-ghost btn-sm" data-autofetch-thumb="${ci}:${pi}">Auto-fetch thumbnail</button>`
+                    : ''}
+                  <label class="report-thumb-upload-label">
+                    Upload thumbnail
+                    <input type="file" class="report-post-thumb-file" data-creator="${ci}" data-idx="${pi}" accept="image/*" style="display:none;">
+                  </label>
+                </div>
+              </div>
             </div>
           `).join('')}
           <button type="button" class="btn btn-ghost btn-sm" data-add-post="${ci}">+ Add Post Link</button>
@@ -1232,7 +1248,7 @@ function wireCreatorsEditorEvents(){
     btn.addEventListener('click', () => {
       const ci = Number(btn.dataset.addPost);
       if(!reportDraft.creators[ci].posts) reportDraft.creators[ci].posts = [];
-      reportDraft.creators[ci].posts.push({ platform: 'Instagram', url: '', label: '' });
+      reportDraft.creators[ci].posts.push({ platform: 'Instagram', url: '', label: '', thumbnail: '' });
       renderCreatorsEditor();
     });
   });
@@ -1263,6 +1279,7 @@ function wireCreatorsEditorEvents(){
   wrap.querySelectorAll('.report-post-platform').forEach(sel => {
     sel.addEventListener('change', (e) => {
       reportDraft.creators[Number(e.target.dataset.creator)].posts[Number(e.target.dataset.idx)].platform = e.target.value;
+      renderCreatorsEditor(); // re-render: the "Auto-fetch thumbnail" button only shows for TikTok/YouTube
     });
   });
   wrap.querySelectorAll('.report-post-url').forEach(inp => {
@@ -1275,6 +1292,62 @@ function wireCreatorsEditorEvents(){
       reportDraft.creators[Number(e.target.dataset.creator)].posts[Number(e.target.dataset.idx)].label = e.target.value;
     });
   });
+  wrap.querySelectorAll('.report-post-thumb-file').forEach(inp => {
+    inp.addEventListener('change', async (e) => {
+      const ci = Number(e.target.dataset.creator), pi = Number(e.target.dataset.idx);
+      const file = e.target.files[0];
+      if(!file) return;
+      try {
+        reportDraft.creators[ci].posts[pi].thumbnail = await uploadImage(file);
+        renderCreatorsEditor();
+      } catch(err){
+        showToast(err.message);
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-autofetch-thumb]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const [ci, pi] = btn.dataset.autofetchThumb.split(':').map(Number);
+      const post = reportDraft.creators[ci].posts[pi];
+      const url = (post.url || '').trim();
+      if(!url){ showToast('Enter the post URL first'); return; }
+      btn.disabled = true;
+      try {
+        const thumb = await fetchPostThumbnail(post.platform, url);
+        if(!thumb){ showToast('Could not find a thumbnail for that URL'); return; }
+        post.thumbnail = thumb;
+        renderCreatorsEditor();
+      } catch(err){
+        showToast(err.message || 'Could not fetch a thumbnail for that URL');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+// Auto-fetches a post's thumbnail without the manager needing to
+// download/upload an image themselves — only possible for platforms
+// with a public (or already-integrated) thumbnail source:
+//  - YouTube: the thumbnail URL is fully predictable from the video ID
+//    (no API key needed), so this is just a regex extraction.
+//  - TikTok: reuses the existing /api/tiktok-oembed proxy (already
+//    built for the media kit's "latest TikTok" feature) — it's a public
+//    oEmbed endpoint, no auth/API key required.
+// Instagram/X/etc. don't have a public oEmbed brxdge can call without
+// Meta app review + an access token, so those platforms fall back to
+// the manual "Upload thumbnail" button instead (see the Post Links UI).
+async function fetchPostThumbnail(platform, url){
+  if(platform === 'YouTube'){
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if(!m) return null;
+    return `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`;
+  }
+  if(platform === 'TikTok'){
+    const data = await api('/api/tiktok-oembed?url=' + encodeURIComponent(url));
+    return data.thumbnail_url || null;
+  }
+  return null;
 }
 
 /* ============================================================
