@@ -112,8 +112,8 @@ async function enterDashboard(){
   renderBrandsPage();
   renderMessagesPage();
   renderProfilePage();
-  renderBlogPage();
   renderCampaignsPage();
+  renderBlogPage();
 }
 
 /* ---------------- NAVIGATION ---------------- */
@@ -599,42 +599,47 @@ function openBrandModal(index){
 }
 
 /* ============================================================
-   PAGE: BLOG & CASE STUDIES
+   PAGE: BLOG (articles only — Case Studies live on the
+   "Case Study & Campaign Results" page instead, see below)
    ============================================================ */
 // slugify() already exists above (shared with the talent-card URL slugs).
+// blogData is one shared library for both post types (postType is
+// 'article' or 'case-study'); this page just filters it down to
+// articles so the admin nav matches the public site's actual grouping
+// (Articles -> #blog section, Case Studies -> #proof section).
 
 function renderBlogPage(){
+  const articles = blogData.map((p, i) => ({ post: p, i })).filter(x => x.post.postType !== 'case-study');
   document.getElementById('page-blog').innerHTML = `
-    <h1 class="page-title">Blog &amp; Case Studies</h1>
-    <p class="page-sub">One post library, two destinations: Articles show in the Blog section on the public site; Case Studies show in the "Case Studies" group of the Campaign Results &amp; Case Studies section instead. Set which one a post is with the Type field below.</p>
+    <h1 class="page-title">Blog</h1>
+    <p class="page-sub">Articles shown in the Blog section on the public site. (Case Studies are managed from "Case Study &amp; Campaign Results" instead.)</p>
 
     <div class="panel">
       <div class="panel-head">
-        <div><h2>Posts</h2><p>${blogData.length} post${blogData.length===1?'':'s'}</p></div>
-        <button class="btn btn-primary" id="addBlogBtn" style="width:auto;">+ Add Post</button>
+        <div><h2>Articles</h2><p>${articles.length} article${articles.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addBlogBtn" style="width:auto;">+ Add Article</button>
       </div>
       <div class="table-scroll">
       <table class="data-table">
-        <thead><tr><th></th><th>Title</th><th>Type</th><th>Talent</th><th></th></tr></thead>
+        <thead><tr><th></th><th>Title</th><th>Talent</th><th></th></tr></thead>
         <tbody id="blogTbody"></tbody>
       </table>
       </div>
     </div>
   `;
-  document.getElementById('addBlogBtn').addEventListener('click', () => openBlogModal(null));
+  document.getElementById('addBlogBtn').addEventListener('click', () => openBlogModal(null, 'article'));
 
   const tbody = document.getElementById('blogTbody');
-  if(!blogData.length){
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:16px 0;">No posts yet — add your first one above.</td></tr>`;
+  if(!articles.length){
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted); padding:16px 0;">No articles yet — add your first one above.</td></tr>`;
     return;
   }
-  tbody.innerHTML = blogData.map((p, i) => `
+  tbody.innerHTML = articles.map(({ post: p, i }) => `
     <tr>
       <td>${p.coverImage
         ? `<img class="table-logo" src="${p.coverImage}" onerror="this.style.background='#eee'">`
         : `<div class="brand-logo-fallback">${escapeHtml((p.title||'?').charAt(0).toUpperCase())}</div>`}</td>
       <td><b>${escapeHtml(p.title)}</b></td>
-      <td style="color:var(--muted);">${p.postType === 'case-study' ? 'Case Study' : 'Article'}</td>
       <td style="color:var(--muted);">${escapeHtml(p.talentName) || '—'}</td>
       <td class="table-actions">
         <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
@@ -646,6 +651,11 @@ function renderBlogPage(){
   tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteBlogPost(Number(btn.dataset.delete))));
 }
 
+// blogData backs both the Blog page (articles) and the Case Studies
+// panel on the Case Study & Campaign Results page, so any add/edit/
+// delete here has to refresh both pages — otherwise whichever one
+// isn't currently visible would show stale data the next time you
+// switch to it.
 async function deleteBlogPost(index){
   const p = blogData[index];
   if(!confirm(`Delete "${p.title}"?`)) return;
@@ -654,18 +664,19 @@ async function deleteBlogPost(index){
     await api('/api/blog', { method: 'POST', body: JSON.stringify(blogData) });
     showToast('Post deleted');
     renderBlogPage();
+    renderCampaignsPage();
   } catch(err){
     showToast(err.message);
   }
 }
 
-function openBlogModal(index){
-  const existing = index !== null ? blogData[index] : null;
-  const isCaseStudy = existing?.postType === 'case-study';
+function openBlogModal(index, defaultType){
+  const existing = (index !== null && index !== undefined) ? blogData[index] : null;
+  const isCaseStudy = existing ? existing.postType === 'case-study' : defaultType === 'case-study';
   document.getElementById('blogModal').innerHTML = `
     <button class="modal-close" data-close>&times;</button>
-    <h3>${existing ? 'Edit Post' : 'Add Post'}</h3>
-    <p class="sub">Articles show in the Blog section; Case Studies show in the Campaign Results &amp; Case Studies section instead — set which with Type below.</p>
+    <h3>${existing ? 'Edit Post' : (isCaseStudy ? 'Add Case Study' : 'Add Article')}</h3>
+    <p class="sub">Articles show in the Blog section; Case Studies show in the Case Study &amp; Campaign Results section instead — set which with Type below.</p>
     <form id="blogForm">
       <div class="field"><label>Title</label><input type="text" id="pTitle" value="${escapeHtml(existing?.title)}" required></div>
       <div class="field">
@@ -747,6 +758,7 @@ function openBlogModal(index){
       overlay.classList.remove('show');
       showToast(existing ? 'Post updated' : 'Post added');
       renderBlogPage();
+      renderCampaignsPage();
     } catch(err){
       showToast(err.message);
     } finally {
@@ -756,12 +768,17 @@ function openBlogModal(index){
 }
 
 /* ============================================================
-   PAGE: CAMPAIGNS
+   PAGE: CASE STUDY & CAMPAIGN RESULTS
+   Two panels on one page: Campaigns (its own table/endpoint) and
+   Case Studies (the postType==='case-study' slice of blogData) —
+   this mirrors how the public site shows them together as the
+   "Campaigns" / "Case Studies" sub-groups of the same #proof section.
    ============================================================ */
 function renderCampaignsPage(){
+  const caseStudies = blogData.map((p, i) => ({ post: p, i })).filter(x => x.post.postType === 'case-study');
   document.getElementById('page-campaigns').innerHTML = `
-    <h1 class="page-title">Campaigns</h1>
-    <p class="page-sub">Brand &times; creator campaign results — shown in the "Campaigns" group of the Campaign Results &amp; Case Studies section on the public site (alongside Case Studies, which are managed from Blog &amp; Case Studies instead).</p>
+    <h1 class="page-title">Case Study &amp; Campaign Results</h1>
+    <p class="page-sub">Campaigns and Case Studies — shown together in the Case Study &amp; Campaign Results section on the public site. (Articles are managed from Blog instead.)</p>
 
     <div class="panel">
       <div class="panel-head">
@@ -775,29 +792,64 @@ function renderCampaignsPage(){
       </table>
       </div>
     </div>
+
+    <div class="panel" style="margin-top:24px;">
+      <div class="panel-head">
+        <div><h2>Case Studies</h2><p>${caseStudies.length} case stud${caseStudies.length===1?'y':'ies'}</p></div>
+        <button class="btn btn-primary" id="addCaseStudyBtn" style="width:auto;">+ Add Case Study</button>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th></th><th>Title</th><th>Talent</th><th></th></tr></thead>
+        <tbody id="caseStudyTbody"></tbody>
+      </table>
+      </div>
+    </div>
   `;
   document.getElementById('addCampaignBtn').addEventListener('click', () => openCampaignModal(null));
+  document.getElementById('addCaseStudyBtn').addEventListener('click', () => openBlogModal(null, 'case-study'));
 
   const tbody = document.getElementById('campaignsTbody');
   if(!campaignsData.length){
     tbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted); padding:16px 0;">No campaigns yet — add your first one above.</td></tr>`;
-    return;
+  } else {
+    tbody.innerHTML = campaignsData.map((c, i) => `
+      <tr>
+        <td>${c.brandLogo
+          ? `<img class="table-logo" src="${c.brandLogo}" onerror="this.style.background='#eee'">`
+          : `<div class="brand-logo-fallback">${escapeHtml((c.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
+        <td><b>${escapeHtml(c.brandName)}</b></td>
+        <td style="color:var(--muted);">${escapeHtml(c.creatorName) || '—'}</td>
+        <td class="table-actions">
+          <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
+          <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCampaignModal(Number(btn.dataset.edit))));
+    tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteCampaign(Number(btn.dataset.delete))));
   }
-  tbody.innerHTML = campaignsData.map((c, i) => `
-    <tr>
-      <td>${c.brandLogo
-        ? `<img class="table-logo" src="${c.brandLogo}" onerror="this.style.background='#eee'">`
-        : `<div class="brand-logo-fallback">${escapeHtml((c.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
-      <td><b>${escapeHtml(c.brandName)}</b></td>
-      <td style="color:var(--muted);">${escapeHtml(c.creatorName) || '—'}</td>
-      <td class="table-actions">
-        <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
-        <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCampaignModal(Number(btn.dataset.edit))));
-  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteCampaign(Number(btn.dataset.delete))));
+
+  const csTbody = document.getElementById('caseStudyTbody');
+  if(!caseStudies.length){
+    csTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted); padding:16px 0;">No case studies yet — add your first one above.</td></tr>`;
+  } else {
+    csTbody.innerHTML = caseStudies.map(({ post: p, i }) => `
+      <tr>
+        <td>${p.coverImage
+          ? `<img class="table-logo" src="${p.coverImage}" onerror="this.style.background='#eee'">`
+          : `<div class="brand-logo-fallback">${escapeHtml((p.title||'?').charAt(0).toUpperCase())}</div>`}</td>
+        <td><b>${escapeHtml(p.title)}</b></td>
+        <td style="color:var(--muted);">${escapeHtml(p.talentName) || '—'}</td>
+        <td class="table-actions">
+          <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
+          <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+    csTbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBlogModal(Number(btn.dataset.edit))));
+    csTbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteBlogPost(Number(btn.dataset.delete))));
+  }
 }
 
 async function deleteCampaign(index){
@@ -818,7 +870,7 @@ function openCampaignModal(index){
   document.getElementById('campaignModal').innerHTML = `
     <button class="modal-close" data-close>&times;</button>
     <h3>${existing ? 'Edit Campaign' : 'Add Campaign'}</h3>
-    <p class="sub">Shown in the "Campaigns" group of the Campaign Results &amp; Case Studies section on the public site.</p>
+    <p class="sub">Shown in the "Campaigns" group of the Case Study &amp; Campaign Results section on the public site.</p>
     <form id="campaignForm">
       <div class="field"><label>Brand Name</label><input type="text" id="cBrandName" value="${escapeHtml(existing?.brandName)}" required></div>
       <div class="field"><label>Creator (optional)</label><input type="text" id="cCreatorName" value="${escapeHtml(existing?.creatorName)}"></div>
