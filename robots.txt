@@ -3,4 +3,4 @@ Allow: /
 
 Disallow: /admin.html
 
-Sitemap: https://www.brxdge.com/sitemap.xml
+Sitemap: https://brxdge.ca/sitemap.xml
