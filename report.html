@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Report | BRXDGE</title>
+<!-- Private-by-link, not by search engine. This page is only ever meant
+     to be reached via the exact ?t=<token> URL an agency team member
+     hands a brand directly — it has no nav link pointing to it from
+     anywhere else on the site, and this tag keeps it out of search
+     results too. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0C0C0C">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="report.css?v=1">
+<script>
+  // Same "apply before first paint" pattern as the main site, and the
+  // same localStorage key — if this brand contact ever also lands on
+  // the main site (or vice versa) in the same browser, the theme choice
+  // carries over instead of surprising them with a flip.
+  (function () {
+    try {
+      var saved = localStorage.getItem('brxdge-theme');
+      if (saved !== 'light') document.documentElement.classList.add('dark-mode');
+    } catch (e) {
+      document.documentElement.classList.add('dark-mode');
+    }
+  })();
+</script>
+</head>
+<body>
+
+<div class="report-shell">
+
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">
+    <svg class="ti-sun" width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <svg class="ti-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+  </button>
+
+  <!-- LOADING -->
+  <div class="report-state" id="loadingState">
+    <div class="report-spinner" aria-hidden="true"></div>
+    <p>Loading report…</p>
+  </div>
+
+  <!-- ERROR (bad/expired/missing token) -->
+  <div class="report-state" id="errorState" style="display:none;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.7" r="1.1" fill="currentColor"/></svg>
+    <h1>Report not found</h1>
+    <p>This link may be incomplete, or the report may have been removed. Reach out to your BRXDGE contact for an updated link.</p>
+  </div>
+
+  <!-- REPORT -->
+  <div id="reportRoot" style="display:none;">
+    <header class="report-header">
+      <div class="report-eyebrow">
+        <span class="mark">◆</span> BRXDGE Campaign Report
+      </div>
+      <div class="report-brand-row">
+        <img id="brandLogo" class="report-brand-logo" alt="" style="display:none;">
+        <div>
+          <h1 id="reportTitle" class="report-title"></h1>
+          <p id="reportBrand" class="report-brand-name"></p>
+        </div>
+      </div>
+      <p id="reportNotes" class="report-notes" style="display:none;"></p>
+    </header>
+
+    <main>
+      <div class="report-creators-grid" id="creatorsGrid"></div>
+      <div class="report-empty" id="creatorsEmpty" style="display:none;">
+        <p>No creators have been added to this report yet.</p>
+      </div>
+    </main>
+
+    <footer class="report-footer">
+      <span>◆ BRXDGE</span>
+      <span class="report-footer-dot">·</span>
+      <span>Talent management for creators in Canada</span>
+    </footer>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="report.js?v=1"></script>
+</body>
+</html>
