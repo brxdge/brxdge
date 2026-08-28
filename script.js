@@ -275,24 +275,28 @@
 
   let p = 0;
   let wordShown = false;
-  // Client revision: slowed a little from the original 3000ms so the count
-  // (and the rotate+assemble animation it's paced against) doesn't feel
-  // rushed. Keep loader-bridge.js's assembly timing in sync if this changes.
-  const COUNT_DURATION_MS = 4000;
+  // Client revision, round 2: slowed way down from 4000ms (originally
+  // 3000ms) so the mark's rotate+assemble entrance — now itself slowed to
+  // match, see ASSEMBLE_SPAN_MS/FLY_MS_* in loader-bridge.js — has real
+  // room to play out and be watched, rather than mostly finishing off-
+  // screen of the percentage counter. Keep loader-bridge.js's assembly
+  // timing in sync if this changes again.
+  const COUNT_DURATION_MS = 7000;
   const countStart = performance.now();
   // Driven off elapsed wall-clock time rather than a flat per-tick
   // increment: every integer 1..100 still gets shown, in order, none
   // skipped, at a steady 30ms cadence under normal conditions (30ms of
-  // elapsed time is roughly 1% of the 4000ms total, so most ticks land on
-  // the very next integer). The difference only shows up if something else
-  // briefly blocks the main thread (a slow synchronous script elsewhere, a
-  // busy tab, etc.) — a flat "+1 per tick" counter would just pick up where
-  // it left off and run long, stretching the loader out past its intended
-  // 4000ms; computing p from real elapsed time instead means the very next
-  // tick jumps straight to wherever it should actually be, so the counter
-  // can't be stalled into running indefinitely. loader-bridge.js's render
-  // lifetime is hardcoded against this same 4000ms total (plus the exit
-  // sequence below); keep the two in sync if this duration ever changes.
+  // elapsed time is a small fraction of the 7000ms total, so most ticks
+  // land on the very next integer). The difference only shows up if
+  // something else briefly blocks the main thread (a slow synchronous
+  // script elsewhere, a busy tab, etc.) — a flat "+1 per tick" counter
+  // would just pick up where it left off and run long, stretching the
+  // loader out past its intended 7000ms; computing p from real elapsed
+  // time instead means the very next tick jumps straight to wherever it
+  // should actually be, so the counter can't be stalled into running
+  // indefinitely. loader-bridge.js's render lifetime is hardcoded against
+  // this same 7000ms total (plus the exit sequence below); keep the two
+  // in sync if this duration ever changes.
   const interval = setInterval(() => {
     const elapsed = performance.now() - countStart;
     const next = Math.min(100, Math.floor((elapsed / COUNT_DURATION_MS) * 100));
