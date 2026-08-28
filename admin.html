@@ -139,6 +139,25 @@ a{ color:inherit; }
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
 .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
+/* ---------- CAMPAIGN REPORTS: per-creator editor (admin.js) ---------- */
+.report-creators-editor{ margin-top:6px; padding-top:16px; border-top:1px solid var(--border); }
+.report-creator-box{
+  border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; background:var(--bg-soft, #FAFBFC);
+}
+.report-creator-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.report-creator-head select{ flex:1; }
+.report-links-block{ margin-top:12px; }
+.report-links-block > label{ display:block; font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:8px; }
+.report-link-row{ display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+.report-link-row select{ flex:0 0 130px; }
+.report-link-row input[type="text"]{ flex:1; min-width:0; }
+.report-link-row button{ flex:0 0 auto; }
+.report-share-link-row{ display:flex; gap:8px; }
+.report-share-link-row input{
+  flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+  font-size:12.5px; color:var(--muted); background:var(--bg-soft, #FAFBFC);
+}
+
 /* ---------- TALENT WIZARD (talent-wizard.js) ---------- */
 #talentModal{ max-width:640px; padding:0; }
 .tw-wizard{ display:flex; flex-direction:column; max-height:88vh; }
@@ -485,6 +504,10 @@ a{ color:inherit; }
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h6M9 13.5h6M9 17h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         Blog
       </button>
+      <button class="nav-item" data-page="reports">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 15v-3.5M12 15V8M16.5 15v-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Campaign Reports
+      </button>
       <button class="nav-item" data-page="messages">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
         Contact Responses
@@ -510,6 +533,7 @@ a{ color:inherit; }
     <div id="page-brands" class="page" style="display:none;"></div>
     <div id="page-campaigns" class="page" style="display:none;"></div>
     <div id="page-blog" class="page" style="display:none;"></div>
+    <div id="page-reports" class="page" style="display:none;"></div>
     <div id="page-messages" class="page" style="display:none;"></div>
     <div id="page-profile" class="page" style="display:none;"></div>
   </main>
@@ -533,6 +557,9 @@ a{ color:inherit; }
 <div class="modal-overlay" id="campaignModalOverlay">
   <div class="modal" id="campaignModal" style="max-width:640px;"></div>
 </div>
+<div class="modal-overlay" id="reportModalOverlay">
+  <div class="modal" id="reportModal" style="max-width:680px;"></div>
+</div>
 <div class="modal-overlay" id="messageModalOverlay">
   <div class="modal" id="messageModal"></div>
 </div>
@@ -548,6 +575,6 @@ a{ color:inherit; }
      changes, same convention already used for these on index.html/
      talent.html. -->
 <script src="talent-wizard.js?v=2"></script>
-<script src="admin.js?v=3"></script>
+<script src="admin.js?v=4"></script>
 </body>
 </html>
