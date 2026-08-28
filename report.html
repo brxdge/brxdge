@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="report.css?v=4">
+<link rel="stylesheet" href="report.css?v=6">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -70,7 +70,9 @@
     <header class="report-header">
       <div class="report-eyebrow"><span class="mark">◆</span> BRXDGE Campaign Portal</div>
       <div class="report-brand-row">
-        <img id="brandLogo" class="report-brand-logo" alt="" style="display:none;">
+        <div class="report-brand-logo-wrap" id="brandLogoWrap" style="display:none;">
+          <img id="brandLogo" class="report-brand-logo" alt="">
+        </div>
         <div>
           <h1 id="reportBrandHeading" class="report-brand-heading"></h1>
           <p id="reportTitle" class="report-title-sub"></p>
@@ -134,7 +136,58 @@
   </div>
 </div>
 
+<!-- CREATOR OVERVIEW MODAL — a "who is this creator" popup opened by
+     clicking a creator's name in a card. A campaign report only ever
+     stores name/photo/profile-links itself, so the cover photo + moving
+     name marquee + Creator Snapshot chips below are a progressive
+     enhancement: report.js looks the creator up by name against the
+     public live roster (GET /api/roster, the same public endpoint
+     talent.html itself renders every media kit from) and fills them in
+     when a match is found. No match just means those sections stay
+     hidden — the popup still works as a plain overview either way. This
+     is still NOT the full media kit, just enough to size someone up at a
+     glance before clicking through via the button at the bottom. -->
+<div class="creator-modal-overlay" id="creatorModalOverlay">
+  <div class="creator-modal" role="dialog" aria-modal="true" aria-labelledby="creatorModalName">
+    <button type="button" class="creator-modal-close" id="creatorModalClose" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- Scaled-down version of the real media kit hero (see .mk-hero-photo/
+         .mk-hero-marquee in style.css): a cover photo with the creator's
+         name scrolling behind it in a continuous marquee. Hidden until a
+         roster match with a usable photo is found. -->
+    <div class="creator-modal-cover" id="creatorModalCover" style="display:none;">
+      <img class="creator-modal-cover-img" id="creatorModalCoverImg" alt="">
+      <div class="creator-modal-marquee" aria-hidden="true">
+        <div class="creator-modal-marquee-track" id="creatorModalMarqueeTrack"></div>
+      </div>
+    </div>
+
+    <div class="creator-modal-body">
+      <div class="creator-modal-head">
+        <img class="creator-modal-photo" id="creatorModalPhoto" alt="" onerror="this.style.visibility='hidden'">
+        <div>
+          <div class="creator-modal-eyebrow">Creator Overview</div>
+          <h3 class="creator-modal-name" id="creatorModalName"></h3>
+        </div>
+      </div>
+
+      <!-- Creator Snapshot — Niche / Platforms / Audience / Content, same
+           fields as the media kit's "At a Glance" card, only populated
+           when a roster match has at least one of them set. -->
+      <div class="creator-modal-snapshot" id="creatorModalSnapshot" style="display:none;"></div>
+
+      <div class="creator-modal-profiles" id="creatorModalProfiles"></div>
+      <a class="creator-modal-mk-link" id="creatorModalMkLink" href="talent.html" target="_blank" rel="noopener noreferrer">
+        <span>View Full Media Kit</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
 <script src="config.js?v=2"></script>
-<script src="report.js?v=3"></script>
+<script src="report.js?v=5"></script>
 </body>
 </html>
