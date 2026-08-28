@@ -412,6 +412,82 @@ app.post('/api/campaigns', requireAuth, (req, res) => {
   }
 });
 
+// --- CAMPAIGN REPORTS (private, per-brand reporting dashboards) ---
+// Separate from the public "campaigns" table above: each report is a
+// standalone link (report.html?t=<shareToken>) you hand to ONE brand so
+// they can see every creator + every post made for their campaign,
+// without a login. Same "save the whole array at once" pattern as
+// roster/blog/campaigns, plus one extra public lookup route by token.
+function newId(prefix) {
+  return `${prefix}_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
+}
+// Longer + fully random (no timestamp) for the share token specifically —
+// this is the one thing standing in for a login, so it needs to be
+// unguessable rather than just unique.
+function newShareToken() {
+  return crypto.randomBytes(20).toString('hex');
+}
+
+const replaceCampaignReports = db.transaction((reports) => {
+  const existing = db.prepare(`SELECT id, shareToken, createdAt FROM campaign_reports`).all();
+  const existingById = new Map(existing.map(r => [r.id, r]));
+  db.prepare(`DELETE FROM campaign_reports`).run();
+  const insert = db.prepare(`
+    INSERT INTO campaign_reports (
+      id, shareToken, title, brandName, brandLogo, notes, creators,
+      createdAt, updatedAt, sortOrder
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const now = new Date().toISOString();
+  reports.forEach((r, i) => {
+    const prior = r.id ? existingById.get(r.id) : null;
+    const id = prior ? prior.id : (r.id || newId('report'));
+    const shareToken = prior ? prior.shareToken : (r.shareToken || newShareToken());
+    insert.run(
+      id, shareToken, r.title || '', r.brandName || '', r.brandLogo || '',
+      r.notes || '', JSON.stringify(Array.isArray(r.creators) ? r.creators : []),
+      prior ? prior.createdAt : now, now, i
+    );
+  });
+});
+
+// GET /api/campaign-reports — auth required; the admin dashboard's own
+// list (includes shareToken so it can render the "copy link" button).
+app.get('/api/campaign-reports', requireAuth, (req, res) => {
+  const rows = db.prepare(`SELECT * FROM campaign_reports ORDER BY sortOrder ASC, id ASC`).all();
+  const reports = rows.map(r => {
+    let creators = [];
+    try { creators = JSON.parse(r.creators || '[]'); } catch (err) { /* leave empty */ }
+    return { ...r, creators };
+  });
+  res.json(reports);
+});
+
+app.post('/api/campaign-reports', requireAuth, (req, res) => {
+  if (!Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Expected an array of campaign reports' });
+  }
+  try {
+    replaceCampaignReports(req.body);
+    res.send('Saved');
+  } catch (err) {
+    console.error('campaign reports save error:', err);
+    res.status(500).json({ error: 'Failed to save campaign reports' });
+  }
+});
+
+// GET /api/campaign-reports/by-token/:token — PUBLIC, no auth. This is the
+// one route the brand's browser actually calls (report.html reads ?t=
+// from the URL and fetches this). Deliberately the only unauthenticated
+// read on this table — knowing the token is what stands in for a login.
+app.get('/api/campaign-reports/by-token/:token', (req, res) => {
+  const row = db.prepare(`SELECT * FROM campaign_reports WHERE shareToken = ?`).get(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Report not found' });
+  let creators = [];
+  try { creators = JSON.parse(row.creators || '[]'); } catch (err) { /* leave empty */ }
+  res.json({ ...row, creators });
+});
+
 // --- ADMIN ACCOUNT MANAGEMENT (profile, password/username changes, other admins) ---
 
 // GET /api/me — the signed-in admin's own username + notes
@@ -704,11 +780,8 @@ async function sendContactEmail({ name, email, message, talent }) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-     from: RESEND_FROM,
-// EMAIL_TO may be a single address or a comma-separated list (e.g.
-// "a@brxdge.ca,b@brxdge.ca") — split into an array so Resend delivers
-// to everyone listed instead of treating it as one malformed address.
-to: EMAIL_TO.split(',').map(addr => addr.trim()).filter(Boolean),
+      from: RESEND_FROM,
+      to: EMAIL_TO,
       reply_to: email,
       subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
       text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
