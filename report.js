@@ -158,13 +158,16 @@ function renderCreatorCards(creators){
         ${posts.length ? `
           <div class="creator-posts">
             <div class="creator-posts-label">Posts (${posts.length})</div>
-            ${posts.map(p => `
-              <a class="creator-post-link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer">
-                <span class="cp-icon">${platformBadge(p.platform, 20)}</span>
-                <span class="cp-label">${escapeHtml(p.label) || escapeHtml(p.platform) || 'View post'}</span>
-                <span class="cp-arrow">↗</span>
-              </a>
-            `).join('')}
+            <div class="creator-posts-grid">
+              ${posts.map(p => `
+                <a class="post-thumb" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(p.label) || escapeHtml(p.platform) || 'View post'}">
+                  <div class="post-thumb-fallback">${platformBadge(p.platform, 30)}</div>
+                  ${p.thumbnail ? `<img src="${escapeHtml(p.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+                  <span class="post-thumb-platform">${platformBadge(p.platform, 22)}</span>
+                  ${p.label ? `<span class="post-thumb-label">${escapeHtml(p.label)}</span>` : ''}
+                </a>
+              `).join('')}
+            </div>
           </div>
         ` : `<p class="creator-none">No posts linked yet.</p>`}
       </div>
