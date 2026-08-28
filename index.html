@@ -6,19 +6,10 @@
 <title>BRXDGE | Talent Management for Creators in Canada</title>
 <meta name="description" content="BRXDGE is a Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.">
 <meta name="robots" content="index, follow">
-<!-- IMPORTANT: this canonical/og:url/og:image block was hardcoded to
-     "https://www.brxdge.com/" — a domain that isn't actually owned/pointed
-     at this site yet. Social platforms (iMessage, Facebook, Slack, etc.)
-     read og:url as the "real" address for whatever's being shared, so
-     tapping a shared link's preview card was sending people to that dead
-     domain instead of back to this live site. Pointed everything below at
-     the real live Railway URL instead. Once a real domain is bought and
-     pointed at this deployment, find-and-replace
-     "https://brxdge-production.up.railway.app" with the new domain across
-     this <head> block (and in talent-backend/index.js's per-talent OG
-     middleware, which builds these same tags dynamically for individual
-     talent share links). -->
-<link rel="canonical" href="https://brxdge-production.up.railway.app/">
+<!-- Canonical/og:url/og:image now point at the real production domain,
+     brxdge.ca, now that it's live. (Previously pointed at the Railway
+     deployment URL as an interim fix — see git history for context.) -->
+<link rel="canonical" href="https://brxdge.ca/">
 <meta name="theme-color" content="#0C0C0C">
 
 <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
@@ -26,13 +17,13 @@
 <meta property="og:site_name" content="BRXDGE">
 <meta property="og:title" content="BRXDGE | Talent Management for Creators in Canada">
 <meta property="og:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, bridging the gap between raw talent and the opportunities it deserves.">
-<meta property="og:url" content="https://brxdge-production.up.railway.app/">
+<meta property="og:url" content="https://brxdge.ca/">
 <!-- Was pointed at "assets/og-image.jpg", which doesn't exist in the repo
      (404s) — that's why link previews were falling back to the favicon/logo
      instead of showing a real preview image. Using the logo that does
      exist (brxdge.png) as the default until a proper 1200x630 preview
      graphic is designed and uploaded to assets/og-image.jpg. -->
-<meta property="og:image" content="https://brxdge-production.up.railway.app/brxdge.png">
+<meta property="og:image" content="https://brxdge.ca/brxdge.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -40,7 +31,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="BRXDGE | Talent Management for Creators in Canada">
 <meta name="twitter:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube.">
-<meta name="twitter:image" content="https://brxdge-production.up.railway.app/brxdge.png">
+<meta name="twitter:image" content="https://brxdge.ca/brxdge.png">
 
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
@@ -51,8 +42,8 @@
   "@type": "Organization",
   "name": "BRXDGE",
   "description": "BRXDGE is a Canadian talent management agency representing social media creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.",
-  "url": "https://brxdge-production.up.railway.app/",
-  "logo": "https://brxdge-production.up.railway.app/brxdge.png",
+  "url": "https://brxdge.ca/",
+  "logo": "https://brxdge.ca/brxdge.png",
   "areaServed": {
     "@type": "Country",
     "name": "Canada"
