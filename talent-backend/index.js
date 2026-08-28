@@ -704,8 +704,11 @@ async function sendContactEmail({ name, email, message, talent }) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: RESEND_FROM,
-      to: EMAIL_TO,
+     from: RESEND_FROM,
+// EMAIL_TO may be a single address or a comma-separated list (e.g.
+// "a@brxdge.ca,b@brxdge.ca") — split into an array so Resend delivers
+// to everyone listed instead of treating it as one malformed address.
+to: EMAIL_TO.split(',').map(addr => addr.trim()).filter(Boolean),
       reply_to: email,
       subject: talent ? `New inquiry about ${talent} — BRXDGE` : 'New contact form message — BRXDGE',
       text: `Name: ${name}\nEmail: ${email}\n${talent ? `Talent: ${talent}\n` : ''}\nMessage:\n${message}`,
