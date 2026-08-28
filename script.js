@@ -257,6 +257,9 @@
   const loadPercent = document.getElementById('loadPercent');
   const loaderMark = document.getElementById('loaderMark');
   const loaderWord = document.getElementById('loaderWord');
+  // POSSIBILITIES tagline, ported over from the retired hero-orbit section
+  // — null on talent.html, which drops it same as loadPercent/loaderWord.
+  const loaderTagline = document.getElementById('loaderTagline');
   const heroAnim = document.querySelector('.hero-anim');
   const heroItems = document.querySelectorAll('.hero-anim-item');
 
@@ -308,6 +311,7 @@
     if (!wordShown && p >= 85) {
       wordShown = true;
       if (loaderWord) loaderWord.classList.add('show');
+      if (loaderTagline) loaderTagline.classList.add('show');
     }
 
     if (p === 100) {
