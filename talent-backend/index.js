@@ -778,6 +778,45 @@ app.delete('/api/contact-messages/:id', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// --- TEMPORARY: one-time volume restore for migrating data onto this new
+// Railway project's volume. Accepts an uploaded .tar.gz (multipart field
+// name "backup"), extracts it into the volume root. Guarded by
+// RESTORE_SECRET. DELETE THIS ROUTE (and the RESTORE_SECRET variable) once
+// the migration is done — it should not stay in the codebase long-term.
+const os = require('os');
+const { spawn } = require('child_process');
+const restoreUpload = multer({ dest: os.tmpdir() });
+app.post('/api/restore-volume', restoreUpload.single('backup'), (req, res) => {
+  const cleanup = () => { if (req.file) fs.unlink(req.file.path, () => {}); };
+  if (!process.env.RESTORE_SECRET || req.query.secret !== process.env.RESTORE_SECRET) {
+    cleanup();
+    return res.status(401).send('Unauthorized');
+  }
+  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
+  if (!volumePath) {
+    cleanup();
+    return res.status(400).send('No volume mounted on this service');
+  }
+  if (!req.file) {
+    return res.status(400).send('No file uploaded — expected multipart field named "backup"');
+  }
+  // --strip-components=1 drops the old backup's wrapping top-level folder
+  // (whatever the old volume's basename was) so brxdge.db and uploads/
+  // land directly at this volume's root, regardless of that old name.
+  const tar = spawn('tar', ['-xzf', req.file.path, '-C', volumePath, '--strip-components=1']);
+  tar.stderr.on('data', d => console.error('restore tar stderr:', d.toString()));
+  tar.on('close', code => {
+    cleanup();
+    if (code === 0) res.send('Restore complete');
+    else res.status(500).send(`tar extraction failed, exit code ${code}`);
+  });
+  tar.on('error', err => {
+    cleanup();
+    console.error('Failed to spawn tar for restore:', err);
+    res.status(500).send('Restore failed: ' + err.message);
+  });
+});
+
 // --- YOUTUBE / TIKTOK LATEST POSTS (unchanged — these were never file-based) ---
 
 async function resolveChannelId(channelUrl) {
