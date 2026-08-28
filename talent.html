@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=62">
+<link rel="stylesheet" href="style.css?v=63">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -167,6 +167,29 @@
 
 
 <div id="loader">
+  <!-- AMBIENT CABLE MOTIF — see index.html's loader for the full comment;
+       same self-contained decorative arc/hanger/dot pattern here for
+       consistency between the two pages' loaders. -->
+  <div class="loader-ambient" aria-hidden="true">
+    <svg viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid slice">
+      <path class="loader-ambient-arc" d="M 0 190 Q 500 68 1000 190"/>
+      <line class="loader-ambient-hanger" x1="80"  y1="152" x2="80"  y2="230"/>
+      <line class="loader-ambient-hanger" x1="220" y1="118" x2="220" y2="230"/>
+      <line class="loader-ambient-hanger" x1="360" y1="92"  x2="360" y2="230"/>
+      <line class="loader-ambient-hanger" x1="500" y1="82"  x2="500" y2="230"/>
+      <line class="loader-ambient-hanger" x1="640" y1="92"  x2="640" y2="230"/>
+      <line class="loader-ambient-hanger" x1="780" y1="118" x2="780" y2="230"/>
+      <line class="loader-ambient-hanger" x1="920" y1="152" x2="920" y2="230"/>
+      <circle class="loader-ambient-dot" cx="80"  cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="220" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="360" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="500" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="640" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="780" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="920" cy="230" r="2.2"/>
+    </svg>
+  </div>
+
   <div class="loader-content">
     <!-- BRXDGE LOADER MARK — a real 3D twin-arch bridge (rendered by
          loader-bridge.js / three.js), the same geometry family as the
@@ -177,15 +200,18 @@
          .expand classes (drop-in bounce + expand-and-burst exit) are still
          driven by script.js exactly as before.
 
-         talent.html-only revision: the percentage readout (#loadPercent)
-         and the BRXDGE wordmark (#loaderWord) are dropped from this page's
-         loader, leaving just the bridge mark animation on its own —
-         index.html's loader is unchanged. script.js's counting/timing loop
-         still runs underneath exactly as before (both elements are null-
-         guarded there), so the bridge's assembly animation stays in sync
-         and the exit sequence still fires at 100%. -->
+         talent.html-only revision: the percentage readout (#loadPercent),
+         BRXDGE wordmark (#loaderWord) and POSSIBILITIES tagline are
+         dropped from this page's loader, leaving just the bridge mark (now
+         flanked by "EST." / "2026", ported from the retired hero-orbit
+         section same as index.html) on its own. script.js's counting/
+         timing loop still runs underneath exactly as before (all three
+         elements are null-guarded there), so the bridge's assembly
+         animation stays in sync and the exit sequence still fires at
+         100%. -->
     <div class="loader-mark-drop-zone">
       <div class="loader-mark" id="loaderMark" aria-hidden="true">
+        <span class="loader-flank loader-flank--left" aria-hidden="true">EST.</span>
         <canvas id="loaderCanvas" aria-hidden="true"></canvas>
         <div class="loader-mark-fallback" aria-hidden="true">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -201,6 +227,7 @@
             </defs>
           </svg>
         </div>
+        <span class="loader-flank loader-flank--right" aria-hidden="true">2026</span>
       </div>
       <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
     </div>
@@ -1197,7 +1224,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=2"></script>
-<script src="script.js?v=45"></script>
+<script src="script.js?v=46"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
