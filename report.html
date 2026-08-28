@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="report.css?v=2">
+<link rel="stylesheet" href="report.css?v=4">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -53,15 +53,17 @@
        the way a real app's top bar would, rather than a report you scroll
        away from its own title. -->
   <div class="portal-topbar">
-    <div class="topbar-left">
-      <span class="topbar-mark">◆</span>
-      <img id="topbarLogo" class="topbar-logo" alt="" style="display:none;">
-      <span id="topbarBrandName" class="topbar-brand-name"></span>
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <span class="topbar-mark">◆</span>
+        <img id="topbarLogo" class="topbar-logo" alt="" style="display:none;">
+        <span id="topbarBrandName" class="topbar-brand-name"></span>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">
+        <svg class="ti-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="ti-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
     </div>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">
-      <svg class="ti-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <svg class="ti-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-    </button>
   </div>
 
   <div class="report-shell">
@@ -98,14 +100,41 @@
     </main>
 
     <footer class="report-footer">
-      <span>◆ BRXDGE</span>
-      <span class="report-footer-dot">·</span>
-      <span>Talent management for creators in Canada</span>
+      <div class="report-footer-main">
+        <!-- Real BRXDGE brand mark — the same rounded-badge bridge-cable
+             icon used in the main site's header/footer (index.html), not
+             a placeholder "◆" glyph. Its own gradient id (gradMarkReport)
+             so it can't collide if this page and the main site ever share
+             a DOM (e.g. embedded in an iframe). -->
+        <a class="report-footer-brand" href="https://brxdge.ca" target="_blank" rel="noopener noreferrer" aria-label="BRXDGE — visit brxdge.ca">
+          <svg class="report-footer-mark" width="26" height="26" viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="4" y="4" width="92" height="92" rx="20" fill="#0C0C0C" stroke="#2E2E2E" stroke-width="1"/>
+            <path d="M 16 66 Q 50 40 84 66" fill="none" stroke="url(#gradMarkReport)" stroke-width="3"/>
+            <line x1="26" y1="60" x2="26" y2="66" stroke="#808080" stroke-width="1.4"/>
+            <line x1="38" y1="51" x2="38" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+            <line x1="50" y1="46" x2="50" y2="66" stroke="#9A9A9A" stroke-width="1.4"/>
+            <line x1="62" y1="51" x2="62" y2="66" stroke="#8C8C8C" stroke-width="1.4"/>
+            <line x1="74" y1="60" x2="74" y2="66" stroke="#808080" stroke-width="1.4"/>
+            <defs>
+              <linearGradient id="gradMarkReport" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#F0F0F0"/><stop offset="50%" stop-color="#8A8A8A"/><stop offset="100%" stop-color="#F0F0F0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="report-footer-brand-name">BRXDGE</span>
+        </a>
+        <span class="report-footer-dot">·</span>
+        <span>Talent management for creators in Canada</span>
+      </div>
+      <a class="report-footer-site-link" href="https://brxdge.ca" target="_blank" rel="noopener noreferrer">
+        brxdge.ca
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </footer>
   </div>
 </div>
 
 <script src="config.js?v=2"></script>
-<script src="report.js?v=2"></script>
+<script src="report.js?v=3"></script>
 </body>
 </html>
