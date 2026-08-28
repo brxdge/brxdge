@@ -19,6 +19,7 @@ let adminsData = [];
 let brandsData = [];
 let blogData = [];
 let campaignsData = [];
+let reportsData = [];
 
 try { token = sessionStorage.getItem(TOKEN_KEY); } catch(e) {}
 
@@ -106,7 +107,7 @@ async function enterDashboard(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').classList.add('show');
   document.getElementById('whoamiName').textContent = me.username;
-  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages(), loadBlog(), loadCampaigns()]);
+  await Promise.all([loadRoster(), loadManagers(), loadBrands(), loadMessages(), loadBlog(), loadCampaigns(), loadReports()]);
   renderTalentPage();
   renderManagersPage();
   renderBrandsPage();
@@ -114,6 +115,7 @@ async function enterDashboard(){
   renderProfilePage();
   renderCampaignsPage();
   renderBlogPage();
+  renderReportsPage();
 }
 
 /* ---------------- NAVIGATION ---------------- */
@@ -158,6 +160,14 @@ async function loadCampaigns(){
   } catch(err){
     console.error('Failed to load campaigns:', err);
     campaignsData = [];
+  }
+}
+async function loadReports(){
+  try {
+    reportsData = await api('/api/campaign-reports');
+  } catch(err){
+    console.error('Failed to load campaign reports:', err);
+    reportsData = [];
   }
 }
 async function loadMessages(){
@@ -938,6 +948,332 @@ function openCampaignModal(index){
     } finally {
       submitBtn.disabled = false;
     }
+  });
+}
+
+/* ============================================================
+   PAGE: CAMPAIGN REPORTS
+   Private, per-brand reporting dashboards — NOT the public "Case Study
+   & Campaign Results" page above. Each report is a standalone link
+   (report.html?t=<shareToken>) you hand to ONE brand so they can see
+   every creator + every post made for their campaign, with no login.
+   ============================================================ */
+const REPORT_PLATFORMS = ['Instagram','TikTok','YouTube','Twitter / X','Facebook','Snapchat','Twitch','LinkedIn','Pinterest','Threads','Other'];
+
+// The working copy of whichever report is currently open in the modal —
+// edited in place by the creators editor below, then read back out (and
+// discarded on Cancel) when the form is submitted.
+let reportDraft = null;
+
+function shareLinkFor(report){
+  return `${location.origin}/report.html?t=${encodeURIComponent(report && report.shareToken || '')}`;
+}
+
+async function copyReportLink(report){
+  const link = shareLinkFor(report);
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast('Link copied');
+  } catch(err){
+    showToast('Could not copy automatically — the link is in the field above');
+  }
+}
+
+function renderReportsPage(){
+  document.getElementById('page-reports').innerHTML = `
+    <h1 class="page-title">Campaign Reports</h1>
+    <p class="page-sub">Private, shareable dashboards for one brand at a time. Send the link and they can see every creator's profile and the specific posts made for that campaign — no login needed on their end.</p>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Reports</h2><p>${reportsData.length} report${reportsData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addReportBtn" style="width:auto;">+ Add Report</button>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th></th><th>Title</th><th>Brand</th><th>Creators</th><th></th><th></th></tr></thead>
+        <tbody id="reportsTbody"></tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('addReportBtn').addEventListener('click', () => openReportModal(null));
+
+  const tbody = document.getElementById('reportsTbody');
+  if(!reportsData.length){
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted); padding:16px 0;">No reports yet — add your first one above.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = reportsData.map((r, i) => `
+    <tr>
+      <td>${r.brandLogo
+        ? `<img class="table-logo" src="${r.brandLogo}" onerror="this.style.background='#eee'">`
+        : `<div class="brand-logo-fallback">${escapeHtml((r.brandName||'?').charAt(0).toUpperCase())}</div>`}</td>
+      <td><b>${escapeHtml(r.title)}</b></td>
+      <td style="color:var(--muted);">${escapeHtml(r.brandName)}</td>
+      <td style="color:var(--muted);">${(r.creators||[]).length}</td>
+      <td class="table-actions"><button class="btn btn-ghost btn-sm" data-copy="${i}">Copy Link</button></td>
+      <td class="table-actions">
+        <button class="btn btn-ghost btn-sm" data-edit="${i}">Edit</button>
+        <button class="btn btn-danger btn-sm" data-delete="${i}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openReportModal(Number(btn.dataset.edit))));
+  tbody.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => deleteReport(Number(btn.dataset.delete))));
+  tbody.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', () => copyReportLink(reportsData[Number(btn.dataset.copy)])));
+}
+
+async function deleteReport(index){
+  const r = reportsData[index];
+  if(!confirm(`Delete the "${r.title}" report? The link you shared with ${r.brandName || 'the brand'} will stop working.`)) return;
+  reportsData = reportsData.filter((_, i) => i !== index);
+  try {
+    await api('/api/campaign-reports', { method: 'POST', body: JSON.stringify(reportsData) });
+    showToast('Report deleted');
+    renderReportsPage();
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
+function openReportModal(index){
+  const existing = (index !== null && index !== undefined) ? reportsData[index] : null;
+  // Deep copy so editing (or Cancel) never mutates reportsData until Save.
+  reportDraft = existing ? JSON.parse(JSON.stringify(existing)) : { id: '', shareToken: '', title: '', brandName: '', brandLogo: '', notes: '', creators: [] };
+  if(!Array.isArray(reportDraft.creators)) reportDraft.creators = [];
+
+  document.getElementById('reportModal').innerHTML = `
+    <button class="modal-close" data-close>&times;</button>
+    <h3>${existing ? 'Edit Report' : 'Add Report'}</h3>
+    <p class="sub">A private link for one brand, no login needed. Add each creator who posted for this campaign, their profile link(s), and the specific posts they made.</p>
+    <form id="reportForm">
+      <div class="field"><label>Report Title</label><input type="text" id="rTitle" value="${escapeHtml(reportDraft.title)}" placeholder="e.g. Lumen Beauty — Summer Launch" required></div>
+      <div class="field"><label>Brand Name</label><input type="text" id="rBrandName" value="${escapeHtml(reportDraft.brandName)}" required></div>
+      <div class="field">
+        <label>Brand Logo (optional)</label>
+        ${reportDraft.brandLogo ? `<img class="table-logo" style="width:48px; height:48px; margin-bottom:8px;" src="${reportDraft.brandLogo}">` : ''}
+        <input type="file" id="rLogoFile" accept="image/*">
+      </div>
+      <div class="field"><label>Notes shown to the brand (optional)</label><textarea id="rNotes" rows="2">${escapeHtml(reportDraft.notes)}</textarea></div>
+
+      <div class="report-creators-editor">
+        <div class="panel-head" style="padding:0 0 10px; margin-bottom:0;">
+          <div><h2 style="font-size:15px;">Creators</h2></div>
+          <button type="button" class="btn btn-ghost btn-sm" id="addReportCreatorBtn">+ Add Creator</button>
+        </div>
+        <div id="reportCreatorsList"></div>
+      </div>
+
+      ${existing
+        ? `<div class="field" style="margin-top:6px;"><label>Share Link</label><div class="report-share-link-row"><input type="text" id="rShareLinkField" readonly value="${escapeHtml(shareLinkFor(existing))}"><button type="button" class="btn btn-ghost btn-sm" id="copyReportLinkBtn">Copy</button></div></div>`
+        : `<p style="font-size:12px; color:var(--muted); margin-top:14px;">The shareable link is generated once you save.</p>`}
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Save</button>
+      </div>
+    </form>
+  `;
+  const overlay = document.getElementById('reportModalOverlay');
+  overlay.classList.add('show');
+  overlay.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => overlay.classList.remove('show')));
+
+  document.getElementById('rShareLinkField')?.addEventListener('click', (e) => e.target.select());
+  document.getElementById('copyReportLinkBtn')?.addEventListener('click', () => copyReportLink(existing));
+
+  renderCreatorsEditor();
+  document.getElementById('addReportCreatorBtn').addEventListener('click', () => {
+    reportDraft.creators.push({ id: 'local_' + Math.random().toString(36).slice(2, 9), name: '', photo: '', profiles: [], posts: [] });
+    renderCreatorsEditor();
+  });
+
+  document.getElementById('reportForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      let brandLogo = reportDraft.brandLogo || '';
+      const logoFile = document.getElementById('rLogoFile').files[0];
+      if(logoFile) brandLogo = await uploadImage(logoFile);
+
+      const entry = {
+        id: reportDraft.id || '',
+        shareToken: reportDraft.shareToken || '',
+        title: document.getElementById('rTitle').value.trim(),
+        brandName: document.getElementById('rBrandName').value.trim(),
+        brandLogo,
+        notes: document.getElementById('rNotes').value.trim(),
+        creators: reportDraft.creators
+          .map(c => ({
+            id: c.id || '',
+            name: (c.name || '').trim(),
+            photo: c.photo || '',
+            profiles: (c.profiles || []).filter(p => p.url && p.url.trim()),
+            posts: (c.posts || []).filter(p => p.url && p.url.trim()),
+          }))
+          .filter(c => c.name),
+      };
+      if(existing){ reportsData[index] = entry; } else { reportsData.push(entry); }
+      await api('/api/campaign-reports', { method: 'POST', body: JSON.stringify(reportsData) });
+      await loadReports(); // pick up the server-assigned id/shareToken for a brand-new report
+      overlay.classList.remove('show');
+      showToast(existing ? 'Report updated' : 'Report added — copy its link from the list');
+      renderReportsPage();
+    } catch(err){
+      showToast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+function renderCreatorsEditor(){
+  const wrap = document.getElementById('reportCreatorsList');
+  if(!wrap) return;
+  if(!reportDraft.creators.length){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:13px; margin:4px 0 12px;">No creators added yet.</p>`;
+  } else {
+    wrap.innerHTML = reportDraft.creators.map((c, ci) => `
+      <div class="report-creator-box">
+        <div class="report-creator-head">
+          <select class="report-pick-talent" data-creator="${ci}">
+            <option value="">Fill in from talent roster (optional)…</option>
+            ${rosterData.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('')}
+          </select>
+          <button type="button" class="btn btn-danger btn-sm" data-remove-creator="${ci}">Remove</button>
+        </div>
+        <div class="field"><label>Name</label><input type="text" class="report-creator-name" data-creator="${ci}" value="${escapeHtml(c.name)}" placeholder="Creator name"></div>
+        <div class="field">
+          <label>Photo</label>
+          ${c.photo ? `<img class="table-logo" style="width:44px; height:44px; margin-bottom:6px;" src="${c.photo}">` : ''}
+          <input type="file" class="report-creator-photo-file" data-creator="${ci}" accept="image/*">
+        </div>
+        <div class="report-links-block">
+          <label>Profile Links</label>
+          ${(c.profiles||[]).map((p, pi) => `
+            <div class="report-link-row">
+              <select class="report-profile-platform" data-creator="${ci}" data-idx="${pi}">
+                ${REPORT_PLATFORMS.map(pl => `<option value="${pl}" ${p.platform===pl?'selected':''}>${pl}</option>`).join('')}
+              </select>
+              <input type="text" class="report-profile-url" data-creator="${ci}" data-idx="${pi}" placeholder="https://instagram.com/..." value="${escapeHtml(p.url)}">
+              <button type="button" class="btn btn-ghost btn-sm" data-remove-profile="${ci}:${pi}">&times;</button>
+            </div>
+          `).join('')}
+          <button type="button" class="btn btn-ghost btn-sm" data-add-profile="${ci}">+ Add Profile Link</button>
+        </div>
+        <div class="report-links-block">
+          <label>Post Links</label>
+          ${(c.posts||[]).map((p, pi) => `
+            <div class="report-link-row">
+              <select class="report-post-platform" data-creator="${ci}" data-idx="${pi}">
+                ${REPORT_PLATFORMS.map(pl => `<option value="${pl}" ${p.platform===pl?'selected':''}>${pl}</option>`).join('')}
+              </select>
+              <input type="text" class="report-post-url" data-creator="${ci}" data-idx="${pi}" placeholder="https://instagram.com/p/..." value="${escapeHtml(p.url)}">
+              <input type="text" class="report-post-label" data-creator="${ci}" data-idx="${pi}" placeholder="Label (optional)" value="${escapeHtml(p.label)}" style="flex:0 0 120px;">
+              <button type="button" class="btn btn-ghost btn-sm" data-remove-post="${ci}:${pi}">&times;</button>
+            </div>
+          `).join('')}
+          <button type="button" class="btn btn-ghost btn-sm" data-add-post="${ci}">+ Add Post Link</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  wireCreatorsEditorEvents();
+}
+
+function wireCreatorsEditorEvents(){
+  const wrap = document.getElementById('reportCreatorsList');
+  if(!wrap) return;
+
+  wrap.querySelectorAll('.report-pick-talent').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      const ci = Number(e.target.dataset.creator);
+      const talent = rosterData.find(t => t.id === e.target.value);
+      if(!talent) return;
+      const c = reportDraft.creators[ci];
+      c.name = talent.name || c.name;
+      c.photo = photoOrFallback(talent) || c.photo;
+      c.profiles = (talent.socials || []).filter(s => s.url).map(s => ({ platform: s.platform || 'Other', url: s.url }));
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('.report-creator-name').forEach(inp => {
+    inp.addEventListener('input', (e) => { reportDraft.creators[Number(e.target.dataset.creator)].name = e.target.value; });
+  });
+  wrap.querySelectorAll('.report-creator-photo-file').forEach(inp => {
+    inp.addEventListener('change', async (e) => {
+      const ci = Number(e.target.dataset.creator);
+      const file = e.target.files[0];
+      if(!file) return;
+      try {
+        reportDraft.creators[ci].photo = await uploadImage(file);
+        renderCreatorsEditor();
+      } catch(err){
+        showToast(err.message);
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-remove-creator]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      reportDraft.creators.splice(Number(btn.dataset.removeCreator), 1);
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('[data-add-profile]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ci = Number(btn.dataset.addProfile);
+      if(!reportDraft.creators[ci].profiles) reportDraft.creators[ci].profiles = [];
+      reportDraft.creators[ci].profiles.push({ platform: 'Instagram', url: '' });
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('[data-add-post]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ci = Number(btn.dataset.addPost);
+      if(!reportDraft.creators[ci].posts) reportDraft.creators[ci].posts = [];
+      reportDraft.creators[ci].posts.push({ platform: 'Instagram', url: '', label: '' });
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('[data-remove-profile]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [ci, pi] = btn.dataset.removeProfile.split(':').map(Number);
+      reportDraft.creators[ci].profiles.splice(pi, 1);
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('[data-remove-post]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [ci, pi] = btn.dataset.removePost.split(':').map(Number);
+      reportDraft.creators[ci].posts.splice(pi, 1);
+      renderCreatorsEditor();
+    });
+  });
+  wrap.querySelectorAll('.report-profile-platform').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      reportDraft.creators[Number(e.target.dataset.creator)].profiles[Number(e.target.dataset.idx)].platform = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('.report-profile-url').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      reportDraft.creators[Number(e.target.dataset.creator)].profiles[Number(e.target.dataset.idx)].url = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('.report-post-platform').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      reportDraft.creators[Number(e.target.dataset.creator)].posts[Number(e.target.dataset.idx)].platform = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('.report-post-url').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      reportDraft.creators[Number(e.target.dataset.creator)].posts[Number(e.target.dataset.idx)].url = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('.report-post-label').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      reportDraft.creators[Number(e.target.dataset.creator)].posts[Number(e.target.dataset.idx)].label = e.target.value;
+    });
   });
 }
 
