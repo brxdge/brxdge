@@ -157,6 +157,31 @@ db.exec(`
     sortOrder     INTEGER NOT NULL DEFAULT 0
   );
 
+  -- PRIVATE brand-facing campaign reports — NOT the public "Campaigns"
+  -- table above. A report is one link you hand to one brand so they can
+  -- see every creator who posted for their campaign (profile + the
+  -- specific posts made), without an account or logging into anything.
+  -- shareToken is the unguessable id in that link
+  -- (report.html?t=<shareToken>) — GET /api/campaign-reports/by-token/:t
+  -- is intentionally the one unauthenticated read in this table's routes.
+  -- creators is a JSON-encoded array of
+  -- { id, name, photo, profiles: [{platform,url}], posts: [{platform,url,label}] }
+  -- — not worth a set of child tables for what's fundamentally a small,
+  -- rarely-queried-outside-its-own-report blob (same reasoning as
+  -- campaigns.deliverables above).
+  CREATE TABLE IF NOT EXISTS campaign_reports (
+    id          TEXT PRIMARY KEY,
+    shareToken  TEXT UNIQUE NOT NULL,
+    title       TEXT NOT NULL,
+    brandName   TEXT NOT NULL,
+    brandLogo   TEXT,
+    notes       TEXT,
+    creators    TEXT NOT NULL DEFAULT '[]',
+    createdAt   TEXT NOT NULL,
+    updatedAt   TEXT NOT NULL,
+    sortOrder   INTEGER NOT NULL DEFAULT 0
+  );
+
   CREATE INDEX IF NOT EXISTS idx_gallery_talent ON gallery_images(talent_id);
   CREATE INDEX IF NOT EXISTS idx_socials_talent ON socials(talent_id);
   CREATE INDEX IF NOT EXISTS idx_posts_social ON posts(social_id);
