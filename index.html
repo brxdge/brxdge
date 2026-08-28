@@ -6,10 +6,19 @@
 <title>BRXDGE | Talent Management for Creators in Canada</title>
 <meta name="description" content="BRXDGE is a Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.">
 <meta name="robots" content="index, follow">
-<!-- Canonical/og:url/og:image now point at the real production domain,
-     brxdge.ca, now that it's live. (Previously pointed at the Railway
-     deployment URL as an interim fix — see git history for context.) -->
-<link rel="canonical" href="https://brxdge.ca/">
+<!-- IMPORTANT: this canonical/og:url/og:image block was hardcoded to
+     "https://www.brxdge.com/" — a domain that isn't actually owned/pointed
+     at this site yet. Social platforms (iMessage, Facebook, Slack, etc.)
+     read og:url as the "real" address for whatever's being shared, so
+     tapping a shared link's preview card was sending people to that dead
+     domain instead of back to this live site. Pointed everything below at
+     the real live Railway URL instead. Once a real domain is bought and
+     pointed at this deployment, find-and-replace
+     "https://brxdge-production.up.railway.app" with the new domain across
+     this <head> block (and in talent-backend/index.js's per-talent OG
+     middleware, which builds these same tags dynamically for individual
+     talent share links). -->
+<link rel="canonical" href="https://brxdge-production.up.railway.app/">
 <meta name="theme-color" content="#0C0C0C">
 
 <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
@@ -17,13 +26,13 @@
 <meta property="og:site_name" content="BRXDGE">
 <meta property="og:title" content="BRXDGE | Talent Management for Creators in Canada">
 <meta property="og:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, bridging the gap between raw talent and the opportunities it deserves.">
-<meta property="og:url" content="https://brxdge.ca/">
+<meta property="og:url" content="https://brxdge-production.up.railway.app/">
 <!-- Was pointed at "assets/og-image.jpg", which doesn't exist in the repo
      (404s) — that's why link previews were falling back to the favicon/logo
      instead of showing a real preview image. Using the logo that does
      exist (brxdge.png) as the default until a proper 1200x630 preview
      graphic is designed and uploaded to assets/og-image.jpg. -->
-<meta property="og:image" content="https://brxdge.ca/brxdge.png">
+<meta property="og:image" content="https://brxdge-production.up.railway.app/brxdge.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
@@ -31,7 +40,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="BRXDGE | Talent Management for Creators in Canada">
 <meta name="twitter:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube.">
-<meta name="twitter:image" content="https://brxdge.ca/brxdge.png">
+<meta name="twitter:image" content="https://brxdge-production.up.railway.app/brxdge.png">
 
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
@@ -42,8 +51,8 @@
   "@type": "Organization",
   "name": "BRXDGE",
   "description": "BRXDGE is a Canadian talent management agency representing social media creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.",
-  "url": "https://brxdge.ca/",
-  "logo": "https://brxdge.ca/brxdge.png",
+  "url": "https://brxdge-production.up.railway.app/",
+  "logo": "https://brxdge-production.up.railway.app/brxdge.png",
   "areaServed": {
     "@type": "Country",
     "name": "Canada"
@@ -1006,8 +1015,8 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
             <span class="chooser-tile-copy">
-              <span class="chooser-tile-label">Talent</span>
-              <span class="chooser-tile-sub">Creators, Pages &amp; Talent</span>
+              <span class="chooser-tile-label">Creator</span>
+              <span class="chooser-tile-sub">Creators, pages &amp; talent</span>
             </span>
           </button>
           <button type="button" class="chooser-tile" data-choose="Brand" style="--tile-bg:url('assets/contact-management.jpg'), linear-gradient(135deg, var(--violet) 0%, var(--ink) 130%);">
@@ -1016,7 +1025,7 @@
             </span>
             <span class="chooser-tile-copy">
               <span class="chooser-tile-label">Management</span>
-              <span class="chooser-tile-sub">Brands &amp; Agencies</span>
+              <span class="chooser-tile-sub">Brands &amp; agencies</span>
             </span>
           </button>
         </div>
@@ -1622,7 +1631,7 @@
                   <div class="stat-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
                   </div>
-                  <span class="num" data-count-to="47">47</span>
+                  <span class="num" data-count-to="47">0</span>
                   <span class="lbl">Creators repped</span>
                 </div>
                 <div class="stat">
@@ -1636,8 +1645,8 @@
                   <div class="stat-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </div>
-                  <span class="num" data-count-to="$5000000">$5M</span>
-                  <span class="lbl">Worth of Brand deals closed</span>
+                  <span class="num" data-count-to="128">0</span>
+                  <span class="lbl">Brand deals closed</span>
                 </div>
                 <div class="stat">
                   <div class="stat-icon" aria-hidden="true">
@@ -1869,7 +1878,7 @@
      visitor's page load wait on a third-party CDN before anything (the
      loader, the entrance animations) can even start. See loadJsPdfLib()
      in script.js. -->
-<script src="config.js"></script>
+<script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=2"></script>
 <script src="script.js?v=44"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
