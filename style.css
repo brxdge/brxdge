@@ -4964,49 +4964,11 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* Bigger loader box + bold brand-style percentage (was tiny Space Mono) */
-.loader-content { position: relative; z-index: 1; width: 280px; text-align: center; color: var(--text); }
-
-/* Ambient cable-motif background (index.html/talent.html markup) — sits
-   behind .loader-content (z-index:0 vs. its 1), covering the whole
-   #loader box rather than just the 280px content column, so the arc and
-   hangers spread wide like the real .brand-lines-bg does on the page
-   itself. Static/very quiet by default; the hangers get a slow opacity
-   breathe for a touch of life without competing with the mark's own
-   entrance. */
-.loader-ambient{
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.loader-ambient svg{ width: 100%; height: 100%; display: block; }
-.loader-ambient-arc{
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1;
-  opacity: 0.3;
-}
-.loader-ambient-hanger{
-  stroke: var(--muted);
-  stroke-width: 1;
-  opacity: 0.14;
-  animation: loaderAmbientBreathe 5s ease-in-out infinite;
-}
-.loader-ambient-hanger:nth-of-type(2){ animation-delay: 0.4s; }
-.loader-ambient-hanger:nth-of-type(3){ animation-delay: 0.8s; }
-.loader-ambient-hanger:nth-of-type(4){ animation-delay: 1.2s; }
-.loader-ambient-hanger:nth-of-type(5){ animation-delay: 1.6s; }
-.loader-ambient-hanger:nth-of-type(6){ animation-delay: 2s; }
-.loader-ambient-hanger:nth-of-type(7){ animation-delay: 2.4s; }
-.loader-ambient-dot{ fill: var(--coral); opacity: 0.45; }
-@keyframes loaderAmbientBreathe{
-  0%, 100%{ opacity: 0.08; }
-  50%{ opacity: 0.26; }
-}
-@media (prefers-reduced-motion: reduce){
-  .loader-ambient-hanger{ animation: none !important; opacity: 0.14 !important; }
-}
+/* Ambient ported-over cable-motif background tried here was removed
+   (client revision) — it read as visual noise competing with the mark
+   itself rather than supporting it. width is now generous (min(), not a
+   fixed 280px) so it never constrains the much bigger mark below it. */
+.loader-content { width: min(92vw, 900px); text-align: center; color: var(--text); }
 /* Now sits above the bridge mark (client revision — was between the mark
    and the wordmark). Starts hidden and fades/rises in a beat after first
    paint (.show added by script.js, same 150ms mark the bridge itself pops
@@ -5920,43 +5882,57 @@ html.dark-mode .creator-panel::before{
    Appended last so it wins the cascade over the earlier loader
    rules above.
 ========================================================= */
+/* Sized to actually dominate the screen (client revision — was a fixed
+   220x220 square) and given the bridge's own natural wide proportions
+   (2/1.05, matching the retired hero-orbit mark's own aspect-ratio)
+   instead of forcing it into a square frame. That square frame was the
+   real cause of the "cropped" look: loader-bridge.js's camera reads
+   whatever aspect ratio this box resolves to (see fitSize() there) and
+   frames the bridge to fill it exactly, so squeezing a wide twin-arch
+   bridge into a 1:1 box left almost no horizontal margin — the foot
+   anchors at each end were sitting right at (and sometimes past) the
+   frustum edge. Widening the frame gives the camera much more horizontal
+   room without changing anything in the JS itself.
+   min() caps on both axes — vw for width, vh (converted through the
+   aspect ratio) for height — so it can genuinely fill most of the screen
+   on a normal desktop window without ever overflowing a short one. */
 .loader-mark-drop-zone{
   position: relative;
-  width: 220px;
-  height: 220px;
-  margin: 0 auto 32px;
+  width: min(60vw, calc(46vh * 1.905), 900px);
+  aspect-ratio: 2 / 1.05;
+  margin: 0 auto 40px;
 }
 .loader-mark-drop-zone .loader-mark{
   margin: 0;
 }
 
 /* "EST." / "2026" flanking the mark — ported from the retired hero-orbit
-   section's .hero-orbit-flank (same font/spacing treatment, just a
-   smaller gap since the loader's mark sits in a much narrower 220px
-   column than the hero's 320-640px one). Plain children of .loader-mark
-   (position:relative already), so they ride along with its opacity/
-   transform for free — no separate JS trigger needed, same as the hero
-   version needed none either. Allowed to overflow past .loader-content's
-   nominal 280px width since #loader itself is a full-viewport box with no
-   overflow:hidden — there's room outside the narrow content column. */
+   section's .hero-orbit-flank (same font/spacing treatment). Gap and type
+   size scaled up now that the mark itself is dramatically bigger. Plain
+   children of .loader-mark (position:relative already), so they ride
+   along with its opacity/transform for free — no separate JS trigger
+   needed, same as the hero version needed none either. Allowed to
+   overflow past .loader-content's own width since #loader itself is a
+   full-viewport box with no overflow:hidden — there's room outside it. */
 .loader-flank{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 11.5px;
+  font-size: 14px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--muted);
   white-space: nowrap;
   z-index: 1;
 }
-.loader-flank--left{ right: calc(100% + 16px); text-align: right; }
-.loader-flank--right{ left: calc(100% + 16px); text-align: left; }
-@media (max-width: 480px){
-  /* Not enough room beside the mark once it's already scaled down for
-     mobile (see the 480px loader block further down) — drop rather than
-     crowd/clip, same call the hero version made at its own breakpoint. */
+.loader-flank--left{ right: calc(100% + 30px); text-align: right; }
+.loader-flank--right{ left: calc(100% + 30px); text-align: left; }
+@media (max-width: 640px){
+  /* Not enough room beside the mark once it's claiming most of a narrow
+     viewport's width (see the mobile loader block further down) — drop
+     rather than crowd/clip, same call the hero version made at its own
+     (760px) breakpoint. */
   .loader-flank{ display: none; }
 }
 
@@ -5965,31 +5941,35 @@ html.dark-mode .creator-panel::before{
    choreography as before — that part of the design still reads great for
    a canvas — just re-targeted at a canvas+fallback pair instead of an SVG,
    mirroring the .hero-orbit-mark canvas/fallback swap pattern exactly.
-   Sized 2x its original 110px (client revision request) — the drop-in
-   fall distance and shadow below are scaled up to match. */
+   Fills its drop-zone (which now carries the actual size/aspect-ratio)
+   rather than sizing itself. Drop distance/duration slowed and scaled up
+   (client revision — was -250px/0.95s) to match both the mark's much
+   bigger footprint and the request for a slower, more deliberate entrance
+   — loader-bridge.js's own assembly animation (the pieces flying in) was
+   slowed to match too, see the ASSEMBLE_SPAN_MS/FLY_MS_* comment there. */
 .loader-mark{
   position: relative;
-  width: 220px;
-  height: 220px;
-  margin: 0 auto 32px;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: translateY(-250px) scale(0.88);
+  transform: translateY(-420px) scale(0.88);
   transition: none;
 }
-.loader-mark.show{ opacity: 1; transform: scale(1); animation: loader-mark-drop 0.95s cubic-bezier(0.32, 0.1, 0.2, 1) forwards; }
+.loader-mark.show{ opacity: 1; transform: scale(1); animation: loader-mark-drop 1.3s cubic-bezier(0.32, 0.1, 0.2, 1) forwards; }
 @keyframes loader-mark-drop{
-  0%{ opacity: 0; transform: translateY(-250px) scale(0.88); }
+  0%{ opacity: 0; transform: translateY(-420px) scale(0.88); }
   8%{ opacity: 1; }
-  58%{ transform: translateY(10px) scale(1.035); }   /* overshoots the landing */
-  76%{ transform: translateY(-5px) scale(0.99); }     /* settles back up */
-  90%{ transform: translateY(2px) scale(1.005); }
+  58%{ transform: translateY(16px) scale(1.035); }   /* overshoots the landing */
+  76%{ transform: translateY(-8px) scale(0.99); }     /* settles back up */
+  90%{ transform: translateY(3px) scale(1.005); }
   100%{ opacity: 1; transform: translateY(0) scale(1); }
 }
 .loader-mark.show ~ .loader-mark-shadow{
-  animation: loader-mark-shadow-bloom 0.95s cubic-bezier(0.32, 0.1, 0.2, 1) forwards;
+  animation: loader-mark-shadow-bloom 1.3s cubic-bezier(0.32, 0.1, 0.2, 1) forwards;
 }
 @keyframes loader-mark-shadow-bloom{
   0%, 50%{ opacity: 0; transform: translateX(-50%) scale(0.3); }
@@ -6028,7 +6008,9 @@ html.dark-mode .creator-panel::before{
    values, so the transition has a real starting point to animate from. */
 .loader-mark.shrink-armed{ animation: none; transform: scale(1); opacity: 1; transition: transform 0.7s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.7s cubic-bezier(0.55, 0, 1, 0.45); }
 .loader-mark.shrink{ transform: scale(0.08); opacity: 0; }
-.loader-mark-shadow{ position: absolute; left: 50%; bottom: -20px; width: 140px; height: 28px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+/* Scaled up (client revision — was 140x28px) to stay proportionate now
+   that the mark above it is dramatically bigger. */
+.loader-mark-shadow{ position: absolute; left: 50%; bottom: -32px; width: 34%; max-width: 340px; height: 56px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .loader-content.exit .loader-mark-shadow{ opacity: 0 !important; }
 
 /* The percentage, wordmark and tagline step back out of the way so the
@@ -6134,17 +6116,18 @@ html.dark-mode .creator-panel::before{
   .loader-mark-shadow{ opacity: 0.7 !important; }
 }
 
-/* ---------- Mobile: scale the whole loader down to fit comfortably ---------- */
-@media (max-width: 480px){
-  .loader-content{ width: 240px; }
-  .loader-mark-drop-zone{ width: 176px; height: 176px; margin-bottom: 26px; }
-  .loader-mark-drop-zone .loader-mark{ width: 176px; height: 176px; }
-  .loader-mark{ transform: translateY(-180px) scale(0.88); }
+/* ---------- Mobile: no flanks competing for width, so the mark can claim
+   an even bigger share of the (narrower) screen than the desktop formula
+   above gives it — still capped on height so a short/landscape phone
+   never forces it to overflow. ---------- */
+@media (max-width: 640px){
+  .loader-mark-drop-zone{ width: min(84vw, calc(40vh * 1.905)); margin-bottom: 30px; }
+  .loader-mark{ transform: translateY(-280px) scale(0.88); }
   @keyframes loader-mark-drop{
-    0%{ opacity: 0; transform: translateY(-180px) scale(0.88); }
+    0%{ opacity: 0; transform: translateY(-280px) scale(0.88); }
     8%{ opacity: 1; }
-    58%{ transform: translateY(8px) scale(1.035); }
-    76%{ transform: translateY(-4px) scale(0.99); }
+    58%{ transform: translateY(12px) scale(1.035); }
+    76%{ transform: translateY(-6px) scale(0.99); }
     90%{ transform: translateY(2px) scale(1.005); }
     100%{ opacity: 1; transform: translateY(0) scale(1); }
   }
@@ -6153,7 +6136,6 @@ html.dark-mode .creator-panel::before{
   .loader-tagline{ font-size: 12px; margin-top: 16px; }
 }
 @media (max-width: 360px){
-  .loader-content{ width: 210px; }
   .loader-word{ font-size: 24px; }
 }
 
