@@ -1,5 +1,5 @@
 /* ============================================================
-   report.html — private brand-facing campaign report page.
+   report.html — private brand-facing campaign PORTAL.
    Deliberately its OWN small stylesheet rather than reusing the
    ~2000-line style.css: this page is a data-dense dashboard, not the
    marketing hero page style.css was built around, and keeping it
@@ -43,22 +43,12 @@ body{
 h1, h2, h3{ font-family:'Bricolage Grotesque', sans-serif; margin:0; }
 p{ margin:0; }
 a{ color:inherit; }
-
-.report-shell{ max-width:980px; margin:0 auto; padding:28px 20px 60px; position:relative; }
-
-.theme-toggle{
-  position:absolute; top:24px; right:20px; width:38px; height:38px; border-radius:50%;
-  border:1px solid var(--panel-line); background:var(--panel); color:var(--text);
-  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:5;
-}
-.theme-toggle .ti-moon{ display:none; }
-html.dark-mode .theme-toggle .ti-sun{ display:none; }
-html.dark-mode .theme-toggle .ti-moon{ display:block; }
+input{ font-family:'Inter', sans-serif; }
 
 /* ---------------- LOADING / ERROR STATES ---------------- */
 .report-state{
-  min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; gap:14px; color:var(--muted); padding:20px;
+  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:14px; color:var(--muted); padding:20px; background:var(--ink);
 }
 .report-state h1{ font-size:22px; color:var(--text); }
 .report-state p{ max-width:360px; font-size:14.5px; line-height:1.6; }
@@ -68,18 +58,62 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 }
 @keyframes report-spin{ to{ transform:rotate(360deg); } }
 
-/* ---------------- HEADER ---------------- */
-.report-header{ padding:36px 0 32px; border-bottom:1px solid var(--panel-line); margin-bottom:32px; }
+/* ---------------- STICKY TOP BAR ---------------- */
+.portal-topbar{
+  position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+  padding:12px 20px; background:var(--panel); border-bottom:1px solid var(--panel-line);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+}
+.topbar-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+.topbar-mark{ font-family:'Space Mono', monospace; font-size:14px; color:var(--muted); flex-shrink:0; }
+.topbar-logo{ width:24px; height:24px; border-radius:6px; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
+.topbar-brand-name{
+  font-size:13.5px; font-weight:700; letter-spacing:0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.theme-toggle{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  border:1px solid var(--panel-line); background:var(--ink-2); color:var(--text);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.theme-toggle .ti-moon{ display:none; }
+html.dark-mode .theme-toggle .ti-sun{ display:none; }
+html.dark-mode .theme-toggle .ti-moon{ display:block; }
+
+/* ---------------- SHELL / HEADER ---------------- */
+.report-shell{ max-width:1040px; margin:0 auto; padding:0 20px 60px; }
+
+.report-header{ padding:40px 0 34px; border-bottom:1px solid var(--panel-line); margin-bottom:32px; }
 .report-eyebrow{
   font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:18px;
+  color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:20px;
 }
 .report-eyebrow .mark{ color:var(--text); }
-.report-brand-row{ display:flex; align-items:center; gap:16px; }
-.report-brand-logo{ width:56px; height:56px; border-radius:14px; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
-.report-title{ font-size:clamp(24px, 4vw, 34px); font-weight:800; line-height:1.15; }
-.report-brand-name{ font-size:14.5px; color:var(--muted); margin-top:6px; font-weight:600; }
-.report-notes{ margin-top:18px; font-size:15px; line-height:1.65; color:var(--muted); max-width:640px; }
+.report-brand-row{ display:flex; align-items:center; gap:18px; }
+.report-brand-logo{ width:64px; height:64px; border-radius:16px; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
+.report-brand-heading{ font-size:clamp(26px, 4.2vw, 38px); font-weight:800; line-height:1.1; }
+.report-title-sub{ font-size:15px; color:var(--muted); margin-top:7px; font-weight:600; }
+.report-notes{ margin-top:20px; font-size:15px; line-height:1.65; color:var(--muted); max-width:660px; }
+
+/* ---------------- STAT STRIP ---------------- */
+.report-stats{ display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+.report-stat{
+  flex:1 1 130px; min-width:110px; background:var(--panel); border:1px solid var(--panel-line);
+  border-radius:var(--radius-md); padding:14px 16px;
+}
+.report-stat .rs-val{ font-family:'Bricolage Grotesque', sans-serif; font-size:22px; font-weight:800; line-height:1; }
+.report-stat .rs-lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin-top:7px; }
+
+/* ---------------- TOOLBAR ---------------- */
+.report-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+.report-search{
+  flex:1 1 260px; max-width:340px; display:flex; align-items:center; gap:8px;
+  background:var(--panel); border:1px solid var(--panel-line); border-radius:100px; padding:9px 14px; color:var(--muted);
+}
+.report-search input{
+  flex:1; border:none; outline:none; background:none; color:var(--text); font-size:13.5px;
+}
+.report-search input::placeholder{ color:var(--muted); }
+.toolbar-count{ font-size:12.5px; color:var(--muted); white-space:nowrap; }
 
 /* ---------------- CREATOR GRID ---------------- */
 .report-creators-grid{
@@ -91,8 +125,9 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 
 .creator-card{
   background:var(--panel); border:1px solid var(--panel-line); border-radius:var(--radius-lg);
-  padding:22px; display:flex; flex-direction:column; gap:16px;
+  padding:22px; display:flex; flex-direction:column; gap:16px; transition:border-color 0.15s ease, transform 0.15s ease;
 }
+.creator-card:hover{ border-color:var(--muted); transform:translateY(-2px); }
 .creator-card-head{ display:flex; align-items:center; gap:12px; }
 .creator-photo{ width:52px; height:52px; border-radius:50%; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
 .creator-name{ font-size:16.5px; font-weight:700; }
@@ -105,6 +140,9 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 }
 .creator-profile-link:hover{ border-color:var(--text); transform:translateY(-1px); }
 .creator-profile-link svg{ flex-shrink:0; }
+
+.platform-badge{ display:inline-flex; flex-shrink:0; border-radius:5px; overflow:hidden; }
+.platform-badge svg{ display:block; }
 
 .creator-posts{ display:flex; flex-direction:column; gap:8px; }
 .creator-posts-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; }
@@ -127,8 +165,11 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 .report-footer-dot{ opacity:0.6; }
 
 @media (max-width: 560px){
-  .report-shell{ padding:20px 16px 40px; }
-  .theme-toggle{ top:18px; right:16px; }
+  .report-shell{ padding:0 16px 40px; }
+  .portal-topbar{ padding:10px 16px; }
   .report-creators-grid{ grid-template-columns:1fr; }
-  .report-brand-logo{ width:46px; height:46px; }
+  .report-brand-logo{ width:52px; height:52px; }
+  .report-stats{ gap:8px; }
+  .report-stat{ flex:1 1 100px; padding:11px 13px; }
+  .report-search{ max-width:none; }
 }
