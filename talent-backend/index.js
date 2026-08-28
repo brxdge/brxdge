@@ -778,31 +778,6 @@ app.delete('/api/contact-messages/:id', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// --- TEMPORARY: one-time volume backup for migrating to a new Railway
-// project. Archives the whole volume (brxdge.db + uploads/) into a single
-// downloadable .tar.gz. Guarded by BACKUP_SECRET so it isn't publicly
-// accessible. DELETE THIS ROUTE (and the BACKUP_SECRET variable) once the
-// migration is done — it should not stay in the codebase long-term.
-const { spawn } = require('child_process');
-app.get('/api/backup-volume', (req, res) => {
-  if (!process.env.BACKUP_SECRET || req.query.secret !== process.env.BACKUP_SECRET) {
-    return res.status(401).send('Unauthorized');
-  }
-  const volumePath = process.env.RAILWAY_VOLUME_MOUNT_PATH;
-  if (!volumePath) {
-    return res.status(400).send('No volume mounted on this service');
-  }
-  res.setHeader('Content-Type', 'application/gzip');
-  res.setHeader('Content-Disposition', 'attachment; filename="brxdge-volume-backup.tar.gz"');
-  const tar = spawn('tar', ['-czf', '-', '-C', path.dirname(volumePath), path.basename(volumePath)]);
-  tar.stdout.pipe(res);
-  tar.stderr.on('data', d => console.error('backup tar stderr:', d.toString()));
-  tar.on('error', err => {
-    console.error('Failed to spawn tar for backup:', err);
-    if (!res.headersSent) res.status(500).send('Backup failed');
-  });
-});
-
 // --- YOUTUBE / TIKTOK LATEST POSTS (unchanged — these were never file-based) ---
 
 async function resolveChannelId(channelUrl) {
