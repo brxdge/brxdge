@@ -962,13 +962,14 @@ function attachTiltInteraction(card){
 function animateCountUp(el, duration){
   const target = Number(el.dataset.countTo || 0);
   const suffix = el.dataset.suffix || '';
-  if(!target){ el.textContent = '0' + suffix; return; }
+  const prefix = el.dataset.prefix || '';
+  if(!target){ el.textContent = prefix + '0' + suffix; return; }
   const start = performance.now();
   const dur = duration || 900;
   function tick(now){
     const t = Math.min((now - start) / dur, 1);
     const eased = 1 - Math.pow(1 - t, 3); // ease-out-cubic
-    el.textContent = formatFollowers(Math.round(target * eased)) + suffix;
+    el.textContent = prefix + formatFollowers(Math.round(target * eased)) + suffix;
     if(t < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -1589,6 +1590,11 @@ function closeBackground(){
 
 const viewBackgroundBtn = document.getElementById('viewBackgroundBtn');
 if(viewBackgroundBtn) viewBackgroundBtn.addEventListener('click', openBackground);
+
+// Navbar "Our Story" link — same story overlay as the "See Our Background"
+// button above, just reachable straight from the nav on any page.
+const navStoryBtn = document.getElementById('navStoryBtn');
+if(navStoryBtn) navStoryBtn.addEventListener('click', (e) => { e.preventDefault(); openBackground(); });
 
 const bgBackBtn = document.getElementById('bgBack');
 if(bgBackBtn) bgBackBtn.addEventListener('click', closeBackground);
