@@ -91,24 +91,61 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 /* ---------------- SHELL / HEADER ---------------- */
 .report-shell{ max-width:var(--shell-max); margin:0 auto; padding:0 clamp(20px, 3.2vw, 28px) 60px; }
 
-.report-header{ padding:40px 0 34px; border-bottom:1px solid var(--panel-line); margin-bottom:32px; }
+/* Header is now an elevated hero CARD rather than plain text flush with
+   the page background — a soft corner glow + shadow give it presence
+   without introducing any new brand color, so it still upgrades the
+   "appeal" without fighting the monochrome brand system. */
+.report-header{
+  position:relative; overflow:hidden; isolation:isolate;
+  margin:28px 0 32px; padding:40px clamp(24px, 3.6vw, 46px) 36px;
+  border:1px solid var(--panel-line); border-radius:var(--radius-lg);
+  background:
+    radial-gradient(620px circle at 6% -30%, rgba(154,154,154,0.16), transparent 62%),
+    var(--panel);
+  box-shadow:0 1px 2px rgba(12,12,12,0.05), 0 20px 44px -26px rgba(12,12,12,0.28);
+}
+html.dark-mode .report-header{
+  background:
+    radial-gradient(620px circle at 6% -30%, rgba(255,255,255,0.07), transparent 62%),
+    var(--panel);
+  box-shadow:0 1px 2px rgba(0,0,0,0.35), 0 20px 44px -26px rgba(0,0,0,0.6);
+}
+.report-header::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:3px; z-index:1;
+  background:linear-gradient(90deg, transparent, var(--muted) 50%, transparent);
+  opacity:0.5;
+}
 .report-eyebrow{
-  font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:20px;
+  position:relative; z-index:1; font-family:'Space Mono', monospace; font-size:11.5px;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+  display:inline-flex; align-items:center; gap:8px; margin-bottom:24px;
+  background:var(--ink-2); border:1px solid var(--panel-line); border-radius:100px; padding:6px 13px;
 }
 .report-eyebrow .mark{ color:var(--text); }
-.report-brand-row{ display:flex; align-items:center; gap:18px; }
-.report-brand-logo{ width:64px; height:64px; border-radius:16px; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
-.report-brand-heading{ font-size:clamp(26px, 4.2vw, 38px); font-weight:800; line-height:1.1; }
+.report-brand-row{ position:relative; z-index:1; display:flex; align-items:center; gap:20px; }
+.report-brand-logo-wrap{
+  width:84px; height:84px; flex-shrink:0; border-radius:20px; padding:14px;
+  display:flex; align-items:center; justify-content:center;
+  background:#FFFFFF; border:1px solid var(--panel-line);
+  box-shadow:0 8px 20px -10px rgba(12,12,12,0.25);
+}
+.report-brand-logo{ width:100%; height:100%; object-fit:contain; display:block; }
+.report-brand-heading{ font-size:clamp(26px, 4.2vw, 38px); font-weight:800; line-height:1.1; letter-spacing:-0.01em; }
 .report-title-sub{ font-size:15px; color:var(--muted); margin-top:7px; font-weight:600; }
-.report-notes{ margin-top:20px; font-size:15px; line-height:1.65; color:var(--muted); max-width:660px; }
+.report-notes{
+  position:relative; z-index:1; margin-top:24px; padding:14px 18px;
+  border-left:3px solid var(--muted); border-radius:0 var(--radius-md) var(--radius-md) 0;
+  background:var(--ink-2); font-size:14.5px; line-height:1.65; color:var(--muted); max-width:660px;
+}
 
 /* ---------------- STAT STRIP ---------------- */
-.report-stats{ display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+.report-stats{ position:relative; z-index:1; display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
 .report-stat{
   flex:1 1 130px; min-width:110px; background:var(--panel); border:1px solid var(--panel-line);
   border-radius:var(--radius-md); padding:14px 16px;
+  transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
+.report-stat:hover{ transform:translateY(-2px); border-color:var(--muted); box-shadow:0 10px 22px -14px rgba(12,12,12,0.3); }
 .report-stat .rs-val{ font-family:'Bricolage Grotesque', sans-serif; font-size:22px; font-weight:800; line-height:1; }
 .report-stat .rs-lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin-top:7px; }
 
@@ -140,6 +177,17 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 .creator-card-head{ display:flex; align-items:center; gap:12px; }
 .creator-photo{ width:52px; height:52px; border-radius:50%; object-fit:cover; background:var(--avatar-bg); flex-shrink:0; }
 .creator-name{ font-size:16.5px; font-weight:700; }
+
+/* Creator name is now a button that opens the overview popup (see
+   #creatorModalOverlay) rather than static text — reset button chrome
+   but keep it visually identical to the old plain text until hovered. */
+.creator-name.creator-name-link{
+  display:inline-block; background:none; border:none; padding:0; margin:0;
+  font-family:inherit; color:inherit; cursor:pointer; text-align:left;
+  transition:opacity 0.15s ease;
+}
+.creator-name.creator-name-link:hover{ opacity:0.7; text-decoration:underline; text-underline-offset:3px; }
+.creator-name.creator-name-link:focus-visible{ outline:2px solid var(--muted); outline-offset:3px; border-radius:4px; }
 
 .creator-profiles{ display:flex; flex-wrap:wrap; gap:8px; }
 .creator-profile-link{
@@ -184,6 +232,110 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
+/* ---------------- CREATOR OVERVIEW MODAL ---------------- */
+.creator-modal-overlay{
+  position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
+  background:rgba(10,10,10,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); padding:20px;
+}
+.creator-modal-overlay.show{ display:flex; }
+.creator-modal{
+  position:relative; width:100%; max-width:420px; max-height:min(640px, 88vh); overflow-y:auto;
+  background:var(--panel); border:1px solid var(--panel-line); border-radius:var(--radius-lg);
+  box-shadow:0 28px 64px -22px rgba(0,0,0,0.5);
+  animation:creator-modal-in 0.18s ease;
+}
+@keyframes creator-modal-in{ from{ opacity:0; transform:translateY(8px) scale(0.98); } to{ opacity:1; transform:none; } }
+.creator-modal-close{
+  position:absolute; top:14px; right:14px; z-index:5; width:32px; height:32px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.3); background:rgba(12,12,12,0.55); color:#fff;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s ease;
+}
+.creator-modal-close:hover{ background:rgba(12,12,12,0.8); }
+/* The close button sits over a plain panel background once there's no
+   cover photo behind it — flip it back to the page's own chrome style so
+   it doesn't read as a near-invisible white-on-white circle. */
+.creator-modal:not(.has-cover) .creator-modal-close{
+  border-color:var(--panel-line); background:var(--ink-2); color:var(--text);
+}
+.creator-modal:not(.has-cover) .creator-modal-close:hover{ background:var(--panel-line); }
+
+/* Scaled-down replay of the real media kit hero (see .mk-hero-photo /
+   .mk-hero-marquee in style.css) — a cover photo with the creator's name
+   scrolling behind it in a continuous marquee, using the same
+   mix-blend-mode:difference trick so the text stays legible over any
+   photo without needing per-photo tuning. */
+.creator-modal-cover{
+  position:relative; height:132px; overflow:hidden; background:#0C0C0C;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+.creator-modal-cover-img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
+  filter:grayscale(0.25); opacity:0.68;
+}
+.creator-modal-cover::after{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.12) 45%, rgba(0,0,0,0.62) 100%);
+}
+.creator-modal-marquee{
+  position:absolute; inset:0; z-index:2; display:flex; align-items:center;
+  -webkit-mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-image:linear-gradient(90deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+.creator-modal-marquee-track{ display:flex; }
+.creator-modal-marquee-group{
+  display:flex; align-items:center; flex-shrink:0;
+  animation:creator-modal-marquee-scroll 14s linear infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .creator-modal-marquee-group{ animation:none; }
+}
+.creator-modal-marquee-group span{
+  font-family:'Bricolage Grotesque', sans-serif; font-weight:800;
+  font-size:clamp(24px, 7vw, 38px); line-height:1; letter-spacing:-0.01em; text-transform:uppercase;
+  color:#fff; mix-blend-mode:difference; white-space:nowrap; padding:0 14px;
+}
+.creator-modal-marquee-group span.creator-modal-marquee-sep{
+  font-size:0.4em; color:#B8B8B8; mix-blend-mode:normal; vertical-align:middle; padding:0 6px;
+}
+@keyframes creator-modal-marquee-scroll{ from{ transform:translateX(0); } to{ transform:translateX(-100%); } }
+
+.creator-modal-body{ padding:24px 28px 28px; }
+.creator-modal-head{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; margin:4px 0 20px; position:relative; z-index:3; }
+/* When a cover photo is showing, pull the avatar up so it overlaps the
+   cover's bottom edge — the same "profile photo over the banner" layout
+   as the real media kit hero's avatar. */
+.creator-modal.has-cover .creator-modal-body{ padding-top:0; }
+.creator-modal.has-cover .creator-modal-head{ margin-top:-38px; }
+.creator-modal-photo{
+  width:76px; height:76px; border-radius:50%; object-fit:cover; background:var(--avatar-bg);
+  border:3px solid var(--panel); box-shadow:0 4px 14px rgba(0,0,0,0.22);
+}
+.creator-modal-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; }
+.creator-modal-name{ font-size:19px; font-weight:800; font-family:'Bricolage Grotesque', sans-serif; margin-top:3px; }
+
+/* Creator Snapshot — compact replay of the media kit's "At a Glance"
+   card (Niche / Platforms / Audience / Content), only shown when a
+   roster match has at least one of those fields set. */
+.creator-modal-snapshot{ display:none; flex-direction:column; gap:12px; padding:14px 16px; margin-bottom:20px; background:var(--ink-2); border:1px solid var(--panel-line); border-radius:var(--radius-md); }
+.creator-modal-snap-row{ display:flex; flex-direction:column; gap:6px; }
+.creator-modal-snap-label{ display:inline-flex; align-items:center; gap:6px; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; }
+.creator-modal-snap-label svg{ flex-shrink:0; }
+.creator-modal-snap-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.creator-modal-snap-chip{
+  font-size:12px; font-weight:600; padding:4px 10px; border-radius:100px;
+  background:var(--panel); border:1px solid var(--panel-line); color:var(--text);
+}
+
+.creator-modal-profiles{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:22px; }
+.creator-modal-noprofiles{ font-size:13px; color:var(--muted); text-align:center; margin-bottom:22px; }
+.creator-modal-mk-link{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%; box-sizing:border-box;
+  background:var(--accent); color:var(--on-accent); border:none; border-radius:100px;
+  padding:12px 18px; font-size:14px; font-weight:700; text-decoration:none; transition:opacity 0.15s ease;
+}
+.creator-modal-mk-link:hover{ opacity:0.85; }
+
 /* ---------------- FOOTER ---------------- */
 .report-footer{
   margin-top:48px; padding-top:24px; border-top:1px solid var(--panel-line);
@@ -210,10 +362,14 @@ html.dark-mode .theme-toggle .ti-moon{ display:block; }
 @media (max-width: 560px){
   .report-shell{ padding:0 16px 40px; }
   .topbar-inner{ padding:10px 16px; }
+  .report-header{ margin:18px 0 24px; padding:28px 20px 26px; }
   .report-creators-grid{ grid-template-columns:1fr; }
   .creator-posts-grid{ grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); }
-  .report-brand-logo{ width:52px; height:52px; }
+  .report-brand-logo-wrap{ width:60px; height:60px; padding:10px; border-radius:16px; }
   .report-stats{ gap:8px; }
   .report-stat{ flex:1 1 100px; padding:11px 13px; }
   .report-search{ max-width:none; }
+  .creator-modal-body{ padding:20px 20px 24px; }
+  .creator-modal.has-cover .creator-modal-body{ padding-top:0; }
+  .creator-modal-cover{ height:104px; }
 }
