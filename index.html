@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=62">
+<link rel="stylesheet" href="style.css?v=63">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -167,7 +167,48 @@
 
 
 <div id="loader">
+  <!-- AMBIENT CABLE MOTIF — a small self-contained echo of .brand-lines-bg's
+       arc + hanger + dot pattern (see the body's ambient background near
+       the top of this file), scoped entirely to the loader so it never has
+       to coordinate with that element's cursor-parallax JS. Purely
+       decorative, very low opacity, disposed along with the rest of
+       #loader once loading finishes. -->
+  <div class="loader-ambient" aria-hidden="true">
+    <svg viewBox="0 0 1000 260" preserveAspectRatio="xMidYMid slice">
+      <path class="loader-ambient-arc" d="M 0 190 Q 500 68 1000 190"/>
+      <line class="loader-ambient-hanger" x1="80"  y1="152" x2="80"  y2="230"/>
+      <line class="loader-ambient-hanger" x1="220" y1="118" x2="220" y2="230"/>
+      <line class="loader-ambient-hanger" x1="360" y1="92"  x2="360" y2="230"/>
+      <line class="loader-ambient-hanger" x1="500" y1="82"  x2="500" y2="230"/>
+      <line class="loader-ambient-hanger" x1="640" y1="92"  x2="640" y2="230"/>
+      <line class="loader-ambient-hanger" x1="780" y1="118" x2="780" y2="230"/>
+      <line class="loader-ambient-hanger" x1="920" y1="152" x2="920" y2="230"/>
+      <circle class="loader-ambient-dot" cx="80"  cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="220" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="360" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="500" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="640" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="780" cy="230" r="2.2"/>
+      <circle class="loader-ambient-dot" cx="920" cy="230" r="2.2"/>
+    </svg>
+  </div>
+
   <div class="loader-content">
+    <!-- BRXDGE wordmark now leads (client revision — replaces the old
+         "BRXDGE" + "POSSIBILITIES" hero-orbit section that used to sit
+         further down the main page; that section is retired and its
+         wordmark/flanks/tagline live here instead now). Same letter-by-
+         letter reveal as before, just restyled to the spaced serif
+         treatment (.eyebrow's font) instead of bold sans, and reordered to
+         sit above the mark rather than below it. Still only reveals at the
+         very end of loading (script.js adds .show at 85%, same trigger as
+         before) — the mark assembling is the show through the middle of
+         the load. -->
+    <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
+      <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
+      <span class="lw-underline" aria-hidden="true"></span>
+    </div>
+
     <!-- BRXDGE LOADER MARK — a real 3D twin-arch bridge (rendered by
          loader-bridge.js / three.js), the same geometry family as the
          hero's #heroOrbitMark but its own short-lived scene. Starts hidden
@@ -175,15 +216,15 @@
          .is-ready once WebGL is confirmed working and swaps the two over —
          see .loader-mark / .loader-mark-fallback in style.css. The .show/
          .expand classes (drop-in bounce + expand-and-burst exit) are still
-         driven by script.js exactly as before. -->
-    <!-- Percentage moved above the bridge mark (client revision) — was
-         between the mark and the wordmark. Fades/rises in on a short delay
-         (see .percentage/.percentage.show in style.css and the 150ms
-         setTimeout in script.js) instead of just appearing instantly with
-         the rest of the loader's first paint. -->
-    <div class="percentage" id="loadPercent">0%</div>
+         driven by script.js exactly as before.
+         "EST." / "2026" now flank the mark directly — ported over from the
+         retired hero-orbit section's .hero-orbit-flank treatment (see
+         .loader-flank in style.css). Plain children of .loader-mark, so
+         they fade/drop in for free along with the mark's own .show
+         animation — no separate JS needed. -->
     <div class="loader-mark-drop-zone">
       <div class="loader-mark" id="loaderMark" aria-hidden="true">
+        <span class="loader-flank loader-flank--left" aria-hidden="true">EST.</span>
         <canvas id="loaderCanvas" aria-hidden="true"></canvas>
         <div class="loader-mark-fallback" aria-hidden="true">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -199,13 +240,23 @@
             </defs>
           </svg>
         </div>
+        <span class="loader-flank loader-flank--right" aria-hidden="true">2026</span>
       </div>
       <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
     </div>
-    <div class="loader-word" id="loaderWord" aria-label="BRXDGE">
-      <span class="lw-char" aria-hidden="true">B</span><span class="lw-char" aria-hidden="true">R</span><span class="lw-char" aria-hidden="true">X</span><span class="lw-char" aria-hidden="true">D</span><span class="lw-char" aria-hidden="true">G</span><span class="lw-char" aria-hidden="true">E</span>
-      <span class="lw-underline" aria-hidden="true"></span>
-    </div>
+
+    <!-- POSSIBILITIES — also ported from the retired hero-orbit section
+         (its .eyebrow span there). Joins the wordmark's end-of-load
+         flourish (script.js adds .show to both at the same 85% mark). -->
+    <span class="loader-tagline" id="loaderTagline" aria-hidden="true">POSSIBILITIES</span>
+
+    <!-- Percentage now trails everything, restyled small/quiet to match
+         the new spaced-serif treatment instead of standing out as a bold
+         headline number — still the first thing to fade in (150ms, same
+         as the mark) and still ticks 0→100 the whole time the mark
+         assembles; see .percentage/.percentage.show in style.css and the
+         150ms setTimeout in script.js. -->
+    <div class="percentage" id="loadPercent">0%</div>
   </div>
 </div>
 
@@ -337,74 +388,15 @@
   </div>
 </section>
 
-<!-- 3D BRIDGE MARK — now the SECOND section (was the hero/first section).
-     Below the fold on load now, so it switches from the page-load
-     .hero-anim/.play trigger to the standard scroll-into-view
-     .reveal/.active pattern every other below-the-fold section uses (see
-     sectionObserver in script.js) — the whole section fades/slides up as
-     the visitor scrolls to it, same as Roster/Categories/etc. New id
-     ("bridge-mark") since "home" moved to the section above; nothing else
-     in the codebase targeted this section by id, so the rename is safe.
-     The click-to-cross interaction (brand-orbit.js) now lands on
-     "what-we-do" instead of this section, so crossing the bridge still
-     carries the visitor forward to new content. -->
-<section class="hero reveal" id="bridge-mark" data-reveal="up">
-
-
-    <div class="hero-copy hero-anim">
-      <span class="eyebrow hero-anim-item">B R X D G E</span>
-
-      <div class="hero-side-zone hero-side-zone--left"><div class="hero-side-glow"></div></div>
-  <div class="hero-side-zone hero-side-zone--right"><div class="hero-side-glow"></div></div>
-  <div class="wrap hero-grid">
-    <!-- BRXDGE ANIMATED 3D MARK — a twin-arch chrome bridge, turning slowly,
-         rendered by brand-orbit.js (three.js). Starts hidden in favor of the
-         flat SVG fallback below; brand-orbit.js adds .is-ready once WebGL is
-         confirmed working and swaps the two over — see the CSS for
-         .hero-orbit-mark / .hero-orbit-fallback. Real <button> (not a div) so
-         the click-to-cross interaction brand-orbit.js wires up is keyboard-
-         operable for free — Enter/Space trigger it exactly like a click. -->
-    <button type="button" class="hero-orbit-mark hero-anim-item" id="heroOrbitMark" aria-label="Cross the bridge, jump to the next section">
-      <!-- "EST." / "MMXXVI" flank the bridge itself now (rather than
-           sitting together above it) — positioned absolute against this
-           button (position:relative, fixed aspect-ratio box), vertically
-           centered on it. aria-hidden since the button's own aria-label
-           already covers what this control does. -->
-      <span class="hero-orbit-flank hero-orbit-flank--left" aria-hidden="true">EST.</span>
-      <canvas id="heroOrbitCanvas" aria-hidden="true"></canvas>
-      <div class="hero-orbit-fallback" aria-hidden="true">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#heroFallbackGrad)" stroke-width="6" stroke-linecap="round"/>
-          <circle cx="8" cy="67" r="5" fill="url(#heroFallbackGrad)"/>
-          <circle cx="92" cy="67" r="5" fill="url(#heroFallbackGrad)"/>
-          <defs>
-            <linearGradient id="heroFallbackGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#F5F5F5"/>
-              <stop offset="50%" stop-color="#9A9A9A"/>
-              <stop offset="100%" stop-color="#F5F5F5"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <span class="hero-orbit-flank hero-orbit-flank--right" aria-hidden="true">2026</span>
-    </button>
-
-    <span class="eyebrow hero-anim-item">POSSIBILITIES</span>
-
-
-      <!-- Each title line still rises out of its own overflow:hidden mask
-           on the page-load hero-anim trigger elsewhere in this file; here
-           the eyebrow/button fade in via the same .hero-anim-item rules,
-           which get their .play class the moment the loader finishes
-           regardless of this section's scroll position, so they're
-           already settled by the time this section scrolls into view —
-           the section-level .reveal/.active transform is what actually
-           carries the visible "entrance" motion here now.
-           Scroll: .hero-copy also carries a scroll-driven fade/lift/blur
-           (--hero-scroll, set by initHeroScrollTransition() in script.js). -->
-  </div>
-</section>
-
+<!-- 3D BRIDGE MARK section retired (client revision) — its "BRXDGE" /
+     twin-arch mark / "EST." / "2026" / "POSSIBILITIES" composition now
+     lives in the loader instead (#loader's .loader-word/.loader-mark/
+     .loader-tagline — see the loader markup near the top of this file and
+     loader-bridge.js). #heroOrbitMark/#heroOrbitCanvas are gone along with
+     it; brand-orbit.js's initBrandOrbitMark('heroOrbitMark', ...) call is
+     null-guarded (`if (!mount || !canvas) return;`) so it just no-ops now
+     — the footer's still instance (initBrandOrbitMark('footerOrbitMark',
+     ...)) is untouched and keeps rendering. -->
 
 <section id="what-we-do" class="reveal" data-reveal="up">
 <div>
@@ -1849,7 +1841,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=2"></script>
-<script src="script.js?v=45"></script>
+<script src="script.js?v=46"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
