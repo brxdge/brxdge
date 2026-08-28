@@ -216,6 +216,7 @@
     <div class="nav-links left-links">
       <a href="#home"><span>Home</span></a>
       <a href="#about"><span>About</span></a>
+      <a href="#" id="navStoryBtn"><span>Our Story</span></a>
       <a href="talent.html"><span>Talent</span></a>
     </div>
     <!-- Mobile-only: single "Contact" link shown top-left instead of the full nav-links list -->
@@ -320,8 +321,6 @@
 
         <span class="hero-title-mask"><em class="hero-title-line">BIGGER OPPORTUNITIES</em></span>
       </h1>
-
-      <p class="lede hero-anim-item">Talent management, brand partnerships, and strategy built around Canadian creators, not templates.</p>
 
       <div class="hero-actions hero-anim-item">
         <button class="btn btn-primary" onclick="window.location.href='talent.html'">
@@ -653,7 +652,7 @@
           <div class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <span class="num" data-count-to="128">0</span>
+          <span class="num" data-count-to="5000000" data-prefix="$">0</span>
           <span class="lbl">Brand deals closed</span>
         </div>
       </div>
@@ -1015,7 +1014,7 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
             <span class="chooser-tile-copy">
-              <span class="chooser-tile-label">Creator</span>
+              <span class="chooser-tile-label">Talent</span>
               <span class="chooser-tile-sub">Creators, pages &amp; talent</span>
             </span>
           </button>
@@ -1626,36 +1625,6 @@
               <h2 class="bg-headline">Hands-on management, without the corporate feel.</h2>
               <p class="bg-lede">We handle everything from content strategy and audience growth to contract negotiation and brand matchmaking, so our talent can spend their time making things people actually want to watch, not managing spreadsheets.</p>
               <p class="bg-lede">Every creator on our roster gets a strategy built around their actual audience, not a template pulled from someone else's playbook.</p>
-              <div class="about-stats-bar bg-stats-bar">
-                <div class="stat">
-                  <div class="stat-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                  </div>
-                  <span class="num" data-count-to="47">0</span>
-                  <span class="lbl">Creators repped</span>
-                </div>
-                <div class="stat">
-                  <div class="stat-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M7.8 8.2a6 6 0 0 0 0 7.6M16.2 8.2a6 6 0 0 1 0 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4.6 4.8a11 11 0 0 0 0 14.4M19.4 4.8a11 11 0 0 1 0 14.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                  </div>
-                  <span class="num" data-count-to="310000000" data-suffix="+">0</span>
-                  <span class="lbl">Combined reach</span>
-                </div>
-                <div class="stat">
-                  <div class="stat-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </div>
-                  <span class="num" data-count-to="128">0</span>
-                  <span class="lbl">Brand deals closed</span>
-                </div>
-                <div class="stat">
-                  <div class="stat-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                  </div>
-                  <span class="num" data-count-to="5">0</span>
-                  <span class="lbl">Years running</span>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -1880,7 +1849,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=2"></script>
-<script src="script.js?v=44"></script>
+<script src="script.js?v=45"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
