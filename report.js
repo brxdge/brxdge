@@ -187,6 +187,7 @@ function showState(which){
 }
 
 let currentCreators = []; // full list, so search can filter without re-fetching
+let currentReport = null; // the loaded report — the Message Us form tags its submission with this
 
 function renderStats(report, creators){
   const postsCount = creators.reduce((sum, c) => sum + (Array.isArray(c.posts) ? c.posts.filter(p => p.url).length : 0), 0);
@@ -384,6 +385,7 @@ function wireCreatorModal(){
 wireCreatorModal();
 
 function renderReport(report){
+  currentReport = report;
   document.title = `${report.brandName || 'Campaign'} Portal | BRXDGE`;
 
   // Kick off the public roster fetch now rather than waiting for the
@@ -439,6 +441,146 @@ function renderReport(report){
   const searchInput = document.getElementById('creatorSearch');
   searchInput.addEventListener('input', () => applySearch(searchInput.value));
 }
+
+/* ---------------- HELP WIDGET (floating FAQ + Message Us) ----------------
+   Scoped to what a brand actually needs while looking at THIS portal —
+   not the main site's booking-focused FAQ (pricing, contracts, etc.),
+   which doesn't apply here since there's nothing to book from this page. */
+const HELP_FAQS = [
+  {
+    q: 'What is this page?',
+    a: 'This is your private BRXDGE Campaign Portal — a live view of every creator working on this campaign, their profiles, and the content they’ve posted. Bookmark this link to come back to it any time.',
+  },
+  {
+    q: 'Is this link private? Can I share it with my team?',
+    a: 'Yes to both. This page isn’t listed anywhere public or indexed by search engines — only people you share this exact link with can view it, so feel free to forward it internally.',
+  },
+  {
+    q: 'Will this page update automatically as the campaign progresses?',
+    a: 'Yes. Whenever your BRXDGE manager adds a new creator or post to this campaign, it appears here the next time you load the page — no need to ask for a refreshed link.',
+  },
+  {
+    q: 'How do I see more about a specific creator?',
+    a: 'Click their name on any card to open a quick overview — their photo, niche, audience, and a link through to their full media kit.',
+  },
+  {
+    q: 'What happens when I click a post thumbnail?',
+    a: 'It opens that exact post on the platform it was published to (Instagram, TikTok, YouTube, etc.) in a new tab.',
+  },
+  {
+    q: 'Can I get this report as a downloadable file?',
+    a: 'Not as a one-click export today — everything here is yours to screenshot or share as-is. If you need a formal export, send us a message below and we’ll put one together.',
+  },
+  {
+    q: 'A link or thumbnail isn’t loading — what do I do?',
+    a: 'Occasionally a platform takes a post down or changes its thumbnail. Send us a message below and we’ll get it fixed.',
+  },
+  {
+    q: 'Can I request more creators or start a new campaign?',
+    a: 'Absolutely — message us below with what you’re looking for and your BRXDGE contact will follow up.',
+  },
+];
+
+function renderHelpFaq(){
+  const list = document.getElementById('helpFaqList');
+  list.innerHTML = HELP_FAQS.map((item, i) => `
+    <div class="help-faq-item">
+      <button type="button" class="help-faq-question" id="helpFaqQ${i}" aria-expanded="false" aria-controls="helpFaqA${i}">
+        <span>${escapeHtml(item.q)}</span>
+        <svg class="help-faq-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="help-faq-answer" id="helpFaqA${i}"><p>${escapeHtml(item.a)}</p></div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.help-faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.setAttribute('aria-expanded', btn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+    });
+  });
+}
+
+function switchHelpTab(tab){
+  const isFaq = tab === 'faq';
+  document.getElementById('helpTabFaq').classList.toggle('active', isFaq);
+  document.getElementById('helpTabFaq').setAttribute('aria-selected', String(isFaq));
+  document.getElementById('helpTabMessage').classList.toggle('active', !isFaq);
+  document.getElementById('helpTabMessage').setAttribute('aria-selected', String(!isFaq));
+  document.getElementById('helpPaneFaq').style.display = isFaq ? 'block' : 'none';
+  document.getElementById('helpPaneMessage').style.display = isFaq ? 'none' : 'block';
+}
+
+function openHelpWidget(){
+  document.getElementById('helpWidget').classList.add('open');
+  document.getElementById('helpFab').setAttribute('aria-expanded', 'true');
+}
+function closeHelpWidget(){
+  document.getElementById('helpWidget').classList.remove('open');
+  document.getElementById('helpFab').setAttribute('aria-expanded', 'false');
+}
+
+async function submitHelpMessage(e){
+  e.preventDefault();
+  const btn = document.getElementById('helpSubmitBtn');
+  const note = document.getElementById('helpFormNote');
+  const name = document.getElementById('helpName').value.trim();
+  const email = document.getElementById('helpEmail').value.trim();
+  const message = document.getElementById('helpMessageInput').value.trim();
+
+  const report = currentReport || {};
+  const talentTag = `Campaign Portal — ${report.brandName || 'Unknown Brand'}${report.title ? ` (${report.title})` : ''}`;
+
+  btn.disabled = true;
+  note.textContent = 'Sending…';
+  note.classList.remove('is-error');
+  try {
+    const res = await fetch(`${API}/api/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, message, talent: talentTag }),
+    });
+    if(!res.ok) throw new Error('Failed to send');
+
+    document.getElementById('helpMessageForm').style.display = 'none';
+    document.getElementById('helpMessageSuccess').style.display = 'block';
+  } catch(err){
+    note.textContent = 'Something went wrong — please try again.';
+    note.classList.add('is-error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function resetHelpMessageForm(){
+  document.getElementById('helpMessageForm').reset();
+  document.getElementById('helpMessageForm').style.display = 'flex';
+  document.getElementById('helpMessageSuccess').style.display = 'none';
+  const note = document.getElementById('helpFormNote');
+  note.textContent = 'Real humans read every message. Expect a reply within 1 business day.';
+  note.classList.remove('is-error');
+}
+
+function wireHelpWidget(){
+  renderHelpFaq();
+
+  document.getElementById('helpFab').addEventListener('click', () => {
+    const widget = document.getElementById('helpWidget');
+    if(widget.classList.contains('open')) closeHelpWidget(); else openHelpWidget();
+  });
+  document.getElementById('helpTabFaq').addEventListener('click', () => switchHelpTab('faq'));
+  document.getElementById('helpTabMessage').addEventListener('click', () => switchHelpTab('message'));
+  document.getElementById('helpMessageForm').addEventListener('submit', submitHelpMessage);
+  document.getElementById('helpSendAnother').addEventListener('click', resetHelpMessageForm);
+
+  document.addEventListener('click', (e) => {
+    if(!document.getElementById('helpWidget').classList.contains('open')) return;
+    if(e.target.closest('#helpWidget')) return;
+    closeHelpWidget();
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeHelpWidget();
+  });
+}
+wireHelpWidget();
 
 async function init(){
   const token = new URLSearchParams(location.search).get('t');
