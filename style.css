@@ -482,7 +482,7 @@
   .about-stats-bar .stat:hover .stat-icon{
     background:var(--coral); border-color:var(--coral); color:var(--on-accent); transform:scale(1.08);
   }
-  .about-stats-bar .num{ display:block; font-family:'Space Mono',monospace; font-size:clamp(26px,2.4vw,32px); font-weight:700; color:var(--coral); line-height:1; }
+  .about-stats-bar .num{ display:block; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:clamp(26px,2.4vw,32px); font-weight:900; letter-spacing:-0.01em; color:var(--coral); line-height:1; }
   .about-stats-bar .lbl{ display:block; margin-top:10px; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); }
   .roster-header-container { text-align: center; margin-bottom: 48px; }
 
