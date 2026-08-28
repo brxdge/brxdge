@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campaign Report | BRXDGE</title>
+<title>Campaign Portal | BRXDGE</title>
 <!-- Private-by-link, not by search engine. This page is only ever meant
      to be reached via the exact ?t=<token> URL an agency team member
      hands a brand directly — it has no nav link pointing to it from
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="report.css?v=1">
+<link rel="stylesheet" href="report.css?v=2">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -33,46 +33,67 @@
 </head>
 <body>
 
-<div class="report-shell">
+<!-- LOADING -->
+<div class="report-state" id="loadingState">
+  <div class="report-spinner" aria-hidden="true"></div>
+  <p>Loading portal…</p>
+</div>
 
-  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">
-    <svg class="ti-sun" width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-    <svg class="ti-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-  </button>
+<!-- ERROR (bad/expired/missing token) -->
+<div class="report-state" id="errorState" style="display:none;">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.7" r="1.1" fill="currentColor"/></svg>
+  <h1>Portal not found</h1>
+  <p>This link may be incomplete, or the report may have been removed. Reach out to your BRXDGE contact for an updated link.</p>
+</div>
 
-  <!-- LOADING -->
-  <div class="report-state" id="loadingState">
-    <div class="report-spinner" aria-hidden="true"></div>
-    <p>Loading report…</p>
+<!-- PORTAL -->
+<div id="reportRoot" style="display:none;">
+
+  <!-- Slim sticky bar — stays visible while scrolling a long creator list,
+       the way a real app's top bar would, rather than a report you scroll
+       away from its own title. -->
+  <div class="portal-topbar">
+    <div class="topbar-left">
+      <span class="topbar-mark">◆</span>
+      <img id="topbarLogo" class="topbar-logo" alt="" style="display:none;">
+      <span id="topbarBrandName" class="topbar-brand-name"></span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark theme">
+      <svg class="ti-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.3" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.6M12 18.9v2.6M4.2 4.2l1.9 1.9M17.9 17.9l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.2 19.8l1.9-1.9M17.9 6.1l1.9-1.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg class="ti-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    </button>
   </div>
 
-  <!-- ERROR (bad/expired/missing token) -->
-  <div class="report-state" id="errorState" style="display:none;">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.7" r="1.1" fill="currentColor"/></svg>
-    <h1>Report not found</h1>
-    <p>This link may be incomplete, or the report may have been removed. Reach out to your BRXDGE contact for an updated link.</p>
-  </div>
-
-  <!-- REPORT -->
-  <div id="reportRoot" style="display:none;">
+  <div class="report-shell">
     <header class="report-header">
-      <div class="report-eyebrow">
-        <span class="mark">◆</span> BRXDGE Campaign Report
-      </div>
+      <div class="report-eyebrow"><span class="mark">◆</span> BRXDGE Campaign Portal</div>
       <div class="report-brand-row">
         <img id="brandLogo" class="report-brand-logo" alt="" style="display:none;">
         <div>
-          <h1 id="reportTitle" class="report-title"></h1>
-          <p id="reportBrand" class="report-brand-name"></p>
+          <h1 id="reportBrandHeading" class="report-brand-heading"></h1>
+          <p id="reportTitle" class="report-title-sub"></p>
         </div>
       </div>
       <p id="reportNotes" class="report-notes" style="display:none;"></p>
+
+      <div class="report-stats" id="reportStats"></div>
     </header>
 
     <main>
+      <div class="report-toolbar">
+        <div class="report-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="text" id="creatorSearch" placeholder="Search creators…" autocomplete="off">
+        </div>
+        <span class="toolbar-count" id="toolbarCount"></span>
+      </div>
+
       <div class="report-creators-grid" id="creatorsGrid"></div>
       <div class="report-empty" id="creatorsEmpty" style="display:none;">
-        <p>No creators have been added to this report yet.</p>
+        <p>No creators have been added to this campaign yet.</p>
+      </div>
+      <div class="report-empty" id="searchEmpty" style="display:none;">
+        <p>No creators match <span id="searchEmptyQuery"></span>.</p>
       </div>
     </main>
 
@@ -82,10 +103,9 @@
       <span>Talent management for creators in Canada</span>
     </footer>
   </div>
-
 </div>
 
 <script src="config.js?v=2"></script>
-<script src="report.js?v=1"></script>
+<script src="report.js?v=2"></script>
 </body>
 </html>
