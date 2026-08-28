@@ -43,8 +43,10 @@
 
    Timing is hardcoded to match script.js's loader countdown exactly (see
    the comments there): the mark's CSS .show class lands at 150ms, the
-   percent count finishes at 4000ms, and the loader is fully gone from the
-   DOM by ~6250ms. The exit itself is two sequential phases — the mark
+   percent count finishes at 7000ms (client revision, round 2 — slowed
+   from 4000ms so there's real time to watch the assembly happen instead
+   of glimpsing it), and the loader is fully gone from the DOM by
+   ~8650ms. The exit itself is two sequential phases — the mark
    expands from normal size to big first, fully opaque, then #loader
    fades to reveal the page underneath — rather than one blended scale-
    and-fade. This module keeps its own render loop alive a little past
@@ -78,7 +80,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // comment. A much shorter timeout than brand-orbit.js's (which can
   // afford to wait up to 1500ms, since the hero mark is hidden behind
   // the loader the whole time anyway): the loader itself is only on
-  // screen for ~6.25s total, so this needs to fire fast.
+  // screen for ~8.65s total, so this needs to fire fast.
   if ('requestIdleCallback' in window) {
     requestIdleCallback(setup, { timeout: 60 });
   } else {
@@ -462,12 +464,15 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   // Staggered left-to-right, mirroring the hero teardown's own left-to-
   // right bias (there: the structure lets go from one end; here: it
-  // builds itself the same direction). Slowed down a little (client
-  // revision) from the original 1100/650/1000 so the assembly reads as
-  // more deliberate rather than a quick snap-together.
-  const ASSEMBLE_SPAN_MS = 1500;
-  const FLY_MS_MIN = 900;
-  const FLY_MS_MAX = 1400;
+  // builds itself the same direction). Slowed down twice now (client
+  // revision, round 2 — was 1500/900/1400, originally 1100/650/1000)
+  // so the assembly reads as unmistakably deliberate — long enough for
+  // the audience to actually watch it happen, not just catch the tail
+  // end of it. script.js's COUNT_DURATION_MS was stretched to 7000ms to
+  // match; keep the two in sync if either changes again.
+  const ASSEMBLE_SPAN_MS = 2600;
+  const FLY_MS_MIN = 1300;
+  const FLY_MS_MAX = 1900;
   {
     const xs = pieces.map((p) => p.restPos.x);
     const minX = Math.min.apply(null, xs);
@@ -550,7 +555,7 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   setPiecesToScattered();
 
-  const RENDER_LIFETIME_MS = 6800; // covers script.js's full ~6250ms loader lifecycle (round 3: two-phase expand-then-transition exit), plus a small buffer
+  const RENDER_LIFETIME_MS = 9000; // covers script.js's full ~8650ms loader lifecycle (round 4: slowed COUNT_DURATION_MS + assembly), plus a small buffer
   let disposed = false;
   const start = performance.now();
   let rafId;
