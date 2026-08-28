@@ -4964,7 +4964,49 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* Bigger loader box + bold brand-style percentage (was tiny Space Mono) */
-.loader-content { width: 280px; text-align: center; color: var(--text); }
+.loader-content { position: relative; z-index: 1; width: 280px; text-align: center; color: var(--text); }
+
+/* Ambient cable-motif background (index.html/talent.html markup) — sits
+   behind .loader-content (z-index:0 vs. its 1), covering the whole
+   #loader box rather than just the 280px content column, so the arc and
+   hangers spread wide like the real .brand-lines-bg does on the page
+   itself. Static/very quiet by default; the hangers get a slow opacity
+   breathe for a touch of life without competing with the mark's own
+   entrance. */
+.loader-ambient{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.loader-ambient svg{ width: 100%; height: 100%; display: block; }
+.loader-ambient-arc{
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: 0.3;
+}
+.loader-ambient-hanger{
+  stroke: var(--muted);
+  stroke-width: 1;
+  opacity: 0.14;
+  animation: loaderAmbientBreathe 5s ease-in-out infinite;
+}
+.loader-ambient-hanger:nth-of-type(2){ animation-delay: 0.4s; }
+.loader-ambient-hanger:nth-of-type(3){ animation-delay: 0.8s; }
+.loader-ambient-hanger:nth-of-type(4){ animation-delay: 1.2s; }
+.loader-ambient-hanger:nth-of-type(5){ animation-delay: 1.6s; }
+.loader-ambient-hanger:nth-of-type(6){ animation-delay: 2s; }
+.loader-ambient-hanger:nth-of-type(7){ animation-delay: 2.4s; }
+.loader-ambient-dot{ fill: var(--coral); opacity: 0.45; }
+@keyframes loaderAmbientBreathe{
+  0%, 100%{ opacity: 0.08; }
+  50%{ opacity: 0.26; }
+}
+@media (prefers-reduced-motion: reduce){
+  .loader-ambient-hanger{ animation: none !important; opacity: 0.14 !important; }
+}
 /* Now sits above the bridge mark (client revision — was between the mark
    and the wordmark). Starts hidden and fades/rises in a beat after first
    paint (.show added by script.js, same 150ms mark the bridge itself pops
@@ -4972,7 +5014,12 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
    the base rule itself (not introduced alongside the value change) so it
    reliably animates; see the .loader-mark.shrink-armed/.shrink comment
    further down for why that distinction matters. */
-.percentage { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 26px; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 18px; color: var(--text); font-weight: 900; opacity: 0; transform: translateY(10px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+/* Restyled small/quiet (client revision — was a bold 26px headline number)
+   to match the loader's new spaced-serif treatment now that it trails the
+   wordmark/mark/tagline instead of leading them; still the first element
+   to fade in (150ms, alongside the mark) and still ticks 0→100 for the
+   whole load. */
+.percentage { font-family: 'Cormorant Garamond', serif; font-size: 15px; letter-spacing: 0.22em; text-transform: uppercase; margin: 22px 0 0; color: var(--muted); font-weight: 400; opacity: 0; transform: translateY(10px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
 .percentage.show{ opacity: 1; transform: translateY(0); }
 
 /* Brand wordmark stays visible alongside the icon at every breakpoint;
@@ -5883,6 +5930,36 @@ html.dark-mode .creator-panel::before{
   margin: 0;
 }
 
+/* "EST." / "2026" flanking the mark — ported from the retired hero-orbit
+   section's .hero-orbit-flank (same font/spacing treatment, just a
+   smaller gap since the loader's mark sits in a much narrower 220px
+   column than the hero's 320-640px one). Plain children of .loader-mark
+   (position:relative already), so they ride along with its opacity/
+   transform for free — no separate JS trigger needed, same as the hero
+   version needed none either. Allowed to overflow past .loader-content's
+   nominal 280px width since #loader itself is a full-viewport box with no
+   overflow:hidden — there's room outside the narrow content column. */
+.loader-flank{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  z-index: 1;
+}
+.loader-flank--left{ right: calc(100% + 16px); text-align: right; }
+.loader-flank--right{ left: calc(100% + 16px); text-align: left; }
+@media (max-width: 480px){
+  /* Not enough room beside the mark once it's already scaled down for
+     mobile (see the 480px loader block further down) — drop rather than
+     crowd/clip, same call the hero version made at its own breakpoint. */
+  .loader-flank{ display: none; }
+}
+
 /* The loader mark is now a real 3D bridge (loader-bridge.js / three.js) in
    place of the old flat SVG. Same drop-in/shadow-bloom/expand-burst
    choreography as before — that part of the design still reads great for
@@ -5954,10 +6031,11 @@ html.dark-mode .creator-panel::before{
 .loader-mark-shadow{ position: absolute; left: 50%; bottom: -20px; width: 140px; height: 28px; transform: translateX(-50%) scale(0.4); border-radius: 50%; background: radial-gradient(ellipse, rgba(0,0,0,0.38), transparent 72%); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .loader-content.exit .loader-mark-shadow{ opacity: 0 !important; }
 
-/* The percentage and wordmark step back out of the way so the mark reads
-   as the sole focus of the exit transition. */
+/* The percentage, wordmark and tagline step back out of the way so the
+   mark reads as the sole focus of the exit transition. */
 .loader-content.exit .percentage,
-.loader-content.exit .loader-word{ opacity: 0; transition: opacity 0.3s ease; }
+.loader-content.exit .loader-word,
+.loader-content.exit .loader-tagline{ opacity: 0; transition: opacity 0.3s ease; }
 
 /* Canvas/fallback swap — starts fallback-visible (flat SVG bridge) until
    loader-bridge.js confirms WebGL works and adds .is-ready, exactly like
@@ -5982,8 +6060,14 @@ html.dark-mode .creator-panel::before{
 .loader-mark-fallback svg{ width: 68%; height: 68%; }
 .loader-mark.is-ready .loader-mark-fallback{ display: none; }
 
-/* ---------- Wordmark: letter-by-letter reveal ---------- */
-.loader-word{ margin-top: 26px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 900; font-size: 38px; letter-spacing: -0.01em; text-transform: uppercase; color: var(--text); opacity: 0; transform: translateY(14px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; display: inline-flex; justify-content: center; }
+/* ---------- Wordmark: letter-by-letter reveal ----------
+   Restyled to the spaced-serif treatment (client revision — was a bold
+   38px sans headline) now that it leads the loader instead of trailing
+   the mark, matching the retired hero-orbit section's "B R X D G E"
+   .eyebrow-style wordmark it replaces. `gap` (not letter-spacing, which
+   has no effect between separate inline-block spans) provides the space
+   between characters. */
+.loader-word{ margin: 0 0 22px; font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(28px, 6vw, 36px); letter-spacing: 0; text-transform: uppercase; color: var(--text); opacity: 0; transform: translateY(14px); transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; display: inline-flex; justify-content: center; gap: 0.14em; }
 .lw-char{
   display: inline-block;
   opacity: 0;
@@ -6016,6 +6100,23 @@ html.dark-mode .creator-panel::before{
 }
 .loader-word.show .lw-underline{ transform: translateX(-50%) scaleX(1); }
 
+/* POSSIBILITIES — ported from the retired hero-orbit section's own
+   .eyebrow span. Joins the wordmark's end-of-load reveal (script.js adds
+   .show to both at the same 85% mark, same delay/easing as .percentage). */
+.loader-tagline{
+  display: block;
+  margin-top: 22px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.loader-tagline.show{ opacity: 1; transform: translateY(0); }
+
 @media (prefers-reduced-motion: reduce){
   .loader-mark,
   .loader-mark.show,
@@ -6047,12 +6148,13 @@ html.dark-mode .creator-panel::before{
     90%{ transform: translateY(2px) scale(1.005); }
     100%{ opacity: 1; transform: translateY(0) scale(1); }
   }
-  .percentage{ font-size: 21px; margin-bottom: 14px; }
-  .loader-word{ font-size: 29px; margin-top: 20px; }
+  .percentage{ font-size: 13px; margin-top: 16px; }
+  .loader-word{ font-size: 27px; margin-bottom: 16px; }
+  .loader-tagline{ font-size: 12px; margin-top: 16px; }
 }
 @media (max-width: 360px){
   .loader-content{ width: 210px; }
-  .loader-word{ font-size: 25px; }
+  .loader-word{ font-size: 24px; }
 }
 
 /* =========================================================
