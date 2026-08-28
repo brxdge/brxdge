@@ -328,7 +328,7 @@ a{ color:inherit; }
 .clickable-row{ cursor:pointer; }
 .clickable-row:hover td{ background:#FAFBFC; }
 
-/* ---------- STATUS / TYPE BADGES (Blog & Case Studies, Campaigns) ---------- */
+/* ---------- STATUS / TYPE BADGES (Case Study & Campaign Results, Blog) ---------- */
 .status-badge{
   display:inline-flex; align-items:center; padding:3px 10px; border-radius:100px;
   font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
@@ -477,13 +477,13 @@ a{ color:inherit; }
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="4" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="13" width="7" height="7" rx="1.8" stroke="currentColor" stroke-width="1.8"/></svg>
         Brand Marquee
       </button>
-      <button class="nav-item" data-page="blog">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h6M9 13.5h6M9 17h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        Blog &amp; Case Studies
-      </button>
       <button class="nav-item" data-page="campaigns">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 13l6-6 4 4 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 5h5v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        Campaigns
+        Case Study &amp; Campaign Results
+      </button>
+      <button class="nav-item" data-page="blog">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 10h6M9 13.5h6M9 17h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Blog
       </button>
       <button class="nav-item" data-page="messages">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -508,8 +508,8 @@ a{ color:inherit; }
     <div id="page-talent" class="page"></div>
     <div id="page-managers" class="page" style="display:none;"></div>
     <div id="page-brands" class="page" style="display:none;"></div>
-    <div id="page-blog" class="page" style="display:none;"></div>
     <div id="page-campaigns" class="page" style="display:none;"></div>
+    <div id="page-blog" class="page" style="display:none;"></div>
     <div id="page-messages" class="page" style="display:none;"></div>
     <div id="page-profile" class="page" style="display:none;"></div>
   </main>
@@ -548,6 +548,6 @@ a{ color:inherit; }
      changes, same convention already used for these on index.html/
      talent.html. -->
 <script src="talent-wizard.js?v=2"></script>
-<script src="admin.js?v=2"></script>
+<script src="admin.js?v=3"></script>
 </body>
 </html>
