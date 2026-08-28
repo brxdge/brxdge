@@ -87,6 +87,20 @@ function escapeHtml(str){
   return (str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Same slug rule as script.js's slugify()/shareUrlFor() — copied rather
+// than shared, same reasoning as the icon set above. talent.html reads a
+// ?talent=<slug> URL param and auto-opens the matching roster entry's
+// media kit on load (matched by slugify(name), not by id — see the
+// "Deep link" block in script.js's init()), which is exactly what lets
+// this page link out to "the real media kit" without needing a talent id
+// of its own (a campaign report only ever stores name/photo/profiles).
+function slugify(str){
+  return (str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function mediaKitUrlFor(name){
+  return `talent.html?talent=${encodeURIComponent(slugify(name))}`;
+}
+
 // Same fallback avatar generator used across the rest of the site
 // (admin.js's photoOrFallback / script.js's talent placeholder) — kept
 // visually consistent even though this file doesn't share code with them.
@@ -102,6 +116,68 @@ function formatUpdatedDate(iso){
   const d = new Date(iso);
   if(isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/* ---------------- PUBLIC ROSTER LOOKUP (for the overview popup) ----------------
+   GET /api/roster is the same public, unauthenticated endpoint talent.html
+   itself uses to render every media kit — it already returns cover photo,
+   niche, socials, and audience stats for every non-hidden talent, no
+   token required (see the isSignedIn() branch in talent-backend/index.js).
+   A campaign report's own creator objects never store that data, so the
+   overview popup fetches this once, matches by the same slugify(name)
+   rule the ?talent= deep link uses, and treats it as a purely optional
+   enhancement — no match just means the popup stays lightweight. */
+let publicRosterPromise = null;
+function loadPublicRosterOnce(){
+  if(!publicRosterPromise){
+    publicRosterPromise = fetch(`${API}/api/roster`).then(r => r.ok ? r.json() : []).catch(() => []);
+  }
+  return publicRosterPromise;
+}
+function findRosterMatch(roster, name){
+  const slug = slugify(name);
+  if(!slug) return null;
+  return (Array.isArray(roster) ? roster : []).find(t => slugify(t.name) === slug) || null;
+}
+function rosterCoverUrl(t){
+  if(t.coverPhoto && String(t.coverPhoto).trim()) return String(t.coverPhoto).trim();
+  return creatorPhotoOrFallback(t);
+}
+
+// Compact version of script.js's Creator Snapshot ("at a glance") card —
+// same fields, same grouping, just re-authored small enough for a popup.
+const SNAPSHOT_ICONS = {
+  niche: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12.59 2.59a2 2 0 0 0-1.42-.59H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l9 9a2 2 0 0 0 2.82 0l7.17-7.17a2 2 0 0 0 0-2.82l-9-9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3" fill="currentColor"/></svg>',
+  platforms: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>',
+  audience: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 8.5a3 3 0 1 1 0-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 14c2.8.3 5 2.8 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  content: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 9.5h5M2.5 14.5h5M16 9.5h5M16 14.5h5" stroke="currentColor" stroke-width="1.8"/></svg>',
+};
+function snapshotNiches(t){
+  return (t.niche || '').split(/[/,&]/).map(s => s.trim()).filter(Boolean);
+}
+function renderModalSnapshot(t){
+  const niches = snapshotNiches(t);
+  const platforms = [...new Set((t.socials || []).map(s => s.platform).filter(Boolean))];
+  const audienceChips = [t.audienceAgeRange, t.location, t.gender].filter(Boolean);
+  const contentChips = Array.isArray(t.contentFormats) ? t.contentFormats.filter(Boolean) : [];
+  const rows = [
+    { label: 'Niche', icon: SNAPSHOT_ICONS.niche, items: niches },
+    { label: 'Platforms', icon: SNAPSHOT_ICONS.platforms, items: platforms },
+    { label: 'Audience', icon: SNAPSHOT_ICONS.audience, items: audienceChips },
+    { label: 'Content', icon: SNAPSHOT_ICONS.content, items: contentChips },
+  ].filter(r => r.items.length);
+  if(!rows.length) return '';
+  return rows.map(r => `
+    <div class="creator-modal-snap-row">
+      <span class="creator-modal-snap-label">${r.icon}${escapeHtml(r.label)}</span>
+      <div class="creator-modal-snap-chips">${r.items.map(i => `<span class="creator-modal-snap-chip">${escapeHtml(i)}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+function buildMarqueeGroup(name){
+  const upper = escapeHtml((name || '').toUpperCase());
+  const sep = `<span class="creator-modal-marquee-sep">•</span>`;
+  return `<span>${upper}</span>${sep}<span>${upper}</span>${sep}<span>${upper}</span>${sep}`;
 }
 
 function showState(which){
@@ -137,14 +213,14 @@ function renderStats(report, creators){
 
 function renderCreatorCards(creators){
   const grid = document.getElementById('creatorsGrid');
-  grid.innerHTML = creators.map(c => {
+  grid.innerHTML = creators.map((c, idx) => {
     const profiles = Array.isArray(c.profiles) ? c.profiles.filter(p => p.url) : [];
     const posts = Array.isArray(c.posts) ? c.posts.filter(p => p.url) : [];
     return `
       <div class="creator-card" data-name="${escapeHtml((c.name || '').toLowerCase())}">
         <div class="creator-card-head">
           <img class="creator-photo" src="${creatorPhotoOrFallback(c)}" alt="" onerror="this.style.visibility='hidden'">
-          <div class="creator-name">${escapeHtml(c.name)}</div>
+          <button type="button" class="creator-name creator-name-link" data-creator-idx="${idx}">${escapeHtml(c.name)}</button>
         </div>
         ${profiles.length ? `
           <div class="creator-profiles">
@@ -207,8 +283,114 @@ function applySearch(query){
   }
 }
 
+/* ---------------- CREATOR OVERVIEW MODAL ---------------- */
+// Bumped on every open/close so a slow roster fetch from a previous click
+// can't clobber the modal after the visitor already moved on to another
+// creator (or closed it) — see the guard at the bottom of openCreatorModal.
+let creatorModalOpenToken = 0;
+
+function setCreatorModalCover(url, name){
+  const modal = document.querySelector('.creator-modal');
+  const cover = document.getElementById('creatorModalCover');
+  if(!url){
+    modal.classList.remove('has-cover');
+    cover.style.display = 'none';
+    return;
+  }
+  document.getElementById('creatorModalCoverImg').src = url;
+  const group = buildMarqueeGroup(name);
+  document.getElementById('creatorModalMarqueeTrack').innerHTML = `
+    <div class="creator-modal-marquee-group">${group}</div>
+    <div class="creator-modal-marquee-group">${group}</div>
+  `;
+  cover.style.display = 'block';
+  modal.classList.add('has-cover');
+}
+
+function openCreatorModal(c){
+  const myToken = ++creatorModalOpenToken;
+  const profiles = Array.isArray(c.profiles) ? c.profiles.filter(p => p.url) : [];
+
+  // Base overview — exactly what the report already knows about this
+  // creator — renders immediately so the popup never waits on a network
+  // request just to open.
+  const photo = document.getElementById('creatorModalPhoto');
+  photo.style.visibility = '';
+  photo.src = creatorPhotoOrFallback(c);
+  document.getElementById('creatorModalName').textContent = c.name || '';
+
+  const profilesWrap = document.getElementById('creatorModalProfiles');
+  profilesWrap.innerHTML = profiles.length
+    ? profiles.map(p => `
+        <a class="creator-profile-link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer">
+          ${platformBadge(p.platform, 16)}<span>${escapeHtml(p.platform || 'Profile')}</span>
+        </a>`).join('')
+    : `<p class="creator-modal-noprofiles">No public profiles linked yet.</p>`;
+
+  document.getElementById('creatorModalMkLink').href = mediaKitUrlFor(c.name);
+
+  // Reset the "roster-only" sections until (if) the lookup below resolves,
+  // so reopening the popup for a creator with no cover doesn't briefly
+  // flash the previous creator's cover/snapshot.
+  setCreatorModalCover(null);
+  document.getElementById('creatorModalSnapshot').innerHTML = '';
+  document.getElementById('creatorModalSnapshot').style.display = 'none';
+
+  document.getElementById('creatorModalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Progressive enhancement — cover photo + marquee + Creator Snapshot,
+  // sourced from the public live roster (see loadPublicRosterOnce()).
+  // Silently does nothing if this creator isn't found there (e.g. a
+  // manually-typed name that doesn't match anyone on the roster).
+  loadPublicRosterOnce().then(roster => {
+    if(myToken !== creatorModalOpenToken) return; // popup moved on since this fetch started
+    const t = findRosterMatch(roster, c.name);
+    if(!t) return;
+
+    setCreatorModalCover(rosterCoverUrl(t), t.name);
+
+    const snapshotHtml = renderModalSnapshot(t);
+    const snapshotEl = document.getElementById('creatorModalSnapshot');
+    if(snapshotHtml){
+      snapshotEl.innerHTML = snapshotHtml;
+      snapshotEl.style.display = 'flex';
+    }
+  });
+}
+function closeCreatorModal(){
+  creatorModalOpenToken++; // invalidate any in-flight roster lookup for the creator that was open
+  document.getElementById('creatorModalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function wireCreatorModal(){
+  // Delegated on the (always-present) grid container rather than bound
+  // per-card, so it keeps working with no extra wiring after every
+  // renderCreatorCards() re-render.
+  document.getElementById('creatorsGrid').addEventListener('click', (e) => {
+    const btn = e.target.closest('.creator-name-link');
+    if(!btn) return;
+    const c = currentCreators[Number(btn.dataset.creatorIdx)];
+    if(c) openCreatorModal(c);
+  });
+  document.getElementById('creatorModalClose').addEventListener('click', closeCreatorModal);
+  document.getElementById('creatorModalOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'creatorModalOverlay') closeCreatorModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeCreatorModal();
+  });
+}
+wireCreatorModal();
+
 function renderReport(report){
   document.title = `${report.brandName || 'Campaign'} Portal | BRXDGE`;
+
+  // Kick off the public roster fetch now rather than waiting for the
+  // first creator-name click — by the time anyone actually opens the
+  // overview popup, it's almost always already in hand (loadPublicRosterOnce()
+  // caches the one in-flight/resolved promise).
+  loadPublicRosterOnce();
 
   // Sticky top bar — brand identity, visible the whole time you scroll.
   document.getElementById('topbarBrandName').textContent = report.brandName || '';
@@ -223,10 +405,11 @@ function renderReport(report){
   document.getElementById('reportTitle').textContent = report.title || '';
 
   const logoEl = document.getElementById('brandLogo');
+  const logoWrap = document.getElementById('brandLogoWrap');
   if(report.brandLogo){
     logoEl.src = report.brandLogo;
     logoEl.alt = report.brandName || '';
-    logoEl.style.display = 'block';
+    logoWrap.style.display = 'flex';
   }
 
   const notesEl = document.getElementById('reportNotes');
