@@ -25,7 +25,7 @@
      lives at the repo root. Bit everyone once already (this same file,
      loaded at the pretty URL, silently failed to pick up its own CSS/JS
      until this got fixed) — don't relative-ize these again. -->
-<link rel="stylesheet" href="/report.css?v=8">
+<link rel="stylesheet" href="/report.css?v=10">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -109,12 +109,13 @@
         </div>
 
         <!-- LIVE PERFORMANCE — the "wide open space" to the right of the
-             title on desktop. Populated by report-live-chart.js (a
-             separate ES module, since it needs Three.js — see that file)
-             once report.js has computed real numbers to show it, via a
-             'brxdge:report-ready' CustomEvent (see the end of
-             renderReport() in report.js). Empty/hidden until then, and on
-             narrow screens it drops below the title instead (report.css). -->
+             title on desktop. A donut chart + legend, drawn directly by
+             renderLivePanel() in report.js from `report.liveMetrics` (the
+             server computes the actual numbers — see computeLiveMetrics()
+             in talent-backend/index.js — this just renders whatever it's
+             handed as inline SVG, no charting library needed). Empty/
+             hidden until there's something real to show, and on narrow
+             screens it drops below the title instead (report.css). -->
         <div class="report-live-panel" id="reportLivePanel" style="display:none;">
           <div class="rlp-head">
             <span class="rlp-live-dot" aria-hidden="true"></span>
@@ -285,7 +286,6 @@
      page is also reached at /<slug>-report/, and a relative "report.js"
      would 404 there. -->
 <script src="/config.js?v=2"></script>
-<script src="/report.js?v=7"></script>
-<script type="module" src="/report-live-chart.js?v=1"></script>
+<script src="/report.js?v=9"></script>
 </body>
 </html>
