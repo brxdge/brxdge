@@ -1136,7 +1136,7 @@ function openReportModal(index){
 
   renderCreatorsEditor();
   document.getElementById('addReportCreatorBtn').addEventListener('click', () => {
-    reportDraft.creators.push({ id: 'local_' + Math.random().toString(36).slice(2, 9), name: '', photo: '', profiles: [], posts: [] });
+    reportDraft.creators.push({ id: 'local_' + Math.random().toString(36).slice(2, 9), name: '', email: '', photo: '', profiles: [], posts: [] });
     renderCreatorsEditor();
   });
 
@@ -1164,6 +1164,7 @@ function openReportModal(index){
           .map(c => ({
             id: c.id || '',
             name: (c.name || '').trim(),
+            email: (c.email || '').trim(),
             photo: c.photo || '',
             profiles: (c.profiles || []).filter(p => p.url && p.url.trim()),
             posts: (c.posts || []).filter(p => p.url && p.url.trim()),
@@ -1200,6 +1201,7 @@ function renderCreatorsEditor(){
           <button type="button" class="btn btn-danger btn-sm" data-remove-creator="${ci}">Remove</button>
         </div>
         <div class="field"><label>Name</label><input type="text" class="report-creator-name" data-creator="${ci}" value="${escapeHtml(c.name)}" placeholder="Creator name"></div>
+        <div class="field"><label>Email <span style="font-weight:400; color:var(--muted);">(matches this creator to their real analytics for the Live Performance panel)</span></label><input type="email" class="report-creator-email" data-creator="${ci}" value="${escapeHtml(c.email)}" placeholder="Must match their email in the talent roster"></div>
         <div class="field">
           <label>Photo</label>
           ${c.photo ? `<img class="table-logo" style="width:44px; height:44px; margin-bottom:6px;" src="${c.photo}">` : ''}
@@ -1244,6 +1246,22 @@ function renderCreatorsEditor(){
                   </label>
                 </div>
               </div>
+              ${/* Real per-post numbers — YouTube only. YouTube's API hands
+                   out view/like/comment counts for any public video with
+                   just an API key; Instagram/TikTok don't expose that to
+                   outside apps without the creator's own login, so there's
+                   nothing honest to auto-fetch here for those platforms —
+                   see /api/youtube-video-stats in talent-backend/index.js. */''}
+              ${p.platform === 'YouTube' ? `
+                <div class="report-post-stats-row">
+                  ${p.stats ? `
+                    <span class="report-post-stat">👁 ${escapeHtml(p.stats.viewsLabel)} views</span>
+                    <span class="report-post-stat">❤ ${escapeHtml(p.stats.likesLabel)} likes</span>
+                    <span class="report-post-stat">💬 ${escapeHtml(p.stats.commentsLabel)} comments</span>
+                  ` : `<span class="report-post-stat report-post-stat-empty">No stats fetched yet</span>`}
+                  <button type="button" class="btn btn-ghost btn-sm" data-fetch-stats="${ci}:${pi}">${p.stats ? 'Refresh stats' : 'Fetch real stats'}</button>
+                </div>
+              ` : ''}
             </div>
           `).join('')}
           <button type="button" class="btn btn-ghost btn-sm" data-add-post="${ci}">+ Add Post Link</button>
@@ -1265,6 +1283,11 @@ function wireCreatorsEditorEvents(){
       if(!talent) return;
       const c = reportDraft.creators[ci];
       c.name = talent.name || c.name;
+      // Auto-fills straight from the roster record so the two never drift
+      // apart by a typo — this IS the match the Live Performance panel
+      // relies on server-side, so picking a talent here is the easiest way
+      // to get it right (a manually-typed email has to match exactly).
+      c.email = talent.email || c.email;
       c.photo = photoOrFallback(talent) || c.photo;
       c.profiles = (talent.socials || []).filter(s => s.url).map(s => ({ platform: s.platform || 'Other', url: s.url }));
       renderCreatorsEditor();
@@ -1272,6 +1295,9 @@ function wireCreatorsEditorEvents(){
   });
   wrap.querySelectorAll('.report-creator-name').forEach(inp => {
     inp.addEventListener('input', (e) => { reportDraft.creators[Number(e.target.dataset.creator)].name = e.target.value; });
+  });
+  wrap.querySelectorAll('.report-creator-email').forEach(inp => {
+    inp.addEventListener('input', (e) => { reportDraft.creators[Number(e.target.dataset.creator)].email = e.target.value; });
   });
   wrap.querySelectorAll('.report-creator-photo-file').forEach(inp => {
     inp.addEventListener('change', async (e) => {
@@ -1375,6 +1401,31 @@ function wireCreatorsEditorEvents(){
         renderCreatorsEditor();
       } catch(err){
         showToast(err.message || 'Could not fetch a thumbnail for that URL');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+  wrap.querySelectorAll('[data-fetch-stats]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const [ci, pi] = btn.dataset.fetchStats.split(':').map(Number);
+      const post = reportDraft.creators[ci].posts[pi];
+      const url = (post.url || '').trim();
+      if(!url){ showToast('Enter the post URL first'); return; }
+      btn.disabled = true;
+      try {
+        const stats = await api('/api/youtube-video-stats?url=' + encodeURIComponent(url));
+        // Only the numbers/labels — not `title`/`fetchedAt` from the API
+        // response — get stored on the post; keeps the saved JSON to just
+        // what report.js actually renders.
+        post.stats = {
+          views: stats.views, likes: stats.likes, comments: stats.comments,
+          viewsLabel: stats.viewsLabel, likesLabel: stats.likesLabel, commentsLabel: stats.commentsLabel,
+        };
+        renderCreatorsEditor();
+        showToast('Stats fetched');
+      } catch(err){
+        showToast(err.message || 'Could not fetch stats for that video');
       } finally {
         btn.disabled = false;
       }
