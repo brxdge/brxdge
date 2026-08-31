@@ -98,25 +98,6 @@ function slugify(str){
   return (str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-// Same parsing/formatting as script.js's parseFollowers()/formatFollowers()
-// — copied rather than shared (this page intentionally has no dependency
-// on script.js, same reasoning as the icon set above). Needed here for
-// the Live Performance panel, which sums real follower counts pulled from
-// the public roster (see computeLiveMetrics() further down).
-function parseFollowers(str){
-  if(!str) return 0;
-  const s = str.toString().trim().toUpperCase().replace(/,/g,'');
-  const num = parseFloat(s);
-  if(isNaN(num)) return 0;
-  if(s.endsWith('M')) return Math.round(num * 1000000);
-  if(s.endsWith('K')) return Math.round(num * 1000);
-  return Math.round(num);
-}
-function formatFollowers(n){
-  if(n >= 1000000) return (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
-  if(n >= 1000) return (n/1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
-  return String(n);
-}
 function mediaKitUrlFor(name){
   // Root-absolute, not relative — this page is also reached at
   // /<slug>-report/ now (see the comment on report.html's <head> asset
@@ -238,83 +219,104 @@ function renderStats(report, creators){
 }
 
 /* ---------------- LIVE PERFORMANCE PANEL ----------------
-   Feeds the 3D bar chart in the header's top-right (report-live-chart.js —
-   a separate ES module since it needs Three.js; see the comment on
-   #reportLivePanel in report.html for why it's split out). Prefers REAL
-   numbers: it matches each report creator back to their live roster entry
-   BY NAME (findRosterMatch(), the exact same lookup the creator overview
-   popup already uses — no id linkage exists between a report creator and
-   the roster, see admin.js's report-creator editor) and sums their real
-   `followers` per platform. "Live" here means "as current as the roster,"
-   refreshed on load and again periodically while the tab stays open —
-   there's no social-API integration in this app to push a true real-time
-   feed from. When no creator matches the roster (a manually-typed name,
-   or none of them have follower data on file), falls back to post-count-
-   by-platform — always available straight from the report itself — so the
-   panel still shows something real rather than sitting empty. */
-function computeLiveMetrics(creators, roster){
-  const platformFollowers = new Map();
-  const platformPosts = new Map();
-  let matchedAny = false;
+   A compact donut chart in the header's top-right, showing either real
+   reach (summed from the roster's follower counts) or, failing that, a
+   posts-by-platform breakdown. All the actual computation — including
+   matching each report creator to their real roster entry — happens on
+   the SERVER now (see computeLiveMetrics() in talent-backend/index.js):
+   report.js just draws whatever `report.liveMetrics` it was handed.
 
-  creators.forEach(c => {
-    (c.posts || []).forEach(p => {
-      if(!p.url) return;
-      const plat = p.platform || 'Other';
-      platformPosts.set(plat, (platformPosts.get(plat) || 0) + 1);
-    });
-    const t = findRosterMatch(roster, c.name);
-    if(!t) return;
-    matchedAny = true;
-    (t.socials || []).forEach(s => {
-      if(!s.platform) return;
-      const followers = parseFollowers(s.followers);
-      if(!followers) return;
-      platformFollowers.set(s.platform, (platformFollowers.get(s.platform) || 0) + followers);
-    });
-  });
+   This used to match by name against the PUBLIC roster endpoint and
+   render a rotating 3D bar chart client-side. Two things changed it:
+   matching by name was fragile (two creators can share a display name),
+   and doing the match here at all meant every talent's follower data had
+   to be public just so this page could read it. Matching by email is far
+   more reliable, but email is private contact info — it must never sit in
+   an unauthenticated JSON response (see GET /api/roster's stripping in
+   index.js) just so a client-side script could compare it. Moving the
+   whole computation server-side solves both: the match happens with
+   direct database access, and only the aggregated numbers (never any
+   email) come back down to the browser.
 
-  if(matchedAny && platformFollowers.size){
-    const bars = [...platformFollowers.entries()]
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6);
-    const total = bars.reduce((sum, b) => sum + b.value, 0);
-    return { label: 'Live Reach', bars, totalLabel: `${formatFollowers(total)} combined reach`, live: true };
-  }
+   "Live" still means "as current as the roster," not a pushed feed — see
+   scheduleLiveRefresh() below, which silently re-unlocks the report every
+   45s (skipped while the tab is hidden) so the panel picks up a follower
+   update a manager makes while a brand happens to have this page open. */
 
-  const bars = [...platformPosts.entries()]
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
-  const total = bars.reduce((sum, b) => sum + b.value, 0);
-  return { label: 'Posts by Platform', bars, totalLabel: `${total} post${total === 1 ? '' : 's'} tracked`, live: false };
+// Solid, single-hex stand-ins for platformIconColor()'s full-color badges
+// above — a stroke segment needs one flat fill, not a multi-stop gradient.
+// Picked to stay recognizably "that platform" while working on both the
+// light and dark panel surface; every segment is also paired with the
+// real colored badge + platform name + value in the legend below, so
+// nothing here is read by hue alone.
+const RING_COLORS = {
+  'Instagram': '#D6249F',
+  'TikTok': '#1478A8',
+  'YouTube': '#FF0000',
+  'Twitter / X': '#1D9BF0',
+  'Facebook': '#3B5FE0',
+  'Snapchat': '#C9A100',
+  'Twitch': '#9146FF',
+  'LinkedIn': '#0A66C2',
+  'Pinterest': '#E0447A',
+  'Threads': '#4B4B4B',
+  'Other': '#767E8C',
+};
+function ringColorFor(platform){
+  return RING_COLORS[platform] || RING_COLORS['Other'];
 }
 
-function initLivePanel(creators){
+function renderLivePanel(metrics){
   const panel = document.getElementById('reportLivePanel');
   if(!panel) return;
-
-  function refresh(roster){
-    const metrics = computeLiveMetrics(creators, roster);
-    if(!metrics.bars.length){ panel.style.display = 'none'; return; }
-    panel.style.display = 'flex';
-    document.getElementById('rlpLabel').textContent = metrics.label;
-    document.getElementById('rlpTotal').textContent = metrics.totalLabel;
-    panel.classList.toggle('rlp-is-live', metrics.live);
-    window.dispatchEvent(new CustomEvent('brxdge:report-ready', { detail: metrics }));
+  if(!metrics || !Array.isArray(metrics.bars) || !metrics.bars.length){
+    panel.style.display = 'none';
+    return;
   }
+  panel.style.display = 'flex';
+  document.getElementById('rlpLabel').textContent = metrics.label;
+  document.getElementById('rlpTotal').textContent = metrics.totalLabel;
+  panel.classList.toggle('rlp-is-live', !!metrics.live);
 
-  loadPublicRosterOnce().then(refresh);
+  const total = metrics.bars.reduce((sum, b) => sum + b.value, 0) || 1;
+  const R = 27, SW = 12, C = 2 * Math.PI * R, GAP = 2.4; // GAP: px of circumference left as a surface gap between segments
+  let cumulative = 0;
+  const segments = metrics.bars.map(b => {
+    const segLen = (b.value / total) * C;
+    const visible = Math.max(segLen - GAP, 0.001);
+    const dashoffset = -cumulative;
+    cumulative += segLen;
+    return `<circle class="rlp-seg" cx="36" cy="36" r="${R}" stroke="${ringColorFor(b.label)}" stroke-width="${SW}" fill="none" stroke-linecap="round" stroke-dasharray="${visible} ${C}" stroke-dashoffset="${dashoffset}"><title>${escapeHtml(b.label)}: ${escapeHtml(b.valueLabel)}</title></circle>`;
+  }).join('');
 
-  // Re-pull the roster periodically so the panel picks up any follower
-  // update a manager makes while a brand happens to have this page open —
-  // genuinely live in the sense of "always current," not a pushed feed.
-  // Skips while the tab is hidden rather than polling a background tab
-  // for no one to see.
-  setInterval(() => {
+  document.getElementById('rlpCanvasWrap').innerHTML = `
+    <svg class="rlp-ring" viewBox="0 0 72 72" role="img" aria-label="${escapeHtml(metrics.label)}">
+      <circle class="rlp-ring-track" cx="36" cy="36" r="${R}" stroke-width="${SW}"></circle>
+      <g transform="rotate(-90 36 36)">${segments}</g>
+    </svg>
+    <div class="rlp-legend">
+      ${metrics.bars.map(b => `
+        <div class="rlp-legend-row">
+          <span class="rlp-swatch" style="background:${ringColorFor(b.label)}"></span>
+          ${platformBadge(b.label, 15)}
+          <span class="rlp-legend-name">${escapeHtml(b.label)}</span>
+          <span class="rlp-legend-val">${escapeHtml(b.valueLabel)}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Re-unlocks the report (cheap — same passcode round trip the gate already
+// does) every 45s so liveMetrics stays current, skipped while the tab is
+// hidden. Guarded so a second renderReport() call (there isn't one today,
+// but future-proofing costs nothing) can't stack a duplicate interval.
+let liveRefreshTimer = null;
+function scheduleLiveRefresh(identifier, passcode){
+  if(liveRefreshTimer || !identifier || !passcode) return;
+  liveRefreshTimer = setInterval(() => {
     if(document.hidden) return;
-    fetch(`${API}/api/roster`).then(r => r.ok ? r.json() : null).then(roster => { if(roster) refresh(roster); }).catch(() => {});
+    unlockReport(identifier, passcode).then(report => { if(report) renderLivePanel(report.liveMetrics); }).catch(() => {});
   }, 45000);
 }
 
@@ -342,14 +344,31 @@ function renderCreatorCards(creators){
           <div class="creator-posts">
             <div class="creator-posts-label">Posts (${posts.length})</div>
             <div class="creator-posts-grid">
-              ${posts.map(p => `
-                <a class="post-thumb" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(p.label) || escapeHtml(p.platform) || 'View post'}">
+              ${posts.map(p => {
+                // Real per-post numbers — YouTube only (see
+                // /api/youtube-video-stats in talent-backend/index.js for
+                // why: it's the one platform that hands out view/like/
+                // comment counts for any public video with no login).
+                // p.stats is only ever present when an admin has clicked
+                // "Fetch real stats" for this post — it's a snapshot from
+                // that moment, not continuously live, same as the roster's
+                // avgViews/avgLikes fields elsewhere in this app.
+                const statsLine = p.stats ? `👁 ${p.stats.viewsLabel} · ❤ ${p.stats.likesLabel}` : '';
+                const tooltipParts = [p.label, p.stats ? `${p.stats.viewsLabel} views, ${p.stats.likesLabel} likes, ${p.stats.commentsLabel} comments` : ''].filter(Boolean);
+                return `
+                <a class="post-thumb" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(tooltipParts.join(' — ')) || escapeHtml(p.platform) || 'View post'}">
                   <div class="post-thumb-fallback">${platformBadge(p.platform, 30)}</div>
                   ${p.thumbnail ? `<img src="${escapeHtml(p.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
                   <span class="post-thumb-platform">${platformBadge(p.platform, 22)}</span>
-                  ${p.label ? `<span class="post-thumb-label">${escapeHtml(p.label)}</span>` : ''}
+                  ${(p.label || statsLine) ? `
+                    <span class="post-thumb-caption">
+                      ${p.label ? `<span class="post-thumb-label">${escapeHtml(p.label)}</span>` : ''}
+                      ${statsLine ? `<span class="post-thumb-stats">${escapeHtml(statsLine)}</span>` : ''}
+                    </span>
+                  ` : ''}
                 </a>
-              `).join('')}
+              `;
+              }).join('')}
             </div>
           </div>
         ` : `<p class="creator-none">No posts linked yet.</p>`}
@@ -528,7 +547,7 @@ function renderReport(report){
 
   currentCreators = Array.isArray(report.creators) ? report.creators : [];
   renderStats(report, currentCreators);
-  initLivePanel(currentCreators);
+  renderLivePanel(report.liveMetrics);
 
   const grid = document.getElementById('creatorsGrid');
   const empty = document.getElementById('creatorsEmpty');
@@ -749,6 +768,7 @@ function wireGate(){
       try { sessionStorage.setItem(rememberKey(pendingIdentifier), passcode); } catch(err) { /* private browsing etc. — fine without it */ }
       renderReport(report);
       showState('report');
+      scheduleLiveRefresh(pendingIdentifier, passcode);
     } catch(err){
       errorNote.textContent = "Couldn't reach the server. Please try again.";
       errorNote.style.display = 'block';
@@ -776,6 +796,7 @@ async function init(){
     if(report){
       renderReport(report);
       showState('report');
+      scheduleLiveRefresh(pendingIdentifier, remembered);
       return;
     }
     // Stale/rotated passcode — fall through to the normal gate below.
