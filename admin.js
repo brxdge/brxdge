@@ -965,7 +965,13 @@ const REPORT_PLATFORMS = ['Instagram','TikTok','YouTube','Twitter / X','Facebook
 // discarded on Cancel) when the form is submitted.
 let reportDraft = null;
 
+// Prefers the new pretty URL (brxdge.ca/<slug>-report/) now that every
+// report gets a slug — falls back to the old ?t=<shareToken> form only
+// for the rare case of a report whose slug somehow isn't set yet (a save
+// still in flight, or an ancient row from before the backend migration/
+// backfill in db.js ran).
 function shareLinkFor(report){
+  if(report && report.slug) return `${location.origin}/${report.slug}-report/`;
   return `${location.origin}/report.html?t=${encodeURIComponent(report && report.shareToken || '')}`;
 }
 
@@ -979,15 +985,44 @@ async function copyReportLink(report){
   }
 }
 
+async function copyReportPasscode(report){
+  try {
+    await navigator.clipboard.writeText(report && report.passcode || '');
+    showToast('Passcode copied');
+  } catch(err){
+    showToast('Could not copy automatically — the passcode is in the field above');
+  }
+}
+
+// Swaps in a fresh passcode for one report — e.g. it leaked, or the brand
+// contact changed. A single dedicated endpoint rather than routing this
+// through the bulk "save the whole array" POST, since that endpoint has
+// no way to distinguish "leave the passcode alone" from "here's a new
+// one" without a sentinel value threaded through it.
+async function regenerateReportPasscode(index){
+  const report = reportsData[index];
+  if(!report || !report.id) return;
+  if(!confirm(`Generate a new passcode for ${report.brandName || 'this brand'}? Their old passcode will stop working immediately.`)) return;
+  try {
+    const res = await api(`/api/campaign-reports/${encodeURIComponent(report.id)}/regenerate-passcode`, { method: 'POST' });
+    report.passcode = res.passcode;
+    const field = document.getElementById('rPasscodeField');
+    if(field) field.value = res.passcode;
+    showToast('New passcode generated');
+  } catch(err){
+    showToast(err.message);
+  }
+}
+
 function renderReportsPage(){
   document.getElementById('page-reports').innerHTML = `
-    <h1 class="page-title">Campaign Reports</h1>
-    <p class="page-sub">Private, shareable dashboards for one brand at a time. Send the link and they can see every creator's profile and the specific posts made for that campaign — no login needed on their end.</p>
+    <h1 class="page-title">Brand Reports</h1>
+    <p class="page-sub">Private, shareable dashboards for one brand at a time. Send the link and passcode and they can see every creator's profile and the specific posts made for that campaign — no login needed on their end.</p>
 
     <div class="panel">
       <div class="panel-head">
-        <div><h2>Reports</h2><p>${reportsData.length} report${reportsData.length===1?'':'s'}</p></div>
-        <button class="btn btn-primary" id="addReportBtn" style="width:auto;">+ Add Report</button>
+        <div><h2>Brand Reports</h2><p>${reportsData.length} report${reportsData.length===1?'':'s'}</p></div>
+        <button class="btn btn-primary" id="addReportBtn" style="width:auto;">+ Add Brand Report</button>
       </div>
       <div class="table-scroll">
       <table class="data-table">
@@ -1040,13 +1075,13 @@ async function deleteReport(index){
 function openReportModal(index){
   const existing = (index !== null && index !== undefined) ? reportsData[index] : null;
   // Deep copy so editing (or Cancel) never mutates reportsData until Save.
-  reportDraft = existing ? JSON.parse(JSON.stringify(existing)) : { id: '', shareToken: '', title: '', brandName: '', brandLogo: '', notes: '', creators: [] };
+  reportDraft = existing ? JSON.parse(JSON.stringify(existing)) : { id: '', shareToken: '', slug: '', passcode: '', title: '', brandName: '', brandLogo: '', notes: '', creators: [] };
   if(!Array.isArray(reportDraft.creators)) reportDraft.creators = [];
 
   document.getElementById('reportModal').innerHTML = `
     <button class="modal-close" data-close>&times;</button>
-    <h3>${existing ? 'Edit Report' : 'Add Report'}</h3>
-    <p class="sub">A private link for one brand, no login needed. Add each creator who posted for this campaign, their profile link(s), and the specific posts they made.</p>
+    <h3>${existing ? 'Edit Brand Report' : 'Add Brand Report'}</h3>
+    <p class="sub">A private, passcode-protected link for one brand. Add each creator who posted for this campaign, their profile link(s), and the specific posts they made.</p>
     <form id="reportForm">
       <div class="field"><label>Report Title</label><input type="text" id="rTitle" value="${escapeHtml(reportDraft.title)}" placeholder="e.g. Lumen Beauty — Summer Launch" required></div>
       <div class="field"><label>Brand Name</label><input type="text" id="rBrandName" value="${escapeHtml(reportDraft.brandName)}" required></div>
@@ -1065,9 +1100,16 @@ function openReportModal(index){
         <div id="reportCreatorsList"></div>
       </div>
 
+      <div class="field" style="margin-top:6px;">
+        <label>Report URL</label>
+        <div class="report-share-link-row"><input type="text" id="rSlug" value="${escapeHtml(reportDraft.slug || '')}" placeholder="auto-generated from brand name"></div>
+        <p class="field-hint" id="rSlugPreview" style="font-size:11.5px; color:var(--muted); margin-top:5px;">${location.origin}/${escapeHtml(reportDraft.slug) || '...'}-report/</p>
+      </div>
+
       ${existing
-        ? `<div class="field" style="margin-top:6px;"><label>Share Link</label><div class="report-share-link-row"><input type="text" id="rShareLinkField" readonly value="${escapeHtml(shareLinkFor(existing))}"><button type="button" class="btn btn-ghost btn-sm" id="copyReportLinkBtn">Copy</button></div></div>`
-        : `<p style="font-size:12px; color:var(--muted); margin-top:14px;">The shareable link is generated once you save.</p>`}
+        ? `<div class="field"><label>Share Link</label><div class="report-share-link-row"><input type="text" id="rShareLinkField" readonly value="${escapeHtml(shareLinkFor(existing))}"><button type="button" class="btn btn-ghost btn-sm" id="copyReportLinkBtn">Copy</button></div></div>
+           <div class="field"><label>Passcode <span style="font-weight:400; color:var(--muted);">— required to view this report</span></label><div class="report-share-link-row"><input type="text" id="rPasscodeField" readonly value="${escapeHtml(reportDraft.passcode || '')}"><button type="button" class="btn btn-ghost btn-sm" id="copyPasscodeBtn">Copy</button><button type="button" class="btn btn-ghost btn-sm" id="regenPasscodeBtn">Regenerate</button></div></div>`
+        : `<p style="font-size:12px; color:var(--muted); margin-top:14px;">The share link and passcode are generated once you save.</p>`}
 
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" data-close>Cancel</button>
@@ -1081,6 +1123,16 @@ function openReportModal(index){
 
   document.getElementById('rShareLinkField')?.addEventListener('click', (e) => e.target.select());
   document.getElementById('copyReportLinkBtn')?.addEventListener('click', () => copyReportLink(existing));
+  document.getElementById('rPasscodeField')?.addEventListener('click', (e) => e.target.select());
+  document.getElementById('copyPasscodeBtn')?.addEventListener('click', () => copyReportPasscode(reportDraft));
+  document.getElementById('regenPasscodeBtn')?.addEventListener('click', () => regenerateReportPasscode(index));
+  // Live preview only — the server is the one that actually slugifies/
+  // dedupes on save, this just shows roughly what that'll produce so
+  // typing "Nike CA" previews as ".../nike-ca-report/" before you save.
+  document.getElementById('rSlug')?.addEventListener('input', (e) => {
+    const preview = e.target.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || '...';
+    document.getElementById('rSlugPreview').textContent = `${location.origin}/${preview}-report/`;
+  });
 
   renderCreatorsEditor();
   document.getElementById('addReportCreatorBtn').addEventListener('click', () => {
@@ -1100,6 +1152,10 @@ function openReportModal(index){
       const entry = {
         id: reportDraft.id || '',
         shareToken: reportDraft.shareToken || '',
+        // Blank is fine — the server auto-generates a slug from the brand
+        // name when this comes through empty (and re-dedupes either way).
+        slug: document.getElementById('rSlug').value.trim(),
+        passcode: reportDraft.passcode || '',
         title: document.getElementById('rTitle').value.trim(),
         brandName: document.getElementById('rBrandName').value.trim(),
         brandLogo,
