@@ -412,39 +412,94 @@ app.post('/api/campaigns', requireAuth, (req, res) => {
   }
 });
 
-// --- CAMPAIGN REPORTS (private, per-brand reporting dashboards) ---
+// --- CAMPAIGN REPORTS ("Brand Reports" in the admin nav — private,
+// per-brand reporting dashboards) ---
 // Separate from the public "campaigns" table above: each report is a
-// standalone link (report.html?t=<shareToken>) you hand to ONE brand so
-// they can see every creator + every post made for their campaign,
-// without a login. Same "save the whole array at once" pattern as
-// roster/blog/campaigns, plus one extra public lookup route by token.
+// standalone portal (brxdge.ca/<slug>-report/, or the older
+// report.html?t=<shareToken> form) you hand to ONE brand so they can see
+// every creator + every post made for their campaign. Same "save the
+// whole array at once" pattern as roster/blog/campaigns.
+//
+// Access used to be "knowing the token IS the login" — an unguessable
+// 20-byte random token stood in for a password. Now that reports also
+// have a short, human-readable slug (brxdge.ca/nike-ca-report/), the slug
+// alone is guessable/enumerable, so it's no longer a secret by itself —
+// the passcode is what actually gates access now, for links of either
+// form. See GET .../meta/by-slug, GET .../meta/by-token, and POST
+// .../unlock below; report.js always does meta-then-unlock, never a
+// single unauthenticated full-data fetch.
 function newId(prefix) {
   return `${prefix}_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 }
 // Longer + fully random (no timestamp) for the share token specifically —
-// this is the one thing standing in for a login, so it needs to be
-// unguessable rather than just unique.
+// kept for backward compatibility with any already-shared ?t= links, even
+// though the passcode (not the token) is what actually gates access now.
 function newShareToken() {
   return crypto.randomBytes(20).toString('hex');
 }
+function slugifyBrandName(name) {
+  return String(name || 'brand')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'brand';
+}
+// Excludes visually-ambiguous characters (0/O, 1/I/L) — a brand contact
+// reads this off a screen or types it in, it's never copy-pasted the way
+// the old token was.
+const PASSCODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function newPasscode() {
+  let code = '';
+  for (let i = 0; i < 6; i++) code += PASSCODE_CHARS[crypto.randomInt(PASSCODE_CHARS.length)];
+  return code;
+}
+// Dedupes a candidate slug against every OTHER slug already claimed
+// (excludingId lets a report keep its own slug when just re-saving
+// itself unchanged, instead of colliding with itself and getting bumped
+// to "-2" every time).
+function dedupeSlug(candidate, excludingId) {
+  const base = slugifyBrandName(candidate);
+  const taken = new Set(
+    db.prepare(`SELECT slug FROM campaign_reports WHERE slug IS NOT NULL AND id != ?`).all(excludingId || '').map(r => r.slug)
+  );
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix++;
+  return `${base}-${suffix}`;
+}
 
 const replaceCampaignReports = db.transaction((reports) => {
-  const existing = db.prepare(`SELECT id, shareToken, createdAt FROM campaign_reports`).all();
+  const existing = db.prepare(`SELECT id, shareToken, slug, passcode, createdAt FROM campaign_reports`).all();
   const existingById = new Map(existing.map(r => [r.id, r]));
   db.prepare(`DELETE FROM campaign_reports`).run();
   const insert = db.prepare(`
     INSERT INTO campaign_reports (
-      id, shareToken, title, brandName, brandLogo, notes, creators,
+      id, shareToken, slug, passcode, title, brandName, brandLogo, notes, creators,
       createdAt, updatedAt, sortOrder
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const now = new Date().toISOString();
+  // Slugs are deduped against what's ABOUT to be in the table (this
+  // batch), not just what's already saved — otherwise two reports added
+  // in the same save for brands with the same name could still collide.
+  const claimedSlugs = new Set(existing.map(r => r.slug).filter(Boolean));
   reports.forEach((r, i) => {
     const prior = r.id ? existingById.get(r.id) : null;
     const id = prior ? prior.id : (r.id || newId('report'));
     const shareToken = prior ? prior.shareToken : (r.shareToken || newShareToken());
+    // Slug: keep whatever's already assigned unless the admin actually
+    // changed it (or this is a brand-new report) — either way, re-dedupe
+    // against every slug already claimed by a DIFFERENT report, in-batch.
+    const requestedSlug = r.slug && String(r.slug).trim() ? slugifyBrandName(r.slug) : (prior ? prior.slug : null) || slugifyBrandName(r.brandName);
+    let slug = requestedSlug;
+    if (!prior || prior.slug !== slug) {
+      let base = slug, suffix = 2;
+      while (claimedSlugs.has(slug) ) slug = `${base}-${suffix++}`;
+    }
+    claimedSlugs.add(slug);
+    const passcode = prior ? prior.passcode : (r.passcode || newPasscode());
     insert.run(
-      id, shareToken, r.title || '', r.brandName || '', r.brandLogo || '',
+      id, shareToken, slug, passcode, r.title || '', r.brandName || '', r.brandLogo || '',
       r.notes || '', JSON.stringify(Array.isArray(r.creators) ? r.creators : []),
       prior ? prior.createdAt : now, now, i
     );
@@ -452,7 +507,8 @@ const replaceCampaignReports = db.transaction((reports) => {
 });
 
 // GET /api/campaign-reports — auth required; the admin dashboard's own
-// list (includes shareToken so it can render the "copy link" button).
+// list (includes shareToken/slug/passcode so it can render the "copy
+// link" button and the passcode field).
 app.get('/api/campaign-reports', requireAuth, (req, res) => {
   const rows = db.prepare(`SELECT * FROM campaign_reports ORDER BY sortOrder ASC, id ASC`).all();
   const reports = rows.map(r => {
@@ -476,16 +532,74 @@ app.post('/api/campaign-reports', requireAuth, (req, res) => {
   }
 });
 
-// GET /api/campaign-reports/by-token/:token — PUBLIC, no auth. This is the
-// one route the brand's browser actually calls (report.html reads ?t=
-// from the URL and fetches this). Deliberately the only unauthenticated
-// read on this table — knowing the token is what stands in for a login.
-app.get('/api/campaign-reports/by-token/:token', (req, res) => {
-  const row = db.prepare(`SELECT * FROM campaign_reports WHERE shareToken = ?`).get(req.params.token);
+// POST /api/campaign-reports/:id/regenerate-passcode — auth required.
+// Swaps in a fresh passcode for one report (e.g. it leaked, or the brand
+// contact changed) without touching anything else about it or requiring
+// a full save-the-whole-array round trip.
+app.post('/api/campaign-reports/:id/regenerate-passcode', requireAuth, (req, res) => {
+  const row = db.prepare(`SELECT id FROM campaign_reports WHERE id = ?`).get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Report not found' });
+  const passcode = newPasscode();
+  db.prepare(`UPDATE campaign_reports SET passcode = ?, updatedAt = ? WHERE id = ?`).run(passcode, new Date().toISOString(), req.params.id);
+  res.json({ passcode });
+});
+
+// ---- PUBLIC read side: meta (no passcode needed) → unlock (passcode
+// required) ----
+// Two steps on purpose: the gate screen on report.html needs the brand
+// name/logo to render itself BEFORE anyone has entered a passcode, but
+// the actual creators/posts data must never leave the server until the
+// passcode checks out. A single-call "here's everything" endpoint (the
+// old GET .../by-token/:token) would mean the passcode gate was purely
+// cosmetic — the data would already be sitting in the network response.
+function reportMetaPayload(row) {
+  if (!row) return null;
+  return { title: row.title, brandName: row.brandName, brandLogo: row.brandLogo };
+}
+app.get('/api/campaign-reports/meta/by-slug/:slug', (req, res) => {
+  const row = db.prepare(`SELECT title, brandName, brandLogo FROM campaign_reports WHERE slug = ?`).get(req.params.slug);
+  if (!row) return res.status(404).json({ error: 'Report not found' });
+  res.json(reportMetaPayload(row));
+});
+app.get('/api/campaign-reports/meta/by-token/:token', (req, res) => {
+  const row = db.prepare(`SELECT title, brandName, brandLogo FROM campaign_reports WHERE shareToken = ?`).get(req.params.token);
+  if (!row) return res.status(404).json({ error: 'Report not found' });
+  res.json(reportMetaPayload(row));
+});
+// POST body: { slug } or { token }, plus { passcode }. Returns the full
+// report (creators included) only once the passcode matches.
+app.post('/api/campaign-reports/unlock', (req, res) => {
+  const { slug, token, passcode } = req.body || {};
+  if (!passcode || (!slug && !token)) return res.status(400).json({ error: 'Missing slug/token or passcode' });
+  const row = slug
+    ? db.prepare(`SELECT * FROM campaign_reports WHERE slug = ?`).get(slug)
+    : db.prepare(`SELECT * FROM campaign_reports WHERE shareToken = ?`).get(token);
+  if (!row) return res.status(404).json({ error: 'Report not found' });
+  if (!row.passcode || String(passcode).trim().toUpperCase() !== String(row.passcode).toUpperCase()) {
+    return res.status(401).json({ error: 'Incorrect passcode' });
+  }
   let creators = [];
   try { creators = JSON.parse(row.creators || '[]'); } catch (err) { /* leave empty */ }
   res.json({ ...row, creators });
+});
+
+// GET /<slug>-report — the pretty public URL for a Brand Report
+// (brxdge.ca/nike-ca-report/), replacing the bare report.html?t=... link
+// as the one handed to brands going forward. Deliberately NOT a wildcard:
+// it only actually serves anything when the path is "<something>-report"
+// AND that something matches a real, currently-assigned slug in the
+// table — anything else falls through via next() exactly as if this
+// route didn't exist, so it can never shadow another page or turn a
+// genuine 404 into something else. Old ?t= links keep working unchanged
+// (see the /unlock route above) — this just adds a second way in.
+app.get('/:slugParam', (req, res, next) => {
+  const raw = req.params.slugParam;
+  if (!raw.endsWith('-report')) return next();
+  const slug = raw.slice(0, -'-report'.length);
+  if (!slug) return next();
+  const row = db.prepare(`SELECT id FROM campaign_reports WHERE slug = ?`).get(slug);
+  if (!row) return next();
+  res.sendFile(path.join(__dirname, '..', 'report.html'));
 });
 
 // --- ADMIN ACCOUNT MANAGEMENT (profile, password/username changes, other admins) ---
