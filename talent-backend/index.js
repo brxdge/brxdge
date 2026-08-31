@@ -468,6 +468,77 @@ function dedupeSlug(candidate, excludingId) {
   return `${base}-${suffix}`;
 }
 
+// ---- Live Performance panel: computed here on the SERVER, not the
+// client (see report.js's renderLivePanel, which just draws whatever this
+// sends). It needs `talents.email` to find a creator's real follower
+// counts, and that column is private — it must never be shipped to a
+// browser just so a client-side script can do this same matching itself
+// (that's exactly what the old GET /api/roster-based version did, back
+// when matching was by name; see report.js's git history / the comment
+// this replaced). Matches a Brand Report creator to a roster talent by
+// email (case-insensitive, exact) — far more reliable than the old
+// name-slugify match, since two creators can share a display name but
+// never a real email. A creator with no email on file, or one that
+// doesn't match anyone in the roster, simply doesn't contribute — this
+// falls back to a posts-by-platform breakdown (always derivable from the
+// report's own data) when nothing at all matched.
+function parseFollowers(str) {
+  if (!str) return 0;
+  const s = String(str).trim().toUpperCase().replace(/,/g, '');
+  const num = parseFloat(s);
+  if (Number.isNaN(num)) return 0;
+  if (s.endsWith('M')) return Math.round(num * 1000000);
+  if (s.endsWith('K')) return Math.round(num * 1000);
+  return Math.round(num);
+}
+function formatFollowers(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
+  return String(n);
+}
+const findTalentByEmail = db.prepare(`SELECT id FROM talents WHERE email IS NOT NULL AND TRIM(email) != '' AND lower(email) = lower(?)`);
+const socialsForTalent = db.prepare(`SELECT platform, followers FROM socials WHERE talent_id = ?`);
+function computeLiveMetrics(creators) {
+  const platformFollowers = new Map();
+  const platformPosts = new Map();
+  let matchedAny = false;
+
+  (creators || []).forEach((c) => {
+    (c.posts || []).forEach((p) => {
+      if (!p.url) return;
+      const plat = p.platform || 'Other';
+      platformPosts.set(plat, (platformPosts.get(plat) || 0) + 1);
+    });
+    const email = (c.email || '').trim();
+    if (!email) return;
+    const talent = findTalentByEmail.get(email);
+    if (!talent) return;
+    matchedAny = true;
+    socialsForTalent.all(talent.id).forEach((s) => {
+      if (!s.platform) return;
+      const followers = parseFollowers(s.followers);
+      if (!followers) return;
+      platformFollowers.set(s.platform, (platformFollowers.get(s.platform) || 0) + followers);
+    });
+  });
+
+  if (matchedAny && platformFollowers.size) {
+    const bars = [...platformFollowers.entries()]
+      .map(([label, value]) => ({ label, value, valueLabel: formatFollowers(value) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+    const total = bars.reduce((sum, b) => sum + b.value, 0);
+    return { label: 'Live Reach', bars, totalLabel: `${formatFollowers(total)} combined reach`, live: true };
+  }
+
+  const bars = [...platformPosts.entries()]
+    .map(([label, value]) => ({ label, value, valueLabel: String(value) }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+  const total = bars.reduce((sum, b) => sum + b.value, 0);
+  return { label: 'Posts by Platform', bars, totalLabel: `${total} post${total === 1 ? '' : 's'} tracked`, live: false };
+}
+
 const replaceCampaignReports = db.transaction((reports) => {
   const existing = db.prepare(`SELECT id, shareToken, slug, passcode, createdAt FROM campaign_reports`).all();
   const existingById = new Map(existing.map(r => [r.id, r]));
@@ -580,7 +651,7 @@ app.post('/api/campaign-reports/unlock', (req, res) => {
   }
   let creators = [];
   try { creators = JSON.parse(row.creators || '[]'); } catch (err) { /* leave empty */ }
-  res.json({ ...row, creators });
+  res.json({ ...row, creators, liveMetrics: computeLiveMetrics(creators) });
 });
 
 // GET /<slug>-report — the pretty public URL for a Brand Report
@@ -749,6 +820,13 @@ function getFullRoster() {
       id: t.id, name: t.name, niche: t.niche, gender: t.gender,
       photo: t.photo, coverPhoto: t.coverPhoto, gallery, bio: t.bio,
       location: t.location,
+      // PRIVATE — used server-side to match a Brand Report creator to this
+      // talent's real analytics (see computeLiveMetrics below) and shown
+      // to a signed-in admin editing the roster. Stripped from the public
+      // GET /api/roster response in the route below before it ever reaches
+      // an unauthenticated visitor's browser — never read this field on
+      // the client side of a public page.
+      email: t.email || '',
       availableFor: parseJsonArray(t.availableFor),
       contentFormats: parseJsonArray(t.contentFormats),
       bookingOptions: parseJsonArray(t.bookingOptions),
@@ -775,9 +853,9 @@ const insertTalent = db.prepare(`
   INSERT INTO talents (
     id, name, niche, gender, photo, coverPhoto, bio, location, availableFor, sortOrder,
     contentFormats, bookingOptions, audienceAgeRange, audienceGenderMale, audienceGenderFemale,
-    audienceAgeBreakdown, audienceTopLocations, audienceInterests, whyCards, hidden
+    audienceAgeBreakdown, audienceTopLocations, audienceInterests, whyCards, hidden, email
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const insertGalleryImg = db.prepare(`INSERT INTO gallery_images (talent_id, url, category, mediaType, sortOrder) VALUES (?, ?, ?, ?, ?)`);
 const insertSocial = db.prepare(`
@@ -808,7 +886,8 @@ const replaceRoster = db.transaction((roster) => {
       JSON.stringify(Array.isArray(t.audienceTopLocations) ? t.audienceTopLocations : []),
       JSON.stringify(Array.isArray(t.audienceInterests) ? t.audienceInterests : []),
       JSON.stringify(Array.isArray(t.whyCards) ? t.whyCards : []),
-      t.hidden ? 1 : 0
+      t.hidden ? 1 : 0,
+      (t.email || '').trim()
     );
     // Gallery items are normally {url, category, mediaType} objects — the
     // plain-string fallback keeps this working if anything still sends the
@@ -852,7 +931,14 @@ function isSignedIn(req) {
 }
 app.get('/api/roster', (req, res) => {
   const roster = getFullRoster();
-  res.json(isSignedIn(req) ? roster : roster.filter(t => !t.hidden));
+  if (isSignedIn(req)) return res.json(roster);
+  // Logged-out visitors (which is everyone loading the public site, and
+  // report.js's "Creator Snapshot" popup — see its loadPublicRosterOnce())
+  // get `email` stripped out entirely. It's private contact info kept
+  // only so a Brand Report creator can be matched to their real analytics
+  // server-side (see computeLiveMetrics) — it should never sit in a public,
+  // unauthenticated JSON response.
+  res.json(roster.filter(t => !t.hidden).map(({ email, ...rest }) => rest));
 });
 
 // Save Roster — requires a signed-in manager. The frontend always sends the
@@ -1066,6 +1152,61 @@ function formatCount(n){
   if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
   return String(Math.round(n));
 }
+
+// Same regex as fetchPostThumbnail()'s YouTube branch in admin.js — kept
+// in sync there rather than shared, same reasoning as everywhere else in
+// this codebase that a tiny helper gets copied instead of imported.
+function extractYouTubeVideoId(url) {
+  const m = String(url || '').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+// GET /api/youtube-video-stats?url=<a YouTube video URL> — real per-post
+// numbers for a single Brand Report post link: view count, like count,
+// comment count. All three are PUBLIC data YouTube's API hands out for
+// any public video with just an API key — no OAuth, no channel owner
+// involved, same as the existing /api/youtube-latest call this mirrors.
+// There is deliberately no `shares` field: YouTube doesn't expose a share
+// count to anyone via this API, including the video's own owner — see the
+// comment on the admin's report-post-stats UI in admin.js for why "Shares"
+// never appears for a YouTube post. Not requireAuth-gated, same as the
+// sibling /api/youtube-latest and /api/tiktok-oembed routes above (this is
+// a thin proxy over a public YouTube lookup, not privileged data).
+app.get('/api/youtube-video-stats', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'url is required' });
+    if (!YOUTUBE_API_KEY) return res.status(500).json({ error: 'YOUTUBE_API_KEY is not configured on the server' });
+    const videoId = extractYouTubeVideoId(url);
+    if (!videoId) return res.status(400).json({ error: 'Could not find a YouTube video id in that URL' });
+
+    const statsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+    );
+    const statsData = await statsRes.json();
+    const item = statsData.items && statsData.items[0];
+    if (!item) return res.status(404).json({ error: 'Video not found — it may be private, deleted, or the link is wrong' });
+
+    const views = parseInt(item.statistics.viewCount, 10) || 0;
+    // Both can be legitimately absent: a creator can hide like count, and
+    // YouTube stopped returning commentCount when comments are disabled —
+    // treat "missing" as "not shown" (0) rather than an error either way.
+    const likes = parseInt(item.statistics.likeCount, 10) || 0;
+    const comments = parseInt(item.statistics.commentCount, 10) || 0;
+
+    res.json({
+      views, likes, comments,
+      viewsLabel: formatCount(views),
+      likesLabel: formatCount(likes),
+      commentsLabel: formatCount(comments),
+      title: item.snippet?.title || '',
+      fetchedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('youtube-video-stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch video stats' });
+  }
+});
 
 app.get('/api/tiktok-oembed', async (req, res) => {
   try {
