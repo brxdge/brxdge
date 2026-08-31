@@ -68,6 +68,11 @@
       niche: existing?.niche || '',
       gender: existing?.gender || '',
       location: existing?.location || '',
+      // Private contact info — never sent to logged-out visitors (see the
+      // GET /api/roster stripping in talent-backend/index.js). Its one job
+      // right now is letting a Brand Report creator entry be matched back
+      // to this talent's real analytics by email instead of by name.
+      email: existing?.email || '',
       bio: existing?.bio || '',
       photo: existing?.photo || '',
       coverPhoto: existing?.coverPhoto || '',
@@ -188,6 +193,7 @@
           </div>
           <div class="tw-field"><label>Location</label><input type="text" id="twLocation" value="${esc(state.location)}" placeholder="e.g. Philippines"></div>
         </div>
+        <div class="tw-field"><label>Email <span class="tw-optional">(private — used to match this talent to their real analytics on Brand Reports)</span></label><input type="email" id="twEmail" value="${esc(state.email)}" placeholder="e.g. kobe@example.com"></div>
         <div class="tw-field"><label>Bio</label><textarea id="twBio" rows="3" placeholder="One or two sentences on who they are and what they make.">${esc(state.bio)}</textarea></div>
         <div class="tw-field-row">
           <div class="tw-field"><label>Profile Photo</label>
@@ -205,6 +211,7 @@
       root.querySelector('#twNiche').addEventListener('input', e => state.niche = e.target.value);
       root.querySelector('#twGender').addEventListener('change', e => state.gender = e.target.value);
       root.querySelector('#twLocation').addEventListener('input', e => state.location = e.target.value);
+      root.querySelector('#twEmail').addEventListener('input', e => state.email = e.target.value);
       root.querySelector('#twBio').addEventListener('input', e => state.bio = e.target.value);
       root.querySelector('#twPhotoFile').addEventListener('change', e => { if (e.target.files[0]) state._photoFile = e.target.files[0]; });
       root.querySelector('#twCoverFile').addEventListener('change', e => { if (e.target.files[0]) state._coverFile = e.target.files[0]; });
@@ -633,6 +640,7 @@
           niche: state.niche.trim(),
           gender: state.gender,
           location: state.location.trim(),
+          email: state.email.trim(),
           bio: state.bio.trim(),
           photo: state.photo,
           coverPhoto: state.coverPhoto,
