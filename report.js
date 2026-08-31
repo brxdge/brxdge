@@ -97,8 +97,32 @@ function escapeHtml(str){
 function slugify(str){
   return (str || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
+
+// Same parsing/formatting as script.js's parseFollowers()/formatFollowers()
+// — copied rather than shared (this page intentionally has no dependency
+// on script.js, same reasoning as the icon set above). Needed here for
+// the Live Performance panel, which sums real follower counts pulled from
+// the public roster (see computeLiveMetrics() further down).
+function parseFollowers(str){
+  if(!str) return 0;
+  const s = str.toString().trim().toUpperCase().replace(/,/g,'');
+  const num = parseFloat(s);
+  if(isNaN(num)) return 0;
+  if(s.endsWith('M')) return Math.round(num * 1000000);
+  if(s.endsWith('K')) return Math.round(num * 1000);
+  return Math.round(num);
+}
+function formatFollowers(n){
+  if(n >= 1000000) return (n/1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+  if(n >= 1000) return (n/1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
+  return String(n);
+}
 function mediaKitUrlFor(name){
-  return `talent.html?talent=${encodeURIComponent(slugify(name))}`;
+  // Root-absolute, not relative — this page is also reached at
+  // /<slug>-report/ now (see the comment on report.html's <head> asset
+  // links), and a relative "talent.html" would try to resolve under that
+  // fake path and 404.
+  return `/talent.html?talent=${encodeURIComponent(slugify(name))}`;
 }
 
 // Same fallback avatar generator used across the rest of the site
@@ -183,6 +207,7 @@ function buildMarqueeGroup(name){
 function showState(which){
   document.getElementById('loadingState').style.display = which === 'loading' ? 'flex' : 'none';
   document.getElementById('errorState').style.display = which === 'error' ? 'flex' : 'none';
+  document.getElementById('gateState').style.display = which === 'gate' ? 'flex' : 'none';
   document.getElementById('reportRoot').style.display = which === 'report' ? 'block' : 'none';
 }
 
@@ -210,6 +235,87 @@ function renderStats(report, creators){
       <div class="rs-lbl">${s.lbl}</div>
     </div>
   `).join('');
+}
+
+/* ---------------- LIVE PERFORMANCE PANEL ----------------
+   Feeds the 3D bar chart in the header's top-right (report-live-chart.js —
+   a separate ES module since it needs Three.js; see the comment on
+   #reportLivePanel in report.html for why it's split out). Prefers REAL
+   numbers: it matches each report creator back to their live roster entry
+   BY NAME (findRosterMatch(), the exact same lookup the creator overview
+   popup already uses — no id linkage exists between a report creator and
+   the roster, see admin.js's report-creator editor) and sums their real
+   `followers` per platform. "Live" here means "as current as the roster,"
+   refreshed on load and again periodically while the tab stays open —
+   there's no social-API integration in this app to push a true real-time
+   feed from. When no creator matches the roster (a manually-typed name,
+   or none of them have follower data on file), falls back to post-count-
+   by-platform — always available straight from the report itself — so the
+   panel still shows something real rather than sitting empty. */
+function computeLiveMetrics(creators, roster){
+  const platformFollowers = new Map();
+  const platformPosts = new Map();
+  let matchedAny = false;
+
+  creators.forEach(c => {
+    (c.posts || []).forEach(p => {
+      if(!p.url) return;
+      const plat = p.platform || 'Other';
+      platformPosts.set(plat, (platformPosts.get(plat) || 0) + 1);
+    });
+    const t = findRosterMatch(roster, c.name);
+    if(!t) return;
+    matchedAny = true;
+    (t.socials || []).forEach(s => {
+      if(!s.platform) return;
+      const followers = parseFollowers(s.followers);
+      if(!followers) return;
+      platformFollowers.set(s.platform, (platformFollowers.get(s.platform) || 0) + followers);
+    });
+  });
+
+  if(matchedAny && platformFollowers.size){
+    const bars = [...platformFollowers.entries()]
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+    const total = bars.reduce((sum, b) => sum + b.value, 0);
+    return { label: 'Live Reach', bars, totalLabel: `${formatFollowers(total)} combined reach`, live: true };
+  }
+
+  const bars = [...platformPosts.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+  const total = bars.reduce((sum, b) => sum + b.value, 0);
+  return { label: 'Posts by Platform', bars, totalLabel: `${total} post${total === 1 ? '' : 's'} tracked`, live: false };
+}
+
+function initLivePanel(creators){
+  const panel = document.getElementById('reportLivePanel');
+  if(!panel) return;
+
+  function refresh(roster){
+    const metrics = computeLiveMetrics(creators, roster);
+    if(!metrics.bars.length){ panel.style.display = 'none'; return; }
+    panel.style.display = 'flex';
+    document.getElementById('rlpLabel').textContent = metrics.label;
+    document.getElementById('rlpTotal').textContent = metrics.totalLabel;
+    panel.classList.toggle('rlp-is-live', metrics.live);
+    window.dispatchEvent(new CustomEvent('brxdge:report-ready', { detail: metrics }));
+  }
+
+  loadPublicRosterOnce().then(refresh);
+
+  // Re-pull the roster periodically so the panel picks up any follower
+  // update a manager makes while a brand happens to have this page open —
+  // genuinely live in the sense of "always current," not a pushed feed.
+  // Skips while the tab is hidden rather than polling a background tab
+  // for no one to see.
+  setInterval(() => {
+    if(document.hidden) return;
+    fetch(`${API}/api/roster`).then(r => r.ok ? r.json() : null).then(roster => { if(roster) refresh(roster); }).catch(() => {});
+  }, 45000);
 }
 
 function renderCreatorCards(creators){
@@ -422,6 +528,7 @@ function renderReport(report){
 
   currentCreators = Array.isArray(report.creators) ? report.creators : [];
   renderStats(report, currentCreators);
+  initLivePanel(currentCreators);
 
   const grid = document.getElementById('creatorsGrid');
   const empty = document.getElementById('creatorsEmpty');
@@ -582,18 +689,116 @@ function wireHelpWidget(){
 }
 wireHelpWidget();
 
-async function init(){
+/* ---------------- ACCESS: identify the report from the URL, then gate it
+   behind a passcode ----------------
+   Two link shapes now resolve to a report: the pretty brxdge.ca/<slug>-
+   report/ URL (the last path segment, stripped of its "-report" suffix —
+   the server only ever serves this file at that path for a slug that's
+   actually assigned, see the /:slugParam route in talent-backend/index.js)
+   and the older report.html?t=<shareToken> form, kept working for any
+   link shared before this revision. Either way, report.js never gets the
+   real data in one call anymore — it fetches non-secret meta (brand name/
+   logo, to render the gate) by whichever identifier it found, then POSTs
+   the passcode to /api/campaign-reports/unlock, which is the only place
+   creators/posts data actually comes back from. */
+let pendingIdentifier = null; // { slug: '...' } or { token: '...' }
+
+function identifierFromUrl(){
   const token = new URLSearchParams(location.search).get('t');
-  if(!token){
+  if(token) return { token };
+  const lastSegment = location.pathname.replace(/\/+$/, '').split('/').pop() || '';
+  if(lastSegment.endsWith('-report')){
+    const slug = lastSegment.slice(0, -'-report'.length);
+    if(slug) return { slug };
+  }
+  return null;
+}
+
+function rememberKey(identifier){
+  return `brxdge-report-passcode:${identifier.slug ? 'slug:' + identifier.slug : 'token:' + identifier.token}`;
+}
+
+async function unlockReport(identifier, passcode){
+  const res = await fetch(`${API}/api/campaign-reports/unlock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...identifier, passcode }),
+  });
+  if(!res.ok) return null;
+  return res.json();
+}
+
+function wireGate(){
+  document.getElementById('gateForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('gateSubmitBtn');
+    const input = document.getElementById('gatePasscodeInput');
+    const errorNote = document.getElementById('gateError');
+    const passcode = input.value.trim();
+    if(!passcode || !pendingIdentifier) return;
+    errorNote.style.display = 'none';
+    submitBtn.disabled = true;
+    try {
+      const report = await unlockReport(pendingIdentifier, passcode);
+      if(!report){
+        errorNote.textContent = "That passcode didn't match. Try again.";
+        errorNote.style.display = 'block';
+        input.select();
+        return;
+      }
+      try { sessionStorage.setItem(rememberKey(pendingIdentifier), passcode); } catch(err) { /* private browsing etc. — fine without it */ }
+      renderReport(report);
+      showState('report');
+    } catch(err){
+      errorNote.textContent = "Couldn't reach the server. Please try again.";
+      errorNote.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+wireGate();
+
+async function init(){
+  pendingIdentifier = identifierFromUrl();
+  if(!pendingIdentifier){
     showState('error');
     return;
   }
+
+  // Already unlocked this report earlier in the same browser tab session
+  // (sessionStorage — cleared when the tab closes, unlike localStorage) —
+  // skip straight past the gate instead of asking again on every reload.
+  let remembered = null;
+  try { remembered = sessionStorage.getItem(rememberKey(pendingIdentifier)); } catch(err) { /* ignore */ }
+  if(remembered){
+    const report = await unlockReport(pendingIdentifier, remembered).catch(() => null);
+    if(report){
+      renderReport(report);
+      showState('report');
+      return;
+    }
+    // Stale/rotated passcode — fall through to the normal gate below.
+  }
+
   try {
-    const res = await fetch(`${API}/api/campaign-reports/by-token/${encodeURIComponent(token)}`);
+    const metaUrl = pendingIdentifier.token
+      ? `${API}/api/campaign-reports/meta/by-token/${encodeURIComponent(pendingIdentifier.token)}`
+      : `${API}/api/campaign-reports/meta/by-slug/${encodeURIComponent(pendingIdentifier.slug)}`;
+    const res = await fetch(metaUrl);
     if(!res.ok) throw new Error('Not found');
-    const report = await res.json();
-    renderReport(report);
-    showState('report');
+    const meta = await res.json();
+
+    document.getElementById('gateBrandHeading').textContent = meta.brandName ? `${meta.brandName} Report` : 'This report is private';
+    if(meta.brandLogo){
+      const gateLogo = document.getElementById('gateLogo');
+      gateLogo.src = meta.brandLogo;
+      gateLogo.alt = meta.brandName || '';
+      document.getElementById('gateLogoWrap').style.display = 'flex';
+    }
+    document.title = `${meta.brandName || 'Campaign'} Portal | BRXDGE`;
+    showState('gate');
+    document.getElementById('gatePasscodeInput').focus();
   } catch(err){
     showState('error');
   }
