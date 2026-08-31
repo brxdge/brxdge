@@ -2939,6 +2939,52 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .services-caption{ font-size: 12.5px; padding: 0 20px 4px; }
 }
 
+/* WHO WE'RE BUILT FOR — Talent / Pages / Brands pillar row (#who-we-serve).
+   Text-only cards, no photography needed. Reuses the same "elevated tile"
+   visual language as .about-stats-bar .stat (border + radius + hover lift)
+   so it feels like an established component rather than a one-off, just
+   with a text label + description instead of a count-up number. */
+.who-we-serve-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+.who-we-serve-card{
+  padding: 30px 24px;
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  text-align: center;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.who-we-serve-card:hover{
+  transform: translateY(-4px);
+  border-color: var(--coral);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.14);
+}
+.who-we-serve-label{
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--coral);
+}
+.who-we-serve-card p{
+  margin: 12px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+@media (max-width: 720px){
+  .who-we-serve-grid{ grid-template-columns: 1fr; gap: 14px; padding: 0 20px; }
+  .who-we-serve-card{ padding: 24px 20px; }
+}
+
 .tilt-card {
   position: absolute;
   inset: 0;
@@ -5332,6 +5378,79 @@ html.dark-mode .creator-panel::before{
 @media (max-width: 560px){
   .creator-panel{ gap: 36px; }
   .creator-handles-list{ grid-template-columns: 1fr; max-width: 320px; }
+}
+
+/* ---------- FOR CREATORS / PAGES / BRANDS SLIDER WRAPPER ----------
+   Three .creator-panel cards (Creator / Page / Brand, see talent.html)
+   laid out side by side in a flex track; JS (initCreatorSlider() in
+   script.js) translateX()'s the track so only one is visible at a time.
+   Arrows overlap the card's rounded corners slightly (negative left/right,
+   pulled in on narrow screens) rather than sitting in their own gutter, so
+   the section doesn't grow any wider than the single-card version did. */
+.creator-slider{ position: relative; max-width: 1180px; margin: 0 auto; }
+.creator-slider-viewport{ overflow: hidden; border-radius: var(--radius-lg); }
+.creator-slider-track{
+  display: flex;
+  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+.creator-slide{ flex: 0 0 100%; min-width: 0; }
+
+.creator-slider-arrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--panel-line);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+.creator-slider-arrow:hover{
+  border-color: var(--coral);
+  color: var(--coral);
+  transform: translateY(-50%) scale(1.08);
+}
+.creator-slider-prev{ left: -14px; }
+.creator-slider-prev svg{ transform: rotate(180deg); }
+.creator-slider-next{ right: -14px; }
+@media (max-width: 900px){
+  .creator-slider-prev{ left: 6px; }
+  .creator-slider-next{ right: 6px; }
+}
+@media (max-width: 560px){
+  /* Not enough room to overlap a 44px circle onto the card at this width
+     without covering the headline text — drop the arrows and rely on the
+     dots + swipe gesture instead, same as the site's other mobile carousels. */
+  .creator-slider-arrow{ display: none; }
+}
+
+.creator-slider-dots{
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+}
+.creator-slider-dot{
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--panel-line);
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.creator-slider-dot.active{
+  background: var(--coral);
+  transform: scale(1.3);
 }
 
 /* ---------- FAQ (opened from a plain "FAQ" link in the footer nav row —
