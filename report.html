@@ -11,11 +11,21 @@
      results too. -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0C0C0C">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="report.css?v=7">
+<!-- Brand Reports revision: this file is now also served at
+     brxdge.ca/<slug>-report/ (see the /:slugParam route in
+     talent-backend/index.js), not just at report.html directly. Every
+     asset reference below (and the script tags near the bottom) MUST stay
+     root-absolute ("/report.css", not "report.css") — a relative path
+     would resolve against whatever URL the browser actually has, and
+     "/nike-ca-report/report.css" 404s even though the file only ever
+     lives at the repo root. Bit everyone once already (this same file,
+     loaded at the pretty URL, silently failed to pick up its own CSS/JS
+     until this got fixed) — don't relative-ize these again. -->
+<link rel="stylesheet" href="/report.css?v=8">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -39,11 +49,31 @@
   <p>Loading portal…</p>
 </div>
 
-<!-- ERROR (bad/expired/missing token) -->
+<!-- ERROR (bad/expired/missing token or slug) -->
 <div class="report-state" id="errorState" style="display:none;">
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.7" r="1.1" fill="currentColor"/></svg>
   <h1>Portal not found</h1>
   <p>This link may be incomplete, or the report may have been removed. Reach out to your BRXDGE contact for an updated link.</p>
+</div>
+
+<!-- PASSCODE GATE — shown once the link itself resolves to a real report
+     (so the brand name/logo can render here) but before the actual
+     creators/posts data has been fetched. Submitting POSTs the passcode
+     to /api/campaign-reports/unlock; the full report only comes back if
+     it matches (see wireGate() in report.js). Same .report-state
+     full-page pattern as loading/error above, not a modal — this page
+     has no other modal chrome for a gate to visually match. -->
+<div class="report-state" id="gateState" style="display:none;">
+  <div class="gate-logo-wrap" id="gateLogoWrap" style="display:none;">
+    <img id="gateLogo" class="gate-logo" alt="">
+  </div>
+  <h1 id="gateBrandHeading">This report is private</h1>
+  <p>Enter the passcode you were given to view this campaign's creators, posts, and performance.</p>
+  <form id="gateForm" class="gate-form">
+    <input type="text" id="gatePasscodeInput" placeholder="Passcode" autocomplete="off" autocapitalize="characters" required>
+    <button type="submit" class="btn-help-submit" id="gateSubmitBtn"><span>Unlock</span></button>
+  </form>
+  <p class="help-form-note is-error" id="gateError" style="display:none;">That passcode didn't match. Try again.</p>
 </div>
 
 <!-- PORTAL -->
@@ -76,6 +106,22 @@
         <div>
           <h1 id="reportBrandHeading" class="report-brand-heading"></h1>
           <p id="reportTitle" class="report-title-sub"></p>
+        </div>
+
+        <!-- LIVE PERFORMANCE — the "wide open space" to the right of the
+             title on desktop. Populated by report-live-chart.js (a
+             separate ES module, since it needs Three.js — see that file)
+             once report.js has computed real numbers to show it, via a
+             'brxdge:report-ready' CustomEvent (see the end of
+             renderReport() in report.js). Empty/hidden until then, and on
+             narrow screens it drops below the title instead (report.css). -->
+        <div class="report-live-panel" id="reportLivePanel" style="display:none;">
+          <div class="rlp-head">
+            <span class="rlp-live-dot" aria-hidden="true"></span>
+            <span id="rlpLabel">Live Performance</span>
+          </div>
+          <div class="rlp-canvas-wrap" id="rlpCanvasWrap"></div>
+          <div class="rlp-total" id="rlpTotal"></div>
         </div>
       </div>
       <p id="reportNotes" class="report-notes" style="display:none;"></p>
@@ -179,7 +225,7 @@
       <div class="creator-modal-snapshot" id="creatorModalSnapshot" style="display:none;"></div>
 
       <div class="creator-modal-profiles" id="creatorModalProfiles"></div>
-      <a class="creator-modal-mk-link" id="creatorModalMkLink" href="talent.html" target="_blank" rel="noopener noreferrer">
+      <a class="creator-modal-mk-link" id="creatorModalMkLink" href="/talent.html" target="_blank" rel="noopener noreferrer">
         <span>View Full Media Kit</span>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
@@ -235,7 +281,11 @@
   </button>
 </div>
 
-<script src="config.js?v=2"></script>
-<script src="report.js?v=6"></script>
+<!-- Root-absolute for the same reason as the stylesheet link above — this
+     page is also reached at /<slug>-report/, and a relative "report.js"
+     would 404 there. -->
+<script src="/config.js?v=2"></script>
+<script src="/report.js?v=7"></script>
+<script type="module" src="/report-live-chart.js?v=1"></script>
 </body>
 </html>
