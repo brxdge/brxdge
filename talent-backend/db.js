@@ -229,6 +229,21 @@ for (const [col, def] of Object.entries(talentRevampColumns)) {
   }
 }
 
+// Brand Reports revision, part 2: each talent can now have an email on
+// file, and a Brand Report's creator entries can carry one too (inside the
+// existing `creators` JSON blob — no schema change needed there). Matching
+// a report creator to their real roster analytics now prefers this email
+// match over the old name-based one, since two people can share a display
+// name but not an email. Nullable — a talent with no email on file just
+// can't be matched this way (falls back gracefully, see index.js).
+// IMPORTANT: `email` is treated as PRIVATE contact info, not public roster
+// data — GET /api/roster strips it from the response for anyone who isn't
+// a signed-in admin (see index.js). Never add it to getFullRoster()'s
+// public-facing fields without re-checking that stripping logic.
+if (!talentColumns.includes('email')) {
+  db.exec(`ALTER TABLE talents ADD COLUMN email TEXT`);
+}
+
 // Client revision ("Major revisions"): a Hide/Show toggle in admin lets a
 // talent be pulled from public view (roster grid + full roster overlay)
 // without deleting their record — same "add the column if it's missing"
