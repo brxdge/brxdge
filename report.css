@@ -64,6 +64,27 @@ input{ font-family:'Inter', sans-serif; }
 }
 @keyframes report-spin{ to{ transform:rotate(360deg); } }
 
+/* ---------------- PASSCODE GATE ---------------- */
+.gate-logo-wrap{
+  width:64px; height:64px; border-radius:16px; padding:10px; margin-bottom:4px;
+  display:flex; align-items:center; justify-content:center;
+  background:#FFFFFF; border:1px solid var(--panel-line);
+  box-shadow:0 8px 20px -10px rgba(12,12,12,0.25);
+}
+.gate-logo{ width:100%; height:100%; object-fit:contain; display:block; }
+.gate-form{
+  display:flex; align-items:center; gap:8px; margin-top:6px;
+  width:100%; max-width:320px;
+}
+.gate-form input{
+  flex:1; min-width:0; font-family:inherit; font-size:15px; letter-spacing:0.06em; text-align:center;
+  color:var(--text); background:var(--ink-2); border:1px solid var(--panel-line); border-radius:10px;
+  padding:11px 14px; outline:none; transition:border-color 0.15s ease;
+}
+.gate-form input:focus{ border-color:var(--muted); }
+.gate-form input::placeholder{ letter-spacing:normal; }
+.gate-form .btn-help-submit{ width:auto; flex-shrink:0; padding:11px 20px; }
+
 /* ---------------- STICKY TOP BAR ---------------- */
 .portal-topbar{
   position:sticky; top:0; z-index:20; background:var(--panel); border-bottom:1px solid var(--panel-line);
@@ -122,7 +143,51 @@ html.dark-mode .report-header{
   background:var(--ink-2); border:1px solid var(--panel-line); border-radius:100px; padding:6px 13px;
 }
 .report-eyebrow .mark{ color:var(--text); }
-.report-brand-row{ position:relative; z-index:1; display:flex; align-items:center; gap:20px; }
+.report-brand-row{ position:relative; z-index:1; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+
+/* ---------------- LIVE PERFORMANCE PANEL ----------------
+   Sits in the "wide open" space to the right of the brand title on
+   desktop (margin-left:auto pushes it there regardless of how much room
+   the logo/heading block on the left actually takes up), and drops to
+   its own full-width row below the title on narrow screens where there's
+   no spare width to share (report-brand-row already wraps — see above —
+   this just controls how much of the row this panel claims once it does). */
+.report-live-panel{
+  margin-left:auto; flex:0 0 auto;
+  display:flex; flex-direction:column; gap:8px;
+  width:300px; padding:14px 16px 12px;
+  border:1px solid var(--panel-line); border-radius:var(--radius-md);
+  background:var(--ink-2);
+}
+.rlp-head{
+  display:flex; align-items:center; gap:7px;
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted);
+}
+.rlp-live-dot{
+  width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0;
+}
+/* Only actually pulses when the numbers behind it are real roster data
+   (metrics.live === true in report.js) — post-count fallback data isn't
+   "live" in any meaningful sense, so it gets a plain static dot instead
+   of implying a live feed that isn't really there. */
+.report-live-panel.rlp-is-live .rlp-live-dot{
+  background:#3FB950; animation:rlp-pulse 1.8s ease-in-out infinite;
+}
+@keyframes rlp-pulse{
+  0%, 100%{ box-shadow:0 0 0 0 rgba(63,185,80,0.5); }
+  50%{ box-shadow:0 0 0 4px rgba(63,185,80,0); }
+}
+.rlp-canvas-wrap{
+  width:100%; height:130px; border-radius:10px; overflow:hidden;
+  background:radial-gradient(120% 140% at 30% 0%, rgba(154,154,154,0.10), transparent 70%);
+}
+.rlp-canvas-wrap canvas{ display:block; width:100%; height:100%; }
+.rlp-total{
+  font-family:'Bricolage Grotesque', sans-serif; font-size:14.5px; font-weight:800; text-align:center;
+}
+@media (max-width: 860px){
+  .report-live-panel{ width:100%; margin-left:0; }
+}
 .report-brand-logo-wrap{
   width:84px; height:84px; flex-shrink:0; border-radius:20px; padding:14px;
   display:flex; align-items:center; justify-content:center;
