@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BRXDGE | Talent Management for Creators in Canada</title>
-<meta name="description" content="BRXDGE is a Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.">
+<title>BRXDGE | Talent, Page & Brand Management in Canada</title>
+<meta name="description" content="BRXDGE is a Canadian talent management agency representing creators and pages, and partnering with brands, across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.">
 <meta name="robots" content="index, follow">
 <!-- IMPORTANT: this canonical/og:url/og:image block was hardcoded to
      "https://www.brxdge.com/" — a domain that isn't actually owned/pointed
@@ -24,8 +24,8 @@
 <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BRXDGE">
-<meta property="og:title" content="BRXDGE | Talent Management for Creators in Canada">
-<meta property="og:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube, bridging the gap between raw talent and the opportunities it deserves.">
+<meta property="og:title" content="BRXDGE | Talent, Page & Brand Management in Canada">
+<meta property="og:description" content="A Canadian talent management agency representing creators and pages, and partnering with brands, across TikTok, Instagram, and YouTube, bridging the gap between raw talent and the opportunities it deserves.">
 <meta property="og:url" content="https://brxdge-production.up.railway.app/">
 <!-- Was pointed at "assets/og-image.jpg", which doesn't exist in the repo
      (404s) — that's why link previews were falling back to the favicon/logo
@@ -38,8 +38,8 @@
 
 <!-- Twitter / X Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="BRXDGE | Talent Management for Creators in Canada">
-<meta name="twitter:description" content="A Canadian talent management agency representing creators across TikTok, Instagram, and YouTube.">
+<meta name="twitter:title" content="BRXDGE | Talent, Page & Brand Management in Canada">
+<meta name="twitter:description" content="A Canadian talent management agency representing creators and pages, and partnering with brands, across TikTok, Instagram, and YouTube.">
 <meta name="twitter:image" content="https://brxdge-production.up.railway.app/brxdge.png">
 
 <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -50,7 +50,7 @@
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "BRXDGE",
-  "description": "BRXDGE is a Canadian talent management agency representing social media creators across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.",
+  "description": "BRXDGE is a Canadian talent management agency representing social media creators and pages, and partnering with brands, across TikTok, Instagram, and YouTube, handling content strategy, brand deals, and contract negotiation so talent can focus on making things people actually want to watch.",
   "url": "https://brxdge-production.up.railway.app/",
   "logo": "https://brxdge-production.up.railway.app/brxdge.png",
   "areaServed": {
@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=64">
+<link rel="stylesheet" href="style.css?v=66">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -511,10 +511,43 @@
   </center>
 
   <div class="wrap">
-    <p class="services-caption">BRXDGE IS A TALENT MANAGEMENT AGENCY REPRESENTING CREATORS ACROSS ALL SOCIAL CHANNELS. FROM CONTENT STRATEGY AND BRAND DEALS TO CONTRACT NEGOTIATION.</p>
+    <p class="services-caption">BRXDGE IS A TALENT MANAGEMENT AGENCY REPRESENTING CREATORS AND PAGES, AND PARTNERING WITH BRANDS, ACROSS ALL SOCIAL CHANNELS. FROM CONTENT STRATEGY AND BRAND DEALS TO CONTRACT NEGOTIATION.</p>
   </div>
 </section>
 
+<!-- WHO WE'RE BUILT FOR — new pillar section per client revision: the site
+     was reading as "creators + brands" only, with pages only ever mentioned
+     in passing About-section prose. This gives Talent / Pages / Brands equal
+     top-level billing as the three groups BRXDGE works with, right under the
+     services section. Reuses the site-wide .featured-italic/.profiles-bold
+     eyebrow+heading pair (same pattern as #categories and #what-we-do above)
+     so it reads as one more section in the established rhythm, not a bolted
+     on add. Cards are text-only (label + one-line description) — no photo
+     assets needed, so nothing here depends on new photography being shot. -->
+<section id="who-we-serve" class="reveal" data-reveal="up">
+  <div class="wrap">
+    <div class="section-head" style="justify-content:center;">
+      <div style="text-align:center; width:100%;">
+        <span class="featured-italic">WHO WE'RE BUILT FOR</span>
+        <h2>TALENT. PAGES. BRANDS.</h2>
+      </div>
+    </div>
+    <div class="who-we-serve-grid">
+      <div class="who-we-serve-card">
+        <span class="who-we-serve-label">Talent</span>
+        <p>Individual creators building a personal audience and a career around it.</p>
+      </div>
+      <div class="who-we-serve-card">
+        <span class="who-we-serve-label">Pages</span>
+        <p>Niche and community accounts turning reach into a real, growing business.</p>
+      </div>
+      <div class="who-we-serve-card">
+        <span class="who-we-serve-label">Brands</span>
+        <p>Companies looking for the right voices to partner with and grow alongside.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <!-- SHOWCASE SLIDER — assembled photo grid with a continuous, looping
@@ -595,7 +628,7 @@
     <div class="about-copy">
       <span class="featured-italic" id="aboutEyebrow">WHO WE ARE</span>
       <h2 class="about-headline">Built by creators, run for creators.</h2>
-      <p>With 10+ years of combined industry experience, our founding team has closed over $20 million in brand deals and partnered with some of Canada's hottest brands, working directly with elite creators and channels across the country. BRXDGE is the natural next step in that experience, built to give creators and pages that same level of strategy and access.</p>
+      <p>With 10+ years of combined industry experience, our founding team has closed over $X million in brand deals and partnered with some of Canada's hottest brands, working directly with elite creators and channels across the country. BRXDGE is the natural next step in that experience, built to give creators and pages that same level of strategy and access.</p>
       <p>Today we manage a growing roster of creators and pages across all social channels, handling everything from content strategy to contract negotiation. From there, we build long term brand partnerships and help shape lasting careers, so our talent can focus on making things people actually want to watch. We exist to bridge the gap between raw talent and the opportunities it deserves, and we're just getting started. We plan to expand beyond creators and pages into other industries, including athletes.</p>
       <p>We're <strong>hands on, relationship first</strong>, and allergic to generic, copy paste management. Every creator and page on our roster gets a strategy built around their audience, not a template.</p>
 
@@ -604,8 +637,8 @@
           <div class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 19c.7-3.6 3-5.6 5.5-5.6s4.8 2 5.5 5.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15 5.6c1.6.4 2.7 1.7 2.7 3.2 0 1.4-1 2.7-2.3 3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M15.3 13.6c2.1.6 3.6 2.4 4.2 5.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           </div>
-          <span class="num" data-count-to="150">0</span>
-          <span class="lbl">Network Partners</span>
+          <span class="num" data-count-to="47">0</span>
+          <span class="lbl">Creators repped</span>
         </div>
         <div class="stat">
           <div class="stat-icon" aria-hidden="true">
@@ -618,7 +651,7 @@
           <div class="stat-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <span class="num" data-count-to="20000000" data-prefix="$">0</span>
+          <span class="num" data-count-to="5000000" data-prefix="$">0</span>
           <span class="lbl">Brand deals closed</span>
         </div>
       </div>
@@ -1553,22 +1586,22 @@
               <p class="bg-lede">No templates. No roster-padding. No creator treated like a line item on someone else's media kit. We measure our own success by how far the people we represent get to go.</p>
               <div class="bg-pillars">
                 <div class="bg-pillar">
-                  <div class="num">01</div>
+                  <div class="bg-pillar-num">01</div>
                   <div class="bg-pillar-title">Transparency First</div>
                   <div class="bg-pillar-desc">Real numbers, real terms, nothing buried in fine print.</div>
                 </div>
                 <div class="bg-pillar">
-                  <div class="num">02</div>
+                  <div class="bg-pillar-num">02</div>
                   <div class="bg-pillar-title">Creator-Led Strategy</div>
                   <div class="bg-pillar-desc">Built around your audience, never a template.</div>
                 </div>
                 <div class="bg-pillar">
-                  <div class="num">03</div>
+                  <div class="bg-pillar-num">03</div>
                   <div class="bg-pillar-title">Real Relationships</div>
                   <div class="bg-pillar-desc">Hands-on management, not a ticket queue.</div>
                 </div>
                 <div class="bg-pillar">
-                  <div class="num">04</div>
+                  <div class="bg-pillar-num">04</div>
                   <div class="bg-pillar-title">Long-Term Growth</div>
                   <div class="bg-pillar-desc">Careers we build for years, not one campaign.</div>
                 </div>
@@ -1815,7 +1848,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=2"></script>
-<script src="script.js?v=47"></script>
+<script src="script.js?v=48"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->

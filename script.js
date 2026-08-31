@@ -4824,19 +4824,113 @@ function scrollToContactAs(type){
   showContactForm(type);
 }
 
-// Used by talent.html's "Apply for Representation" CTA — opens the same
-// popup contact modal used for talent-booking inquiries (#contactOverlay,
+// Used by talent.html's Creator/Page/Brand slider CTAs (see #forCreators —
+// still that id for now, it predates the Page/Brand slides) — opens the
+// same popup contact modal used for talent-booking inquiries (#contactOverlay,
 // part of the shared chrome on every page) instead of navigating away, so
-// applying for representation never leaves the Talent page. talentName is
-// left blank (this isn't about a specific talent) and the title/subtitle
-// are swapped for representation-specific copy instead of openContactModal()'s
-// booking-flavored defaults.
-function openCreatorApplicationModal(){
-  document.getElementById('contactModalTitle').textContent = 'Apply for Representation';
-  document.getElementById('contactModalSub').textContent = "Tell us about your content and audience, and a real human on the team will get back to you.";
+// applying/partnering never leaves the Talent page. talentName is left
+// blank (this isn't about a specific talent) and the title/subtitle are
+// swapped for audience-specific copy instead of openContactModal()'s
+// booking-flavored defaults. Was openCreatorApplicationModal() with no
+// arguments (Creator-only); generalized to take the audience type so the
+// same function serves all three slides instead of three near-duplicates.
+const APPLICATION_MODAL_COPY = {
+  Creator: {
+    title: 'Apply for Representation',
+    sub: "Tell us about your content and audience, and a real human on the team will get back to you.",
+  },
+  Page: {
+    title: 'Apply for Representation',
+    sub: "Tell us about your page and its audience, and a real human on the team will get back to you.",
+  },
+  Brand: {
+    title: 'Partner With BRXDGE',
+    sub: "Tell us about your brand and the kind of talent or page you're looking to work with, and a real human on the team will get back to you.",
+  },
+};
+function openApplicationModal(type){
+  const copy = APPLICATION_MODAL_COPY[type] || APPLICATION_MODAL_COPY.Creator;
+  document.getElementById('contactModalTitle').textContent = copy.title;
+  document.getElementById('contactModalSub').textContent = copy.sub;
   document.getElementById('contactPopupTalent').value = '';
   contactOverlay.classList.add('show');
 }
+// Kept as a thin alias — nothing in this codebase still calls it directly
+// (talent.html's CTAs were updated to call openApplicationModal(type)
+// instead), but leaving the old name resolvable is a cheap safety net
+// against any stale cached copy of talent.html briefly still referencing it.
+function openCreatorApplicationModal(){ openApplicationModal('Creator'); }
+
+/* ---------------- FOR CREATORS / PAGES / BRANDS SLIDER (talent.html) ----------------
+   Drives the #creatorSlider carousel built in talent.html's #forCreators
+   section — three .creator-panel cards (Creator / Page / Brand) in a flex
+   track, one .creator-slide wide each. Guarded on #creatorSlider so this
+   is a no-op on index.html, which doesn't have this section. */
+function initCreatorSlider(){
+  const slider = document.getElementById('creatorSlider');
+  if (!slider) return;
+  const track = document.getElementById('creatorSliderTrack');
+  const slides = Array.from(track.children);
+  const dots = Array.from(slider.querySelectorAll('.creator-slider-dot'));
+  const prevBtn = slider.querySelector('.creator-slider-prev');
+  const nextBtn = slider.querySelector('.creator-slider-next');
+  let index = 0;
+  let autoplayTimer = null;
+
+  function goTo(i){
+    index = (i + slides.length) % slides.length;
+    track.style.transform = `translateX(-${index * 100}%)`;
+    dots.forEach((dot, di) => dot.classList.toggle('active', di === index));
+  }
+
+  function startAutoplay(){
+    stopAutoplay();
+    autoplayTimer = setInterval(() => goTo(index + 1), 6000);
+  }
+  function stopAutoplay(){
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+  }
+
+  if (prevBtn) prevBtn.addEventListener('click', () => { goTo(index - 1); stopAutoplay(); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { goTo(index + 1); stopAutoplay(); });
+  dots.forEach((dot, di) => dot.addEventListener('click', () => { goTo(di); stopAutoplay(); }));
+
+  // Touch swipe support (phones): swipe left for next, swipe right for
+  // previous — same threshold/pattern as the gallery lightbox's swipe
+  // handling elsewhere in this file.
+  let touchStartX = 0;
+  track.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].clientX;
+    stopAutoplay();
+  }, { passive: true });
+  track.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) < 40) return; // ignore small/accidental drags
+    if (dx < 0) goTo(index + 1); else goTo(index - 1);
+  }, { passive: true });
+
+  // Gentle autoplay so a visitor who never touches the slider still sees
+  // all three audiences — paused permanently the moment they interact with
+  // it themselves (arrows, dots, or a swipe), so it never fights a manual pick.
+  slider.addEventListener('mouseenter', stopAutoplay);
+
+  // Only start the clock once the slider actually scrolls into view, not
+  // the moment the page loads — this section is the last one on talent.html,
+  // well below the fold, so starting immediately would mean it's already
+  // cycled through slides (or several loops) by the time anyone scrolls
+  // down far enough to see it. Fires once, like the site's other .reveal
+  // section-entrance observer.
+  const autoplayObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        startAutoplay();
+        autoplayObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.4 });
+  autoplayObserver.observe(slider);
+}
+initCreatorSlider();
 
 // ---------------- FAQ ACCORDION ----------------
 // Independent items rather than a strict single-open accordion — opening
