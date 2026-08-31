@@ -251,6 +251,63 @@ if (!galleryColumns.includes('mediaType')) {
   db.exec(`ALTER TABLE gallery_images ADD COLUMN mediaType TEXT NOT NULL DEFAULT 'image'`);
 }
 
+// Brand Reports revision: every report now gets a human-readable public
+// URL (brxdge.ca/<slug>-report/, replacing the bare ?t=<shareToken> link)
+// and a passcode that gates viewing it — a guessable slug is no longer
+// enough of a secret on its own, the passcode is what actually stands in
+// for a login now (see GET/POST /api/campaign-reports/... in index.js).
+// Same "add the column if it's missing" migration as everywhere else in
+// this file. `slug` can't get a UNIQUE column constraint retrofitted onto
+// an existing SQLite table via ALTER TABLE, so it's a plain nullable
+// column backed by a separate partial unique index instead (below).
+const campaignReportColumns = db.prepare(`PRAGMA table_info(campaign_reports)`).all().map(c => c.name);
+if (!campaignReportColumns.includes('slug')) {
+  db.exec(`ALTER TABLE campaign_reports ADD COLUMN slug TEXT`);
+}
+if (!campaignReportColumns.includes('passcode')) {
+  db.exec(`ALTER TABLE campaign_reports ADD COLUMN passcode TEXT`);
+}
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_reports_slug ON campaign_reports(slug) WHERE slug IS NOT NULL`);
+
+// Backfill: any report saved before this revision existed has slug/passcode
+// still NULL (the ALTER TABLE above only adds the column — it can't invent
+// values for rows that already existed). Without this, an already-live
+// report like an existing "Nike CA" portal would stay unreachable at its
+// new pretty URL until someone happened to re-save it from the admin
+// dashboard. Generate both right now instead, once, so every report that
+// already exists gets a working slug + passcode the moment this file next
+// runs (deploy or restart) — same one-time-catch-up spirit as the other
+// migrations above, just generating values instead of defaulting them.
+const crypto = require('crypto');
+function slugifyBrandName(name) {
+  return String(name || 'brand')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'brand';
+}
+// Excludes visually-ambiguous characters (0/O, 1/I/L) — this gets read
+// aloud or typed off a screen by a brand contact, not pasted.
+const PASSCODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function generatePasscode() {
+  let code = '';
+  for (let i = 0; i < 6; i++) code += PASSCODE_CHARS[crypto.randomInt(PASSCODE_CHARS.length)];
+  return code;
+}
+const reportsNeedingBackfill = db.prepare(`SELECT id, brandName FROM campaign_reports WHERE slug IS NULL OR passcode IS NULL`).all();
+if (reportsNeedingBackfill.length) {
+  const existingSlugs = new Set(db.prepare(`SELECT slug FROM campaign_reports WHERE slug IS NOT NULL`).all().map(r => r.slug));
+  const updateStmt = db.prepare(`UPDATE campaign_reports SET slug = ?, passcode = ? WHERE id = ?`);
+  reportsNeedingBackfill.forEach((r) => {
+    const base = slugifyBrandName(r.brandName);
+    let slug = base;
+    let suffix = 2;
+    while (existingSlugs.has(slug)) { slug = `${base}-${suffix}`; suffix++; }
+    existingSlugs.add(slug);
+    updateStmt.run(slug, generatePasscode(), r.id);
+  });
+}
+
 // A small helper matching the shape better-sqlite3's db.transaction() gave
 // us, since node:sqlite's DatabaseSync doesn't have that convenience
 // built in — this just wraps a function in BEGIN/COMMIT/ROLLBACK.
