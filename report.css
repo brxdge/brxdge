@@ -177,11 +177,26 @@ html.dark-mode .report-header{
   0%, 100%{ box-shadow:0 0 0 0 rgba(63,185,80,0.5); }
   50%{ box-shadow:0 0 0 4px rgba(63,185,80,0); }
 }
-.rlp-canvas-wrap{
-  width:100%; height:130px; border-radius:10px; overflow:hidden;
-  background:radial-gradient(120% 140% at 30% 0%, rgba(154,154,154,0.10), transparent 70%);
+/* Donut + legend, drawn inline by renderLivePanel() in report.js — see the
+   comment on #reportLivePanel in report.html. Ring on the left, a small
+   platform-by-platform legend filling the rest of the panel's width so
+   every segment's exact value is always visible, never just hinted at by
+   its color. */
+.rlp-canvas-wrap{ display:flex; align-items:center; gap:12px; }
+.rlp-ring{ width:72px; height:72px; flex-shrink:0; }
+.rlp-ring-track{ fill:none; stroke:var(--panel-line); }
+.rlp-seg{ transition:stroke-dasharray 0.4s ease, stroke-dashoffset 0.4s ease; }
+.rlp-legend{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.rlp-legend-row{ display:flex; align-items:center; gap:6px; }
+.rlp-swatch{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.rlp-legend-row .platform-badge{ width:15px; height:15px; flex-shrink:0; border-radius:4px; }
+.rlp-legend-name{
+  flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:11.5px; font-weight:600; color:var(--text);
 }
-.rlp-canvas-wrap canvas{ display:block; width:100%; height:100%; }
+.rlp-legend-val{
+  flex-shrink:0; font-family:'Space Mono', monospace; font-size:10.5px; font-weight:700; color:var(--muted);
+}
 .rlp-total{
   font-family:'Bricolage Grotesque', sans-serif; font-size:14.5px; font-weight:800; text-align:center;
 }
@@ -290,10 +305,20 @@ html.dark-mode .report-header{
   position:absolute; top:6px; left:6px; width:22px; height:22px;
   box-shadow:0 1px 4px rgba(0,0,0,0.35);
 }
-.post-thumb-label{
+/* Holds the admin's custom label and/or real fetched stats (YouTube only —
+   see renderCreatorCards() in report.js) stacked in the same bottom
+   scrim, so a post with both doesn't need two competing overlays. */
+.post-thumb-caption{
   position:absolute; left:0; right:0; bottom:0; padding:14px 8px 6px;
-  background:linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  background:linear-gradient(to top, rgba(0,0,0,0.78), transparent);
+  display:flex; flex-direction:column; gap:2px;
+}
+.post-thumb-label{
   color:#fff; font-size:10.5px; font-weight:700; line-height:1.25;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.post-thumb-stats{
+  color:rgba(255,255,255,0.88); font-size:9.5px; font-weight:600; line-height:1.25;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
