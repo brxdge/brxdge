@@ -355,8 +355,17 @@ function renderCreatorCards(creators){
                 // avgViews/avgLikes fields elsewhere in this app.
                 const statsLine = p.stats ? `👁 ${p.stats.viewsLabel} · ❤ ${p.stats.likesLabel}` : '';
                 const tooltipParts = [p.label, p.stats ? `${p.stats.viewsLabel} views, ${p.stats.likesLabel} likes, ${p.stats.commentsLabel} comments` : ''].filter(Boolean);
+                // A button, not a link that jumps straight out to the
+                // platform — clicking opens the Post Overview modal below
+                // instead (openPostModal()), which shows whatever real
+                // data brxdge has on this post and puts the actual outbound
+                // link at the bottom as its own explicit action. Keyed by
+                // creator index + this post's URL (unique within one
+                // creator's posts) rather than a post array index, since
+                // `posts` here is filtered (only url-having posts) and
+                // wouldn't line up with currentCreators[idx].posts by index.
                 return `
-                <a class="post-thumb" href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(tooltipParts.join(' — ')) || escapeHtml(p.platform) || 'View post'}">
+                <button type="button" class="post-thumb" data-creator-idx="${idx}" data-post-url="${escapeHtml(p.url)}" title="${escapeHtml(tooltipParts.join(' — ')) || escapeHtml(p.platform) || 'View post'}">
                   <div class="post-thumb-fallback">${platformBadge(p.platform, 30)}</div>
                   ${p.thumbnail ? `<img src="${escapeHtml(p.thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
                   <span class="post-thumb-platform">${platformBadge(p.platform, 22)}</span>
@@ -366,7 +375,7 @@ function renderCreatorCards(creators){
                       ${statsLine ? `<span class="post-thumb-stats">${escapeHtml(statsLine)}</span>` : ''}
                     </span>
                   ` : ''}
-                </a>
+                </button>
               `;
               }).join('')}
             </div>
@@ -494,20 +503,209 @@ function wireCreatorModal(){
   // per-card, so it keeps working with no extra wiring after every
   // renderCreatorCards() re-render.
   document.getElementById('creatorsGrid').addEventListener('click', (e) => {
-    const btn = e.target.closest('.creator-name-link');
-    if(!btn) return;
-    const c = currentCreators[Number(btn.dataset.creatorIdx)];
-    if(c) openCreatorModal(c);
+    const nameBtn = e.target.closest('.creator-name-link');
+    if(nameBtn){
+      const c = currentCreators[Number(nameBtn.dataset.creatorIdx)];
+      if(c) openCreatorModal(c);
+      return;
+    }
+    const postBtn = e.target.closest('.post-thumb');
+    if(postBtn){
+      const c = currentCreators[Number(postBtn.dataset.creatorIdx)];
+      const p = c && Array.isArray(c.posts) ? c.posts.find(x => x.url === postBtn.dataset.postUrl) : null;
+      if(c && p) openPostModal(c, p);
+    }
   });
   document.getElementById('creatorModalClose').addEventListener('click', closeCreatorModal);
   document.getElementById('creatorModalOverlay').addEventListener('click', (e) => {
     if(e.target.id === 'creatorModalOverlay') closeCreatorModal();
   });
+  document.getElementById('postModalClose').addEventListener('click', closePostModal);
+  document.getElementById('postModalOverlay').addEventListener('click', (e) => {
+    if(e.target.id === 'postModalOverlay') closePostModal();
+  });
   document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape') closeCreatorModal();
+    if(e.key !== 'Escape') return;
+    closeCreatorModal();
+    closePostModal();
   });
 }
 wireCreatorModal();
+
+/* ---------------- POST OVERVIEW MODAL ----------------
+   Opens when a post thumbnail is clicked (see the .post-thumb button in
+   renderCreatorCards() above) instead of navigating straight to the
+   platform. Tries to show the REAL post via the platform's own official
+   embed (see loadPlatformEmbed() below); falls back to brxdge's own plain
+   card (thumbnail + label + whatever real stats are on file) when that
+   isn't possible. Either way, nothing here is ever fabricated — no made-up
+   caption, comment, or count — and the actual outbound link is always its
+   own explicit button at the bottom, never just what the click itself does. */
+function postStatItems(stats){
+  if(!stats) return [];
+  // No "Shares" here on purpose — no platform's public API exposes a
+  // share count, YouTube included, so there's nothing real to show for it.
+  return [
+    { val: stats.viewsLabel, lbl: 'Views' },
+    { val: stats.likesLabel, lbl: 'Likes' },
+    { val: stats.commentsLabel, lbl: 'Comments' },
+  ].filter(s => s.val != null);
+}
+
+// Same rule as extractYouTubeVideoId() in talent-backend/index.js — kept
+// in sync there rather than shared, same reasoning as every other tiny
+// helper duplicated between this file and the backend/admin.js.
+function extractYouTubeVideoId(url){
+  const m = String(url || '').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+// Instagram's documented integration: load embed.js once, then call
+// window.instgrm.Embeds.process() every time new .instagram-media
+// blockquotes are added to the page (it doesn't auto-watch the DOM).
+let instagramEmbedScriptPromise = null;
+function loadInstagramEmbedScript(){
+  if(window.instgrm) return Promise.resolve();
+  if(!instagramEmbedScriptPromise){
+    instagramEmbedScriptPromise = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = 'https://www.instagram.com/embed.js';
+      s.async = true;
+      // Resolve either way — a failed/blocked script load just means
+      // Embeds.process() below silently does nothing, which openPostModal()
+      // treats the same as "no live embed available" and falls back.
+      s.onload = () => resolve();
+      s.onerror = () => resolve();
+      document.body.appendChild(s);
+    });
+  }
+  return instagramEmbedScriptPromise;
+}
+
+// TikTok's embed.js scans the page for .tiktok-embed blockquotes on load
+// and replaces each with the real player — it doesn't expose a public
+// "reprocess" function the way Instagram's does, so the documented way to
+// make it notice a blockquote added AFTER the first load is to append a
+// fresh script tag (the browser serves the repeat request from cache).
+function loadTikTokEmbedScript(){
+  const s = document.createElement('script');
+  s.src = 'https://www.tiktok.com/embed.js';
+  s.async = true;
+  document.body.appendChild(s);
+}
+
+// Tries to get the platform's own real embed for this post. Resolves to
+// an HTML string to render, or null if there isn't one — a platform with
+// no such widget (Facebook, Snapchat, etc.), a request that fails (the
+// post is private/deleted, or the platform's embed service hiccups — see
+// the comments on the two proxy routes in talent-backend/index.js), or a
+// URL brxdge can't make sense of. Never throws.
+async function loadPlatformEmbed(post){
+  try {
+    if(post.platform === 'YouTube'){
+      const videoId = extractYouTubeVideoId(post.url);
+      if(!videoId) return null;
+      return `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }
+    if(post.platform === 'TikTok'){
+      const res = await fetch(`${API}/api/tiktok-oembed?url=${encodeURIComponent(post.url)}`);
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.html || null;
+    }
+    if(post.platform === 'Instagram'){
+      const res = await fetch(`${API}/api/instagram-oembed?url=${encodeURIComponent(post.url)}`);
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.html || null;
+    }
+  } catch(err){ /* fall through to null below */ }
+  return null;
+}
+
+let postModalOpenToken = 0; // bumped on every open/close, same guard pattern as creatorModalOpenToken
+function renderPostModalFallback(post){
+  const img = document.getElementById('postModalMediaImg');
+  const fallback = document.getElementById('postModalMediaFallback');
+  if(post.thumbnail){
+    img.src = post.thumbnail;
+    img.style.display = 'block';
+    fallback.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    fallback.style.display = 'flex';
+    fallback.innerHTML = platformBadge(post.platform, 44);
+  }
+  document.getElementById('postModalPlatformBadge').innerHTML = platformBadge(post.platform, 26);
+  document.getElementById('postModalMedia').style.display = 'block';
+  document.getElementById('postModalEmbedWrap').style.display = 'none';
+}
+function openPostModal(creator, post){
+  const myToken = ++postModalOpenToken;
+  document.getElementById('postModalCreatorName').textContent = creator.name || '';
+
+  const labelEl = document.getElementById('postModalLabel');
+  if(post.label && post.label.trim()){
+    labelEl.textContent = post.label;
+    labelEl.style.display = 'block';
+  } else {
+    labelEl.style.display = 'none';
+  }
+
+  const stats = postStatItems(post.stats);
+  const statsEl = document.getElementById('postModalStats');
+  if(stats.length){
+    statsEl.innerHTML = stats.map(s => `
+      <div class="post-modal-stat">
+        <div class="pm-val">${escapeHtml(s.val)}</div>
+        <div class="pm-lbl">${escapeHtml(s.lbl)}</div>
+      </div>
+    `).join('');
+    statsEl.style.display = 'flex';
+  } else {
+    statsEl.style.display = 'none';
+  }
+
+  const linkEl = document.getElementById('postModalLink');
+  linkEl.href = post.url;
+  document.getElementById('postModalLinkText').textContent = `View Post on ${post.platform || 'Platform'}`;
+
+  // Start on the plain card (instant) — the real embed, if one loads,
+  // swaps in on top of it. A brief "Loading post…" note only shows for
+  // platforms that need a network round trip (Instagram/TikTok); YouTube
+  // resolves synchronously so it never flashes at all.
+  renderPostModalFallback(post);
+  const needsFetch = post.platform === 'Instagram' || post.platform === 'TikTok';
+  document.getElementById('postModalLoading').style.display = needsFetch ? 'flex' : 'none';
+
+  document.getElementById('postModalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  loadPlatformEmbed(post).then(async (html) => {
+    if(myToken !== postModalOpenToken) return; // modal moved on since this fetch started
+    document.getElementById('postModalLoading').style.display = 'none';
+    if(!html) return; // stays on the fallback card already showing
+
+    document.getElementById('postModalEmbedWrap').innerHTML = html;
+    document.getElementById('postModalMedia').style.display = 'none';
+    document.getElementById('postModalEmbedWrap').style.display = 'block';
+
+    if(post.platform === 'Instagram'){
+      await loadInstagramEmbedScript();
+      if(myToken !== postModalOpenToken) return;
+      if(window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process();
+    } else if(post.platform === 'TikTok'){
+      loadTikTokEmbedScript();
+    }
+  });
+}
+function closePostModal(){
+  postModalOpenToken++; // invalidate any in-flight embed fetch for the post that was open
+  document.getElementById('postModalOverlay').classList.remove('show');
+  document.getElementById('postModalEmbedWrap').innerHTML = ''; // don't let a stale embed flash on the next open
+  document.body.style.overflow = '';
+}
 
 function renderReport(report){
   currentReport = report;
