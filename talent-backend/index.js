@@ -1221,10 +1221,50 @@ app.get('/api/tiktok-oembed', async (req, res) => {
       title: data.title || '',
       thumbnail_url: data.thumbnail_url || '',
       author_name: data.author_name || '',
+      // The real embeddable widget (a <blockquote class="tiktok-embed">…)
+      // — added for the Post Overview modal's "show the real post" view
+      // (see loadPlatformEmbed() in report.js). The admin's existing
+      // "Auto-fetch thumbnail" flow only ever used thumbnail_url above and
+      // still does; this is additive, not a breaking change to that.
+      html: data.html || '',
     });
   } catch (err) {
     console.error('tiktok-oembed error:', err);
     res.status(500).json({ error: 'Failed to fetch TikTok video preview' });
+  }
+});
+
+// GET /api/instagram-oembed?url=<an Instagram post/reel URL> — the real
+// embeddable widget (Instagram's own <blockquote class="instagram-media">
+// markup) for the Post Overview modal's "show the real post" view. Proxied
+// server-side for the same reason as the TikTok route above: avoids a
+// browser-side CORS failure calling graph.facebook.com directly, same
+// pattern either way.
+//
+// Meta required an access_token here from 2020 until reversing that in
+// June 2026 — this now works tokenless for a single PUBLIC post/reel (not
+// profiles, feeds, or private content), per Meta's own "tokenless oEmbed"
+// change. That's a very recent policy shift, so this is coded to fail
+// gracefully (see the catch below and the modal's fallback in report.js)
+// rather than assume it'll always succeed — if Meta tightens this again,
+// the Post Overview modal just falls back to its own card instead of
+// erroring for the visitor.
+app.get('/api/instagram-oembed', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'url is required' });
+
+    const oembedRes = await fetch(
+      `https://graph.facebook.com/v25.0/instagram_oembed?url=${encodeURIComponent(url)}&omitscript=true`
+    );
+    if (!oembedRes.ok) throw new Error('Instagram oEmbed request failed — is this a valid, public post URL?');
+    const data = await oembedRes.json();
+    if (!data.html) throw new Error('Instagram did not return an embed for this post');
+
+    res.json({ html: data.html, author_name: data.author_name || '' });
+  } catch (err) {
+    console.error('instagram-oembed error:', err.message);
+    res.status(502).json({ error: 'Could not load a live Instagram embed for this post' });
   }
 });
 
