@@ -292,9 +292,14 @@ html.dark-mode .report-header{
    public oEmbed — see fetchPostThumbnail() in admin.js). */
 .creator-posts-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:8px; }
 .post-thumb{
-  position:relative; display:block; aspect-ratio:1/1; border-radius:var(--radius-md); overflow:hidden;
+  position:relative; display:block; width:100%; aspect-ratio:1/1; border-radius:var(--radius-md); overflow:hidden;
   background:var(--ink-2); border:1px solid var(--panel-line); text-decoration:none; color:var(--text);
   transition:transform 0.15s ease, border-color 0.15s ease;
+  /* This is a <button>, not an <a>, now — clicking opens the Post
+     Overview modal rather than navigating straight out (see
+     renderCreatorCards() in report.js) — reset away the default button
+     chrome so it still just looks like a plain image tile. */
+  padding:0; font:inherit; cursor:pointer; -webkit-appearance:none; appearance:none;
 }
 .post-thumb:hover{ transform:translateY(-2px) scale(1.02); border-color:var(--muted); }
 .post-thumb img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
@@ -426,6 +431,85 @@ html.dark-mode .report-header{
 }
 .creator-modal-mk-link:hover{ opacity:0.85; }
 
+/* ---------------- POST OVERVIEW MODAL ----------------
+   Opens when a post thumbnail is clicked (see the .post-thumb button in
+   report.js) — same overlay/card mechanics as the Creator Overview modal
+   above (reuses its animation, backdrop, and close-button treatment), just
+   with a full-bleed image up top instead of a round avatar, since a post
+   IS its image. */
+.post-modal-overlay{
+  position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
+  background:rgba(10,10,10,0.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); padding:20px;
+}
+.post-modal-overlay.show{ display:flex; }
+.post-modal{
+  position:relative; width:100%; max-width:420px; max-height:min(640px, 88vh); overflow-y:auto;
+  background:var(--panel); border:1px solid var(--panel-line); border-radius:var(--radius-lg);
+  box-shadow:0 28px 64px -22px rgba(0,0,0,0.5);
+  animation:creator-modal-in 0.18s ease;
+}
+.post-modal-close{
+  position:absolute; top:14px; right:14px; z-index:5; width:32px; height:32px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.3); background:rgba(12,12,12,0.55); color:#fff;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s ease;
+}
+.post-modal-close:hover{ background:rgba(12,12,12,0.8); }
+
+.post-modal-media{
+  position:relative; aspect-ratio:1/1; overflow:hidden; background:#0C0C0C;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+.post-modal-media-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.post-modal-media-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.post-modal-platform-badge{
+  position:absolute; top:12px; left:12px; width:26px; height:26px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.4);
+}
+.post-modal-media-loading{
+  position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center;
+  background:rgba(12,12,12,0.55); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+  color:#fff; font-size:12px; font-weight:700; letter-spacing:0.02em;
+}
+
+/* The real Instagram/TikTok embed, once it loads, swaps in above the plain
+   .post-modal-media card (see loadPlatformEmbed()/openPostModal() in
+   report.js). Instagram/TikTok's own widgets set their own internal width
+   and can run considerably taller than a square (their blockquote reports
+   its own aspect ratio once embed.js processes it) — so unlike
+   .post-modal-media above, this has no fixed aspect-ratio and simply lets
+   the embed's natural height show, scrollable within the modal's own
+   max-height like everything else in .post-modal. */
+.post-modal-embed-wrap{
+  width:100%; overflow:hidden; border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  background:#0C0C0C; display:flex; justify-content:center;
+}
+.post-modal-embed-wrap iframe{ display:block; width:100%; aspect-ratio:16/9; border:0; }
+.post-modal-embed-wrap blockquote{ margin:0; max-width:100% !important; min-width:0 !important; width:100% !important; }
+.post-modal-embed-wrap iframe[src*="instagram.com"],
+.post-modal-embed-wrap iframe[src*="tiktok.com"]{ aspect-ratio:auto; }
+
+.post-modal-body{ padding:20px 24px 24px; }
+.post-modal-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; }
+.post-modal-eyebrow span{ color:var(--text); }
+.post-modal-label{ font-size:15px; font-weight:700; line-height:1.4; margin-top:6px; }
+
+.post-modal-stats{ display:flex; gap:10px; margin-top:16px; }
+.post-modal-stat{
+  flex:1; text-align:center; background:var(--ink-2); border:1px solid var(--panel-line);
+  border-radius:var(--radius-md); padding:10px 8px;
+}
+.post-modal-stat .pm-val{ font-family:'Bricolage Grotesque', sans-serif; font-size:17px; font-weight:800; line-height:1; }
+.post-modal-stat .pm-lbl{ font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; margin-top:5px; }
+
+.post-modal-link{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%; box-sizing:border-box;
+  background:var(--accent); color:var(--on-accent); border:none; border-radius:100px;
+  padding:12px 18px; font-size:14px; font-weight:700; text-decoration:none; transition:opacity 0.15s ease;
+  margin-top:18px;
+}
+.post-modal-link:hover{ opacity:0.85; }
+
 /* ---------------- FOOTER ---------------- */
 .report-footer{
   margin-top:48px; padding-top:24px; border-top:1px solid var(--panel-line);
@@ -551,6 +635,7 @@ html.dark-mode .report-header{
   .creator-modal-body{ padding:20px 20px 24px; }
   .creator-modal.has-cover .creator-modal-body{ padding-top:0; }
   .creator-modal-cover{ height:104px; }
+  .post-modal-body{ padding:18px 18px 20px; }
   .help-widget{ right:14px; bottom:14px; }
   .help-panel{ max-height:min(520px, 74vh); }
 }
