@@ -25,7 +25,7 @@
      lives at the repo root. Bit everyone once already (this same file,
      loaded at the pretty URL, silently failed to pick up its own CSS/JS
      until this got fixed) — don't relative-ize these again. -->
-<link rel="stylesheet" href="/report.css?v=10">
+<link rel="stylesheet" href="/report.css?v=12">
 <script>
   // Same "apply before first paint" pattern as the main site, and the
   // same localStorage key — if this brand contact ever also lands on
@@ -234,6 +234,59 @@
   </div>
 </div>
 
+<!-- POST OVERVIEW MODAL — opens when a post thumbnail is clicked, instead
+     of jumping straight out to the platform (see the .post-thumb button
+     and openPostModal() in report.js).
+
+     Tries to show the REAL post — for Instagram and TikTok, Meta's/
+     TikTok's own official embed widget (the actual photo/video, real
+     caption, real live like/comment counts, rendered by their own script —
+     see loadPlatformEmbed() in report.js); for YouTube, the real playable
+     video via YouTube's standard iframe embed, plus real view/like/comment
+     counts when an admin has fetched them (/api/youtube-video-stats in
+     talent-backend/index.js). If a live embed can't be loaded (the post is
+     private/deleted, the platform's embed service hiccups, or it's a
+     platform with no such widget), this falls back to brxdge's own plain
+     card — thumbnail + label + whatever real stats are on file — rather
+     than showing an error or, worse, anything invented. Nothing on this
+     page ever fabricates a caption, comment, or count that isn't real.
+     The real link out is always available at the bottom regardless of
+     which view is showing. -->
+<div class="post-modal-overlay" id="postModalOverlay">
+  <div class="post-modal" role="dialog" aria-modal="true" aria-labelledby="postModalCreatorName">
+    <button type="button" class="post-modal-close" id="postModalClose" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <!-- Fallback view: brxdge's own thumbnail card. Shown while a real
+         embed is loading, and left showing if one never arrives. -->
+    <div class="post-modal-media" id="postModalMedia">
+      <div class="post-modal-media-fallback" id="postModalMediaFallback"></div>
+      <img class="post-modal-media-img" id="postModalMediaImg" alt="" style="display:none;">
+      <span class="post-modal-platform-badge" id="postModalPlatformBadge"></span>
+      <div class="post-modal-media-loading" id="postModalLoading" style="display:none;">Loading post…</div>
+    </div>
+
+    <!-- Real view: the platform's own embed widget, swapped in over the
+         fallback above once/if it successfully loads (see openPostModal()
+         in report.js). Not fixed-aspect like the fallback — an Instagram
+         embed's real height varies with its caption/comments. -->
+    <div class="post-modal-embed-wrap" id="postModalEmbedWrap" style="display:none;"></div>
+
+    <div class="post-modal-body">
+      <div class="post-modal-eyebrow">Post by <span id="postModalCreatorName"></span></div>
+      <p class="post-modal-label" id="postModalLabel" style="display:none;"></p>
+
+      <div class="post-modal-stats" id="postModalStats" style="display:none;"></div>
+
+      <a class="post-modal-link" id="postModalLink" href="#" target="_blank" rel="noopener noreferrer">
+        <span id="postModalLinkText">View Post</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M17 7H8M17 7v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
 <!-- HELP WIDGET — floating FAQ + "message the team" launcher, bottom-right.
      The FAQ list is scoped to what a brand actually needs while looking at
      THIS portal (see HELP_FAQS in report.js), not the main site's
@@ -286,6 +339,6 @@
      page is also reached at /<slug>-report/, and a relative "report.js"
      would 404 there. -->
 <script src="/config.js?v=2"></script>
-<script src="/report.js?v=9"></script>
+<script src="/report.js?v=11"></script>
 </body>
 </html>
