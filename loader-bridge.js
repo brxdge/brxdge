@@ -65,6 +65,13 @@ import * as THREE from './assets/vendor/three.module.min.js';
   const canvas = document.getElementById('loaderCanvas');
   if (!mount || !canvas) return;
 
+  // talent.html-only revision: that page drops #loadPercent from its
+  // loader (see script.js), so its absence doubles as a reliable "which
+  // page is this" signal — reused here rather than adding a new detection
+  // mechanism. Drives the faster ASSEMBLE_SPAN_MS/FLY_MS_*/RENDER_LIFETIME_MS
+  // branch below, matching script.js's talent.html COUNT_DURATION_MS.
+  const isTalentPage = !document.getElementById('loadPercent');
+
   let renderer;
   try {
     // antialias off: MSAA is disproportionately expensive on software/
@@ -470,9 +477,12 @@ import * as THREE from './assets/vendor/three.module.min.js';
   // the audience to actually watch it happen, not just catch the tail
   // end of it. script.js's COUNT_DURATION_MS was stretched to 7000ms to
   // match; keep the two in sync if either changes again.
-  const ASSEMBLE_SPAN_MS = 2600;
-  const FLY_MS_MIN = 1300;
-  const FLY_MS_MAX = 1900;
+  // talent.html branch: proportionally scaled down to match that page's
+  // fast 2200ms COUNT_DURATION_MS in script.js (index.html's values,
+  // tuned against its own 7000ms count, are untouched).
+  const ASSEMBLE_SPAN_MS = isTalentPage ? 800 : 2600;
+  const FLY_MS_MIN = isTalentPage ? 400 : 1300;
+  const FLY_MS_MAX = isTalentPage ? 600 : 1900;
   {
     const xs = pieces.map((p) => p.restPos.x);
     const minX = Math.min.apply(null, xs);
@@ -555,7 +565,12 @@ import * as THREE from './assets/vendor/three.module.min.js';
 
   setPiecesToScattered();
 
-  const RENDER_LIFETIME_MS = 9000; // covers script.js's full ~8650ms loader lifecycle (round 4: slowed COUNT_DURATION_MS + assembly), plus a small buffer
+  // talent.html branch: covers that page's full ~3650ms fast loader
+  // lifecycle (150ms start delay + 2200ms count + 700ms shrink + 600ms
+  // fade — the exit transition itself is unchanged/not sped up), plus a
+  // small buffer. index.html's 9000ms (covering its own ~8650ms lifecycle)
+  // is untouched.
+  const RENDER_LIFETIME_MS = isTalentPage ? 4000 : 9000;
   let disposed = false;
   const start = performance.now();
   let rafId;
