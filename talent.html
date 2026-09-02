@@ -179,16 +179,17 @@
 
          talent.html-only revision: the percentage readout (#loadPercent),
          BRXDGE wordmark (#loaderWord) and POSSIBILITIES tagline are
-         dropped from this page's loader, leaving just the bridge mark (now
-         flanked by "EST." / "2026", ported from the retired hero-orbit
-         section same as index.html) on its own. script.js's counting/
-         timing loop still runs underneath exactly as before (all three
-         elements are null-guarded there), so the bridge's assembly
-         animation stays in sync and the exit sequence still fires at
-         100%. -->
+         dropped from this page's loader, leaving just the bridge mark on
+         its own — no "EST." / "2026" flank text either (client revision:
+         removed for this page; index.html's separate retired-hero-orbit
+         version is untouched). script.js's counting/timing loop still
+         runs underneath (all three elements are null-guarded there), but
+         runs much faster on this page specifically — see COUNT_DURATION_MS
+         in script.js and the matching talent.html branch in
+         loader-bridge.js — so the bridge's assembly animation stays in
+         sync and the exit sequence still fires at 100%. -->
     <div class="loader-mark-drop-zone">
       <div class="loader-mark" id="loaderMark" aria-hidden="true">
-        <span class="loader-flank loader-flank--left" aria-hidden="true">EST.</span>
         <canvas id="loaderCanvas" aria-hidden="true"></canvas>
         <div class="loader-mark-fallback" aria-hidden="true">
           <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +205,6 @@
             </defs>
           </svg>
         </div>
-        <span class="loader-flank loader-flank--right" aria-hidden="true">2026</span>
       </div>
       <div class="loader-mark-shadow" id="loaderMarkShadow" aria-hidden="true"></div>
     </div>
@@ -1284,7 +1284,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=3"></script>
-<script src="script.js?v=48"></script>
+<script src="script.js?v=49"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
@@ -1295,7 +1295,7 @@
      by the hero mark's setup, which starts around the same time. Timing
      constants here are hardcoded to match script.js's loader interval —
      see the comments in both files if that cadence ever changes. -->
-<script type="module" src="loader-bridge.js?v=7"></script>
+<script type="module" src="loader-bridge.js?v=8"></script>
 </body>
 </html>
 
