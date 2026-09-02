@@ -281,7 +281,15 @@
   // room to play out and be watched, rather than mostly finishing off-
   // screen of the percentage counter. Keep loader-bridge.js's assembly
   // timing in sync if this changes again.
-  const COUNT_DURATION_MS = 7000;
+  //
+  // talent.html-only revision: dropped back down to a fast 2200ms on this
+  // page specifically, per client request — index.html's loader (which
+  // still has #loadPercent) is untouched and keeps the full 7000ms. Same
+  // null-guard signal used everywhere else on this page (loadPercent is
+  // only ever null on talent.html) reused here rather than adding a new
+  // page-detection mechanism. Keep loader-bridge.js's talent.html branch
+  // (ASSEMBLE_SPAN_MS/FLY_MS_*/RENDER_LIFETIME_MS) in sync if this changes.
+  const COUNT_DURATION_MS = loadPercent ? 7000 : 2200;
   const countStart = performance.now();
   // Driven off elapsed wall-clock time rather than a flat per-tick
   // increment: every integer 1..100 still gets shown, in order, none
