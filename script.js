@@ -5188,3 +5188,125 @@ document.querySelectorAll('.reveal').forEach((section) => {
     tiltCards.forEach(c => c.classList.remove('card-colored'));
   });
 })();
+
+/* ---------------- ONE-SCROLL SECTION SNAP ----------------
+   Client request: a single wheel/trackpad scroll should carry the visitor
+   from wherever they are in the current section straight to the MIDDLE of
+   the next (or previous, scrolling up) section, instead of the usual
+   inch-by-inch native scroll — meant to read as smoother, more deliberate
+   section-to-section transitions.
+
+   Scope/behavior notes (documenting the calls made here so they're easy to
+   revisit later, not just silently baked in):
+     - Applies to whichever direct `main > section` elements exist on the
+       page it's loaded on — 12 on index.html, 2 on talent.html — so this
+       one implementation serves both pages via the shared script.js.
+     - Every wheel tick moves exactly one section, landing on that
+       section's own vertical center, regardless of how tall the section
+       is. That's a literal reading of "one scroll = one section"; if a
+       tall section (e.g. the testimonials/proof block) ends up feeling
+       like visitors can't linger on its top/bottom content, the fix is
+       either a taller cooldown (see COOLDOWN_MS below) or switching this
+       to only snap once a scroll nears a section boundary — flag it if
+       the current feel isn't right.
+     - Skipped entirely when the visitor has requested reduced motion
+       (prefers-reduced-motion), and on coarse-pointer/touch devices — the
+       wheel event doesn't fire the same way on touch scrolling anyway, so
+       mobile keeps its native inertial scroll untouched.
+     - Skipped while any full-screen overlay is open (media kit, full
+       roster, background/company-story overlay, contact popup, etc.),
+       detected the same way setBodyScrollLocked() above locks the page —
+       so this never fights an overlay's own internal scroll.
+     - Only listens for 'wheel'. Keyboard (arrow/space/page keys) and touch
+       swipes still get plain native scrolling, which doubles as an escape
+       hatch for anyone who wants finer-grained control than the snap
+       allows.
+     - A short cooldown after each jump absorbs the burst of extra 'wheel'
+       events a single physical trackpad swipe fires, so one gesture never
+       accidentally chains into two or three section jumps. */
+(function initOneScrollSectionSnap(){
+  const sections = Array.from(document.querySelectorAll('main > section'));
+  if (sections.length < 2) return;
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
+
+  const DURATION_MS = 700;   // length of the eased jump itself
+  const COOLDOWN_MS = 120;   // extra lockout after the jump, to swallow trailing wheel ticks
+
+  let isAnimating = false;
+  let cooldownUntil = 0;
+  let rafId = null;
+
+  function overlayOpen(){
+    return document.documentElement.style.overflow === 'hidden' ||
+           document.body.style.overflow === 'hidden';
+  }
+
+  function easeInOutCubic(t){
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function currentIndex(){
+    const viewportCenter = window.innerHeight / 2;
+    let best = 0, bestDist = Infinity;
+    sections.forEach((sec, i) => {
+      const rect = sec.getBoundingClientRect();
+      const dist = Math.abs((rect.top + rect.height / 2) - viewportCenter);
+      if (dist < bestDist) { bestDist = dist; best = i; }
+    });
+    return best;
+  }
+
+  function targetYFor(section){
+    const rect = section.getBoundingClientRect();
+    const targetCenterViewport = rect.top + rect.height / 2;
+    const raw = window.scrollY + (targetCenterViewport - window.innerHeight / 2);
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    return Math.max(0, Math.min(raw, max));
+  }
+
+  function animateTo(targetY){
+    isAnimating = true;
+    const startY = window.scrollY;
+    const distance = targetY - startY;
+    const startTime = performance.now();
+    if (rafId) cancelAnimationFrame(rafId);
+
+    function step(now){
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / DURATION_MS);
+      const y = startY + distance * easeInOutCubic(t);
+      window.scrollTo({ top: y, left: window.scrollX, behavior: 'instant' });
+      if (t < 1) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        isAnimating = false;
+        rafId = null;
+        cooldownUntil = performance.now() + COOLDOWN_MS;
+      }
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
+  function onWheel(e){
+    if (overlayOpen()) return;
+
+    if (isAnimating) { e.preventDefault(); return; }
+    if (performance.now() < cooldownUntil) { e.preventDefault(); return; }
+    if (Math.abs(e.deltaY) < 1) return;
+
+    const idx = currentIndex();
+    const dir = e.deltaY > 0 ? 1 : -1;
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= sections.length) return; // at an edge — let native overscroll happen
+
+    const targetY = targetYFor(sections[targetIdx]);
+    if (Math.abs(targetY - window.scrollY) < 2) return; // nowhere meaningful to go
+
+    e.preventDefault();
+    animateTo(targetY);
+  }
+
+  window.addEventListener('wheel', onWheel, { passive: false });
+})();
