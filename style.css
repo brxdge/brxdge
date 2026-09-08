@@ -482,7 +482,7 @@
   .about-stats-bar .stat:hover .stat-icon{
     background:var(--coral); border-color:var(--coral); color:var(--on-accent); transform:scale(1.08);
   }
-  .about-stats-bar .num{ display:block; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:clamp(26px,2.4vw,32px); font-weight:900; letter-spacing:-0.01em; color:var(--coral); line-height:1; }
+  .about-stats-bar .num{ display:block; font-family:'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:clamp(26px,2.4vw,32px); font-weight:900; letter-spacing:-0.01em; color:var(--coral); line-height:1; }
   .about-stats-bar .lbl{ display:block; margin-top:10px; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); }
   .roster-header-container { text-align: center; margin-bottom: 48px; }
 
@@ -670,14 +670,14 @@
   60%{ opacity: 1; transform: scale(1.25); }
   100%{ opacity: 1; transform: scale(1); }
 }
-.intro-text{ margin-top: 18px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 40px; letter-spacing: 0.12em; background: linear-gradient(135deg, #F0F0F0, #8A8A8A, #F0F0F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.intro-text{ margin-top: 18px; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 40px; letter-spacing: 0.12em; background: linear-gradient(135deg, #F0F0F0, #8A8A8A, #F0F0F0); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .intro-word{ display: inline-block; opacity: 0; transform: scale(0.15); transform-origin: center center; letter-spacing: 0.4em; animation: introWordExpand 0.65s cubic-bezier(0.22, 1.4, 0.36, 1) forwards 1.15s; }
 @keyframes introWordExpand{
   0%{ opacity: 0; transform: scale(0.15); letter-spacing: 0.4em; }
   70%{ opacity: 1; }
   100%{ opacity: 1; transform: scale(1); letter-spacing: 0.12em; }
 }
-.intro-sub{ margin-top: 10px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12.5px; letter-spacing: 0.3em; text-transform: uppercase; color: #888888; opacity: 0; transform: scaleX(0); transform-origin: center; animation: introSubExpand 0.5s ease forwards 1.65s; }
+.intro-sub{ margin-top: 10px; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12.5px; letter-spacing: 0.3em; text-transform: uppercase; color: #888888; opacity: 0; transform: scaleX(0); transform-origin: center; animation: introSubExpand 0.5s ease forwards 1.65s; }
 @keyframes introSubExpand{
   to{ opacity: 1; transform: scaleX(1); }
 }
@@ -799,8 +799,35 @@
 
   *{ box-sizing: border-box; }
   html{ scroll-behavior: smooth; overflow-x: hidden; }
-  body{ margin: 0; background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 55%, #DDDDDD 100%); background-attachment: fixed; color: var(--text); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; transition: background 0.5s ease, color 0.4s ease; }
-  h1,h2,h3{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; letter-spacing: -0.01em; font-weight: 800; }
+  body{ margin: 0; background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 55%, #DDDDDD 100%); background-attachment: fixed; color: var(--text); font-family: 'Arimo', 'Noto Sans Georgian', 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; transition: background 0.5s ease, color 0.4s ease; text-transform: uppercase; }
+
+  /* Client revision: every text element on the site is now uppercase by
+     default (inherited from body above) EXCEPT the About section's body
+     copy (id="about" .about-copy p — the long-form paragraphs under "Built
+     by creators, run for creators."), which stays in normal sentence case
+     for readability. This one override wins over the inherited uppercase
+     because it targets the <p> tags directly with higher specificity than
+     the bare `body` rule it's undoing. If another long-paragraph block
+     elsewhere should also be exempted later, add its selector to this
+     same rule rather than sprinkling text-transform:none around the file. */
+  #about .about-copy p{ text-transform: none; }
+
+  /* Also excluded from the blanket uppercase: free-text form fields
+     (contact form name/email/message, admin/wizard inputs, search boxes,
+     etc.) — forcing whatever a visitor TYPES into all-caps as they type it
+     would read as broken, not stylistic, so those stay normal case. Static
+     button/label/nav text is unaffected and stays uppercase via body above. */
+  input, textarea{ text-transform: none; }
+
+  /* Browsers' own default stylesheet resets text-transform to `none`
+     directly on form controls (button/select), which — being an explicit
+     rule on the element itself — wins over the inherited `uppercase` from
+     body above (inheritance only applies where nothing more specific is
+     declared, and the browser default counts). Buttons and dropdown
+     filters are just more site UI/labels, not visitor-typed text, so they
+     get uppercase explicitly here to match everything else. */
+  button, select{ text-transform: uppercase; }
+  h1,h2,h3{ font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; letter-spacing: -0.01em; font-weight: 800; }
 
 
   
@@ -1006,7 +1033,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
 
 /* Centered logo — a real link back to home, with a glowing bridge-arc mark that
    stays crisp against the glass navbar at every breakpoint. */
-.brand { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 10px; color: #D0D0D0; text-decoration: none; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.1em; white-space: nowrap; transition: opacity 0.25s ease; }
+.brand { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 10px; color: #D0D0D0; text-decoration: none; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: 0.1em; white-space: nowrap; transition: opacity 0.25s ease; }
 .brand:hover{ opacity: 0.85; }
 /* Wordmark reads as brushed chrome rather than flat white — the navbar
    itself is always dark regardless of site theme, so this fixed silver
@@ -1050,7 +1077,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
 
   .orbit-stage{ perspective: 1400px; height: 460px; display: flex; align-items: center; justify-content: center; }
   .orbit{ position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
-  .orbit-core{ position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F0F0F0, var(--coral) 55%, #1E1E1E 100%); box-shadow: 0 0 60px rgba(168,168,168,0.35), inset 0 0 30px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 34px; color: #0C0C0C; }
+  .orbit-core{ position: absolute; top: 50%; left: 50%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F0F0F0, var(--coral) 55%, #1E1E1E 100%); box-shadow: 0 0 60px rgba(168,168,168,0.35), inset 0 0 30px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 800; font-size: 34px; color: #0C0C0C; }
   .orbit-ring{ position: absolute; top: 50%; left: 50%; width: 0; height: 0; transform-style: preserve-3d; animation: ringSpin 34s linear infinite; }
   .orbit-stage:hover .orbit-ring{ animation-play-state: paused; }
   .orbit-item{ position: absolute; top: 0; left: 0; width: 88px; height: 88px; margin: -44px 0 0 -44px; transform-style: preserve-3d; }
@@ -1690,7 +1717,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   }
   .gl-back:hover{ opacity:0.6; }
   .gl-name{
-    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight:800; text-transform:uppercase;
+    font-family:'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight:800; text-transform:uppercase;
     font-size:clamp(26px, 2.4vw, 34px); line-height:1.05; letter-spacing:-0.01em; color:#111;
   }
 
@@ -1881,7 +1908,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
     position: absolute; z-index: 4;
     top: calc(50% + 150px); left: 50%; transform: translateX(-50%);
     display: inline-flex; align-items: center; gap: 7px;
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px;
+    font-family: 'Arimo', 'Noto Sans Georgian', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: 600; font-size: 15px;
     letter-spacing: 0.04em; text-transform: uppercase;
     color: #fff; text-decoration: none;
     padding-bottom: 5px;
@@ -2165,7 +2192,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
      heading (#servicesHeading) — same family/weight/letter-spacing/size,
      see h1,h2,h3 + .section-head h2 near the top of this file. */
   .mk-why-text h4{
-    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family:'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size:clamp(30px, 4vw, 44px); font-weight:800; letter-spacing:-0.01em;
     margin:0 0 18px; line-height:1.08;
   }
@@ -2927,7 +2954,7 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   margin: 0 auto;
   padding: 0 28px 8px;
   text-align: center;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: 14px;
   line-height: 1.65;
@@ -5109,7 +5136,7 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
   display: block;
   text-align: center;
   text-transform: uppercase;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 800;
   font-size: clamp(34px, 7vw, 68px);
   letter-spacing: -0.01em;
@@ -6631,7 +6658,7 @@ html.dark-mode .creator-panel::before{
   flex-shrink: 0;
 }
 .campaign-card-brand{
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(20px, 2vw, 26px);
   font-weight: 700;
   letter-spacing: -0.01em;
