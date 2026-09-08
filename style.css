@@ -2966,6 +2966,15 @@ html.dark-mode .mobile-tabbar .theme-switch .theme-switch-knob{ transform: trans
   .services-caption{ font-size: 12.5px; padding: 0 20px 4px; }
 }
 
+/* Client request: match the same font as .services-caption above (the
+   "BRXDGE IS A TALENT MANAGEMENT AGENCY..." line) on a handful of specific
+   text snippets elsewhere on the page. Deliberately a standalone utility
+   class rather than editing .category-sub/.brands-sub/.lede/who-we-serve-card p
+   directly — those classes (or bare <p> tags) are shared by other copy
+   blocks the client did NOT ask to change, so only the exact elements this
+   was requested for get tagged with this class alongside their existing one. */
+.font-match-caption{ font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+
 /* WHO WE'RE BUILT FOR — Talent / Pages / Brands pillar row (#who-we-serve).
    Text-only cards, no photography needed. Reuses the same "elevated tile"
    visual language as .about-stats-bar .stat (border + radius + hover lift)
