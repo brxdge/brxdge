@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&family=Arimo:wght@400;700;800&family=Noto+Sans+Georgian:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=68">
+<link rel="stylesheet" href="style.css?v=70">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -319,6 +319,16 @@
   </button>
 </nav>
 
+<!-- FULLPAGE SLIDE WRAPPER — desktop-only "every section is a full-screen
+     slide" treatment (client reference: night.co), see the FULLPAGE SLIDES
+     block in script.js for the controller and the matching CSS block in
+     style.css (search "FULLPAGE SLIDES"). Wraps <main> AND <footer> together
+     since both need to move as one unit when the wrapper's translateY
+     changes — the footer becomes the final "slide". Mobile/touch and
+     prefers-reduced-motion visitors never get the class the CSS/JS key off
+     of, so this wrapper is otherwise inert for them and the page scrolls
+     exactly as it always did. -->
+<div class="fp-wrapper" id="fpWrapper">
 <main>
 <!-- BRIDGING CREATORS HEADLINE — now shown FIRST (moved back to being the
      page's true entrance, per the client's requested section swap). Uses
@@ -535,15 +545,15 @@
     <div class="who-we-serve-grid">
       <div class="who-we-serve-card">
         <span class="who-we-serve-label">Talent</span>
-        <p class="services-caption">Individual creators building a personal audience and a career around it.</p>
+        <p class="font-match-caption">Individual creators building a personal audience and a career around it.</p>
       </div>
       <div class="who-we-serve-card">
         <span class="who-we-serve-label">Pages</span>
-        <p class="services-caption">Niche and community accounts turning reach into a real, growing business.</p>
+        <p class="font-match-caption">Niche and community accounts turning reach into a real, growing business.</p>
       </div>
       <div class="who-we-serve-card">
         <span class="who-we-serve-label">Brands</span>
-        <p class="services-caption">Companies looking for the right voices to partner with and grow alongside.</p>
+        <p>Companies looking for the right voices to partner with and grow alongside.</p>
       </div>
     </div>
   </div>
@@ -677,32 +687,32 @@
     <div class="category-head">
       <span class="featured-italic featured-grotesque">BUILT</span>
       <span class="profiles-bold">FOR BRANDS</span>
-      <p class="services-caption">From "who should we work with" to a campaign report in your inbox: four steps.</p>
+      <p class="category-sub">From "who should we work with" to a campaign report in your inbox: four steps.</p>
     </div>
     <div class="brand-steps">
       <div class="brand-step stagger-item">
         <span class="brand-step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         <span class="brand-step-num">01</span>
         <h3>Find the Right Talent</h3>
-        <p class="services-caption">Browse creators based on niche, platform, audience and reach.</p>
+        <p class="font-match-caption">Browse creators based on niche, platform, audience and reach.</p>
       </div>
       <div class="brand-step stagger-item">
         <span class="brand-step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="brand-step-num">02</span>
         <h3>Build Your Cast</h3>
-        <p class="services-caption">Select multiple creators and create a campaign roster.</p>
+        <p>Select multiple creators and create a campaign roster.</p>
       </div>
       <div class="brand-step stagger-item">
         <span class="brand-step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="brand-step-num">03</span>
         <h3>Launch Your Campaign</h3>
-        <p class="services-caption">Send your brief directly to the BRXDGE team.</p>
+        <p>Send your brief directly to the BRXDGE team.</p>
       </div>
       <div class="brand-step stagger-item">
         <span class="brand-step-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 15l4-4 3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="brand-step-num">04</span>
         <h3>Measure the Results</h3>
-        <p class="services-caption">Receive campaign reporting and performance insights.</p>
+        <p>Receive campaign reporting and performance insights.</p>
       </div>
     </div>
     <div class="for-brands-cta">
@@ -720,7 +730,7 @@
     <div class="category-head">
       <span class="featured-italic">WHAT WE</span>
       <span class="profiles-bold">REPRESENT</span>
-      <p class="services-caption">The lanes our roster creates in. Every talent we sign is building an audience in one of these worlds.</p>
+      <p class="category-sub font-match-caption">The lanes our roster creates in. Every talent we sign is building an audience in one of these worlds.</p>
     </div>
     <!-- Hover/focus-reveal row list — same interaction "theme" as the
          original build (tint wash + cursor-tracked floating photo preview,
@@ -857,7 +867,7 @@
   <div class="wrap brands-head">
     <span class="featured-italic">OUR </span>
     <span class="profiles-bold">PARTNERS</span>
-    <p class="services-caption">We've connected creators with brands across beauty, lifestyle, gaming, food and more.</p>
+    <p class="brands-sub font-match-caption">We've connected creators with brands across beauty, lifestyle, gaming, food and more.</p>
   </div>
   <div class="brands-marquee" id="brandsMarquee" role="region" aria-label="Brand partner names, drag or hover to browse">
     <div class="brands-marquee-track" id="brandsMarqueeTrack">
@@ -1091,6 +1101,7 @@
   </div>
   <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities. <a href="admin.html" class="footer-admin-link">Manager Login</a></p>
 </footer>
+</div><!-- /#fpWrapper -->
 
 <!-- FAQ WIDGET — used to be an inline section before Contact, then a
      popup opened by an always-floating bottom-right button; the floating
@@ -1848,7 +1859,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=3"></script>
-<script src="script.js?v=51"></script>
+<script src="script.js?v=52"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
