@@ -4294,12 +4294,18 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 .tr-load-more-btn{ padding: 14px 36px; font-size: 13.5px; letter-spacing: 0.04em; text-transform: uppercase; }
 
-/* ---------- OVERLAY FOOTER ---------- */
+/* ---------- .tr-footer (ENHANCED FOOTER TREATMENT) ----------
+   Originally built for the talent-roster overlay's own footer copy only
+   (hence the name), .tr-footer is now ALSO applied directly to the real
+   site <footer> at the bottom of index.html — client request: "make the
+   footer of the main page into this [the overlay footer's look]". Both
+   footers share every rule below; see the HTML comment on the real
+   footer in index.html for the reasoning on reusing this class as-is
+   rather than duplicating its rules under a new name. */
 /* .brand-name's default gradient is fixed-light (meant for the navbar,
    which is always dark regardless of site theme — see the comment above
-   its rule). This footer sits on the theme-aware .mediakit-overlay
-   background instead, so a fixed-light gradient would all but disappear
-   in light mode.
+   its rule). This footer sits on the theme-aware --ink page background
+   (or, inside the overlay, the theme-aware .mediakit-overlay background)
    Client revision: an earlier pass swapped in the --chrome var for that
    reason, but --chrome is tuned for large/textured surfaces (the 3D mark,
    big headline text sitting on a busy panel) — several of its stops go
@@ -4362,14 +4368,16 @@ html.dark-mode .mediakit-overlay::after{ mix-blend-mode: screen; opacity: 0.65; 
 }
 
 /* Client revision: "add the Bridge orbit at the middle" — the same chrome
-   3D bridge mark used in the hero (see brand-orbit.js), mounted a second
-   time as a small, still, purely decorative centerpiece between the brand
-   mark and the nav links. Restructured .footer-grid into the same
-   1fr/auto/1fr centered-middle-column technique already used for the
-   rebuilt toolbar above (.talent-search-wrap), so the mark sits at the
-   row's true visual center regardless of how wide the brand/links zones
-   are — scoped to .tr-footer specifically so the main site footer's plain
-   2-item flex layout is untouched. */
+   3D bridge mark used in the hero (see brand-orbit.js), mounted as a
+   small, still, purely decorative centerpiece between the brand mark and
+   the nav links. Restructured .footer-grid into the same 1fr/auto/1fr
+   centered-middle-column technique already used for the rebuilt toolbar
+   above (.talent-search-wrap), so the mark sits at the row's true visual
+   center regardless of how wide the brand/links zones are — scoped to
+   .tr-footer, which by now (see the section comment above) means both the
+   real site footer and the talent-roster overlay's footer copy, keeping
+   the plain 2-item flex layout as the fallback for anything that doesn't
+   opt into this class. */
 /* Pre-existing quirk surfaced while building this: both .footer-grid and
    .fineprint below also carry the shared .wrap class, which — inside this
    overlay — picks up .talent-roster-overlay .wrap's 108px/80px top/bottom
