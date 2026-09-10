@@ -715,3 +715,12 @@ initBrandOrbitMark('heroOrbitMark', 'heroOrbitCanvas', { interactive: true });
 // initBrandOrbitMark), so this is safe on any page that doesn't have the
 // overlay footer markup.
 initBrandOrbitMark('footerOrbitMark', 'footerOrbitCanvas', { interactive: false });
+
+// Client revision: "make the footer of the main page into this" — the
+// real site footer (index.html's own <footer>, now also carrying the
+// .tr-footer class) gets the same still/decorative mark as a third mount,
+// with its own mount/canvas ids (mainFooterOrbitMark/-Canvas) since the
+// talent-roster overlay's #footerOrbitMark already exists elsewhere on
+// that same page — two separate WebGL scenes coexisting, each independently
+// no-op-safe on any page missing its markup.
+initBrandOrbitMark('mainFooterOrbitMark', 'mainFooterOrbitCanvas', { interactive: false });
