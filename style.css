@@ -772,6 +772,28 @@
   font-size: clamp(24px, 6vw, 58px);
 }
 
+/* Client request: swap the "WHO WE'RE BUILT FOR" eyebrow (Who We Serve
+   section) off the site's default Cormorant Garamond italic-serif look
+   and onto a bold sans treatment matching the h1,h2,h3 heading font
+   (Inter, standing in for Helvetica Now Display Bold — see that rule near
+   the top of this file; same free-license substitution used sitewide).
+   Scoped to just this section's eyebrow, not the shared .featured-italic
+   class itself, so the many other section eyebrows that reuse that class
+   (About, Categories, flagship proof/creator panels, etc.) keep their
+   existing serif-italic voice untouched. Sized/line-heighted down from
+   the base class's big-display clamp+0.8 line-height — at this weight and
+   family it reads as a small label over the TALENT. PAGES. BRANDS.
+   headline rather than a second competing headline. */
+#who-we-serve .featured-italic{
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-size: clamp(15px, 2.4vw, 22px);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
 .featured-italicc { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 64px; display: block; line-height: 0.8; text-align: center; }
 
 .featured-italiccc {
@@ -7711,3 +7733,75 @@ html.dark-mode .creator-panel::before{
   .bg-stats-bar .stat:nth-child(n+3){ padding-left: 0; }
   .bg-headline{ font-size: clamp(30px, 9vw, 44px); line-height: 1.06; }
 }
+
+/* =========================================================
+   FULLPAGE SLIDES (client reference: night.co)
+   Desktop-only "every section is a full-screen slide" treatment.
+   #fpWrapper (wrapping <main>+<footer> together — see the HTML comment
+   there) gets translateY'd by initFullpageSlides() in script.js to bring
+   exactly one slide (one main>section, or the footer as the final slide)
+   fully into view at a time. That same script is what flips the
+   .fp-active class onto <html> that every rule below keys off — so this
+   whole block stays fully inert until the JS decides fullpage mode should
+   actually run (desktop-class pointer, no reduced-motion, 2+ slides
+   found). Mobile/touch and reduced-motion visitors never get that class,
+   so the page scrolls exactly as it always did for them, completely
+   unchanged by anything below.
+   Sections/footer are forced to exactly one viewport tall with their own
+   internal scroll (overflow-y:auto) for whichever ones have more content
+   than that — the wheel handler in script.js only advances to the next/
+   previous slide once a section's own content has been scrolled to its
+   top/bottom edge, so nothing is ever clipped or unreachable, it just
+   scrolls inside itself first, same as fullPage.js-style sites handle an
+   oversized section. ========================================================= */
+html.fp-active,
+html.fp-active body{
+  height: 100%;
+  overflow: hidden;
+}
+html.fp-active #fpWrapper{
+  will-change: transform;
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+html.fp-active #fpWrapper > main > section,
+html.fp-active #fpWrapper > footer{
+  height: 100vh;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+/* Footer is short by design — center its content in the slide instead of
+   leaving it pinned to the top of an otherwise mostly-empty screen. */
+html.fp-active #fpWrapper > footer{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Same vertical progress-dot language as .bg-progress/.bg-progress-dot
+   (the Company Background story overlay) reused here for visual
+   consistency — one more dot column, just for the top-level page instead
+   of that overlay's own inner story. */
+.fp-dots{
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.fp-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--panel-line);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.fp-dot:hover{ background: var(--muted); }
+.fp-dot.active{ background: var(--coral); transform: scale(1.35); }
