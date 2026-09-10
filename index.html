@@ -76,7 +76,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;1,600&family=Montserrat:wght@900&family=Arimo:wght@400;700;800&family=Noto+Sans+Georgian:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=71">
+<link rel="stylesheet" href="style.css?v=72">
 <script>
   // Applied before first paint so the loader/site never flashes the wrong theme.
   (function () {
@@ -1064,7 +1064,26 @@
 </section>
 </main>
 
-<footer>
+<!-- Client revision: "make the footer of the main page into this" — the
+     client pointed at the talent-roster overlay's own footer (the .tr-footer
+     block further down this file, id="talentRosterOverlay"), which already
+     has this exact treatment: bigger chrome-gradient wordmark, the same
+     still/decorative 3D bridge mark from the hero centered between the
+     brand and the nav links, and a 3-column centered grid instead of the
+     plain 2-item flex row. Reusing .tr-footer here directly (rather than
+     copying its rules under a new name) so this stays pixel-identical to
+     that reference and to any future tweaks made there — it's a bit of a
+     misnomer now that it also styles the real page footer, not just the
+     talent-roster one, but see the big comment above .tr-footer's rules in
+     style.css for the full reasoning.
+     Unlike that overlay copy, this keeps the FAQ trigger button (client:
+     "don't forget the FAQ") — the overlay's version deliberately dropped it
+     since #faqTrigger must stay unique per page and this real footer's copy
+     already owns that id. Also unlike the overlay copy, the 3D mark here
+     needs its OWN mount/canvas ids (mainFooterOrbitMark/-Canvas) since the
+     talent-roster overlay's #footerOrbitMark already exists elsewhere on
+     this same page (see brand-orbit.js) — reusing those ids would collide. -->
+<footer class="tr-footer">
   <div class="wrap footer-grid">
     <div class="brand">
       <svg class="brand-mark" width="32" height="32" viewBox="0 0 100 100">
@@ -1083,6 +1102,30 @@
       </svg>
       <span class="brand-name">BRXDGE</span>
     </div>
+
+    <!-- Same still/decorative bridge mark as .tr-footer-orbit elsewhere —
+         not a button, no click handler (brand-orbit.js mounts it with
+         interactive:false). -->
+    <div class="tr-footer-orbit" aria-hidden="true">
+      <div class="footer-orbit-mark" id="mainFooterOrbitMark">
+        <canvas id="mainFooterOrbitCanvas" aria-hidden="true"></canvas>
+        <div class="footer-orbit-fallback" aria-hidden="true">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 64 Q50 28 92 64" fill="none" stroke="url(#footerFallbackGradMain)" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="8" cy="67" r="5" fill="url(#footerFallbackGradMain)"/>
+            <circle cx="92" cy="67" r="5" fill="url(#footerFallbackGradMain)"/>
+            <defs>
+              <linearGradient id="footerFallbackGradMain" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#F5F5F5"/>
+                <stop offset="50%" stop-color="#9A9A9A"/>
+                <stop offset="100%" stop-color="#F5F5F5"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+
     <div class="footer-links">
       <a href="#home">Home</a><a href="#about">About</a><a href="talent.html">Talent</a>
       <a href="#what-we-do">Services</a><a href="#contact">Contact</a>
@@ -1852,7 +1895,7 @@
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
-<script type="module" src="brand-orbit.js?v=7"></script>
+<script type="module" src="brand-orbit.js?v=8"></script>
 <!-- Animated 3D brand mark (loader) — its own short-lived scene/module,
      deliberately NOT shared with brand-orbit.js: the loader mark is a
      one-shot ~6.25s render that must never compete with or be torn down
