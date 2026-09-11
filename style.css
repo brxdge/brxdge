@@ -75,7 +75,7 @@
   to{ opacity: 1; transform: scaleX(1); }
 }
 
-/* "BRIDGING CREATORS TO BIGGER OPPORTUNITIES" headline + the CTA buttons —
+/* "BRIDGING TALENT TO BIGGER OPPORTUNITIES" headline + the CTA buttons —
    now inside #home (the first section again, per the client's requested
    section swap). .hero-title/.hero-title-mask/.hero-title-line are reused
    for a matching look; the per-line mask reveal is driven by the generic
@@ -120,7 +120,7 @@
   animation: chrome-sweep 10s ease-in-out infinite alternate;
 }
 .services-intro .hero-actions{ margin-top: 44px; justify-content: center; }
-/* Sub-headline under "BRIDGING CREATORS TO BIGGER OPPORTUNITIES" — reuses
+/* Sub-headline under "BRIDGING TALENT TO BIGGER OPPORTUNITIES" — reuses
    the .lede class already established in the Contact section, scoped here
    since that class's other rule (".hero p.lede") targets a different,
    now-unused spot in the markup and isn't sized for this context. */
