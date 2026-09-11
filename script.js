@@ -1341,7 +1341,7 @@ function buildComingSoonEmptyState(){
           <path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/>
         </svg>
       </span>
-      <span class="roster-empty-title">Request our full roster</span>
+      <button type="button" class="roster-empty-title" onclick="openApplicationModal('Roster')">Request our full roster</button>
       <p class="roster-empty-sub">${isManager ? "We're building out the BRXDGE talent roster — add the first profile with the button above." : "Reach out and we'll share our full roster of creators and pages."}</p>
     </div>
   `;
@@ -4854,6 +4854,14 @@ const APPLICATION_MODAL_COPY = {
   Brand: {
     title: 'Partner With BRXDGE',
     sub: "Tell us about your brand and the kind of talent or page you're looking to work with, and a real human on the team will get back to you.",
+  },
+  // Used by the "Request our full roster" button in the roster's empty
+  // state (see buildComingSoonEmptyState() above renderRoster()) — a
+  // visitor landing on an empty/still-building roster can still ask for
+  // the full lineup by email instead of hitting a dead end.
+  Roster: {
+    title: 'Request Our Full Roster',
+    sub: "Send us a message and we'll share our full roster of creators and pages.",
   },
 };
 function openApplicationModal(type){
