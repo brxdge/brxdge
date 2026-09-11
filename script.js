@@ -1341,8 +1341,8 @@ function buildComingSoonEmptyState(){
           <path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/>
         </svg>
       </span>
-      <span class="roster-empty-title">Coming Soon</span>
-      <p class="roster-empty-sub">We're building out the BRXDGE talent roster${isManager ? ' — add the first profile with the button above.' : '. Check back soon.'}</p>
+      <span class="roster-empty-title">Request our full roster</span>
+      <p class="roster-empty-sub">${isManager ? "We're building out the BRXDGE talent roster — add the first profile with the button above." : "Reach out and we'll share our full roster of creators and pages."}</p>
     </div>
   `;
 }
