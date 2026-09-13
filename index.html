@@ -241,17 +241,17 @@
   <!-- Left column -->
   <div class="nav-col nav-col-left">
     <div class="nav-links left-links">
-      <a href="#home"><span>Home</span></a>
-      <a href="#about"><span>About</span></a>
+      <a href="/home"><span>Home</span></a>
+      <a href="/about"><span>About</span></a>
       <a href="#" id="navStoryBtn"><span>Our Story</span></a>
-      <a href="talent.html"><span>Talent</span></a>
+      <a href="/talent"><span>Talent</span></a>
     </div>
     <!-- Mobile-only: single "Contact" link shown top-left instead of the full nav-links list -->
-    <a href="#contact" class="mobile-top-link">Contact</a>
+    <a href="/contact" class="mobile-top-link">Contact</a>
   </div>
 
   <!-- Center Logo -->
-  <a href="#home" class="brand" aria-label="BRXDGE, back to home">
+  <a href="/home" class="brand" aria-label="BRXDGE, back to home">
     <span class="brand-mark-wrap">
       <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
         <path class="brand-mark-arc" d="M8 64 Q50 28 92 64" fill="none" stroke="url(#navMarkGrad)" stroke-width="8" stroke-linecap="round"/>
@@ -272,8 +272,8 @@
   <!-- Right column -->
   <div class="nav-col nav-col-right right-group">
     <div class="nav-links right-links">
-      <a href="#what-we-do"><span>Services</span></a>
-      <a href="#contact"><span>Contact</span></a>
+      <a href="/services"><span>Services</span></a>
+      <a href="/contact"><span>Contact</span></a>
     </div>
 
     <!-- NAV TALENTS — shows the current campaign cast (talent added via the
@@ -310,10 +310,10 @@
 
 <!-- MOBILE BOTTOM TAB BAR (replaces the old hamburger + slide-down menu below 860px) -->
 <nav class="mobile-tabbar" id="mobileTabbar">
-  <a href="#home">Home</a>
-  <a href="#about">About</a>
-  <a href="talent.html">Talent</a>
-  <a href="#what-we-do">Services</a>
+  <a href="/home">Home</a>
+  <a href="/about">About</a>
+  <a href="/talent">Talent</a>
+  <a href="/services">Services</a>
   <button class="theme-switch" id="themeToggleMobile" aria-label="Toggle dark mode" role="switch" aria-checked="false" type="button">
     <svg class="ts-icon ts-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <svg class="ts-icon ts-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -350,11 +350,11 @@
       </h1>
 
       <div class="hero-actions hero-anim-item">
-        <button class="btn btn-primary" onclick="window.location.href='talent.html'">
+        <button class="btn btn-primary" onclick="window.location.href='/talent'">
           <span class="btn-label">Explore Talent</span>
           <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button class="btn btn-ghost" onclick="scrollToSection('contact')">
+        <button class="btn btn-ghost" onclick="navigateToRoute('contact')">
           <svg class="btn-icon btn-icon-lead" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-2.5 2.5a3.5 3.5 0 0 0 5 5l1-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <span class="btn-label">Work With BRXDGE</span>
         </button>
@@ -1129,8 +1129,8 @@
     </div>
 
     <div class="footer-links">
-      <a href="#home">Home</a><a href="#about">About</a><a href="talent.html">Talent</a>
-      <a href="#what-we-do">Services</a><a href="#contact">Contact</a>
+      <a href="/home">Home</a><a href="/about">About</a><a href="/talent">Talent</a>
+      <a href="/services">Services</a><a href="/contact">Contact</a>
       <button type="button" class="footer-faq-link" id="faqTrigger" aria-expanded="false" aria-controls="faqPanel">FAQ</button>
     </div>
   </div>
@@ -1586,8 +1586,8 @@
       </div>
 
       <div class="footer-links">
-        <a href="#home">Home</a><a href="#about">About</a>
-        <a href="#what-we-do">Services</a><a href="#contact">Contact</a>
+        <a href="/home">Home</a><a href="/about">About</a>
+        <a href="/services">Services</a><a href="/contact">Contact</a>
       </div>
     </div>
     <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities</p>
@@ -1893,7 +1893,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=3"></script>
-<script src="script.js?v=56"></script>
+<script src="script.js?v=57"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
