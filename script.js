@@ -4820,6 +4820,88 @@ function scrollToSection(id){
   if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+/* ---------------- CLEAN URL ROUTING (Home/About/Services/Contact) ----------------
+   Client revision: the address bar was showing brxdge.ca/index.html#about
+   (or, from talent.html, a #hash tacked onto a cross-page index.html link)
+   — wanted brxdge.ca/about instead, no #hash, no .html. index.html is still
+   one physical page with plain #id section anchors under the hood; this
+   just keeps the address bar on the clean path that maps to whichever
+   section is showing, and does the actual scrolling as a same-page
+   scrollIntoView() + history.pushState() instead of a real navigation, so
+   Home/About/Services/Contact never trigger a full reload of the exact
+   same document. See talent-backend/index.js's CLEAN_SECTION_ROUTES for the
+   server half of this (what makes a fresh load/refresh/shared link at one
+   of these paths work with no JS at all) — the two lists must stay in
+   sync. talent.html isn't in this map: it's now linked to directly as its
+   own real route (/talent, see index.js) rather than a section on this
+   page, so a real navigation is exactly right for it. */
+const SECTION_ROUTES = { home: 'home', about: 'about', services: 'what-we-do', contact: 'contact' };
+
+// Scrolls to the section this route maps to and swaps the address bar to
+// match, without a real navigation — history.pushState() still creates a
+// normal history entry, so the browser's Back/Forward buttons work exactly
+// like they would for a real page (see the popstate listener below).
+function navigateToRoute(route){
+  const id = SECTION_ROUTES[route];
+  if(!id) return false;
+  scrollToSection(id);
+  if(location.pathname !== '/' + route) history.pushState({ route }, '', '/' + route);
+  return true;
+}
+
+// Every nav link/brand logo/footer link that used to point at a #hash (see
+// index.html) now points at its clean path instead — this intercepts those
+// clicks so they scroll+pushState in place rather than asking the browser
+// to fully reload the exact same index.html it's already sitting on.
+// Delegated on `document` (one listener, not one per link) so any future
+// link reusing the same /home-/about-/services-/contact href pattern picks
+// this up for free.
+document.addEventListener('click', (e) => {
+  if(e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest('a');
+  if(!a) return;
+  const route = (a.getAttribute('href') || '').replace(/^\//, '');
+  const id = SECTION_ROUTES[route];
+  if(!id) return;
+  // Only intercept when the target section actually lives on THIS page —
+  // talent.html carries these same clean-path links to get back to
+  // index.html's sections, and there they should do a real cross-page
+  // navigation (the section id genuinely isn't in this document) rather
+  // than silently no-op.
+  if(!document.getElementById(id)) return;
+  e.preventDefault();
+  navigateToRoute(route);
+});
+
+// A pushState navigation never fires a real page load, so Back/Forward
+// between clean paths (Home -> About -> Back) has to be re-synced by hand —
+// this is that: land back on whichever section the URL now points at.
+window.addEventListener('popstate', () => {
+  const route = location.pathname.replace(/^\//, '');
+  scrollToSection(SECTION_ROUTES[route] || 'home');
+});
+
+// Lands the visitor on the right section when index.html is loaded
+// directly at one of these clean paths — typed in, refreshed, or a shared
+// /about-style link — rather than always starting at the top on Home's
+// section regardless of which path was actually requested.
+(function landOnRouteFromInitialUrl(){
+  const route = location.pathname.replace(/^\//, '');
+  const id = SECTION_ROUTES[route];
+  if(!id || id === 'home') return; // already at the top, nothing to do
+  document.addEventListener('DOMContentLoaded', () => {
+    // Section layout isn't final the instant the DOM finishes parsing
+    // (reveal-triggered sizing, images below the fold, etc.) — same
+    // ordering constraint the ?talent= deep link elsewhere in this file
+    // waits on. A short delay is enough since this only needs layout to
+    // have settled, not every image to have finished downloading.
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if(el) el.scrollIntoView({ block: 'start' });
+    }, 50);
+  });
+})();
+
 // Used by the "Build Your Campaign →" (For Brands) and "Apply for
 // Representation →" (For Creators) CTAs — scrolls to the contact section
 // AND skips straight past the Creator/Management chooser to the form,
@@ -4828,7 +4910,7 @@ function scrollToSection(id){
 // showContactForm() (see the chooser wiring above) instead of duplicating
 // the reveal/pre-select logic here.
 function scrollToContactAs(type){
-  scrollToSection('contact');
+  navigateToRoute('contact');
   showContactForm(type);
 }
 
