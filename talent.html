@@ -11,7 +11,7 @@
      deployment URL from before brxdge.ca was bought and pointed at this
      deployment, silently undermining brxdge.ca's own search visibility.
      Now pointed at the real live domain. -->
-<link rel="canonical" href="https://brxdge.ca/talent.html">
+<link rel="canonical" href="https://brxdge.ca/talent">
 <meta name="theme-color" content="#0C0C0C">
 
 <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack, etc.) -->
@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="BRXDGE">
 <meta property="og:title" content="BRXDGE Talent | Meet the Creators & Pages We Represent">
 <meta property="og:description" content="Browse the creators and pages represented by BRXDGE, a Canadian talent management agency spanning TikTok, Instagram, and YouTube.">
-<meta property="og:url" content="https://brxdge.ca/talent.html">
+<meta property="og:url" content="https://brxdge.ca/talent">
 <!-- Was pointed at "assets/og-image.jpg", which doesn't exist in the repo
      (404s) — that's why link previews were falling back to the favicon/logo
      instead of showing a real preview image. Using the logo that does
@@ -209,17 +209,17 @@
   <!-- Left column -->
   <div class="nav-col nav-col-left">
     <div class="nav-links left-links">
-      <a href="index.html#home"><span>Home</span></a>
-      <a href="index.html#about"><span>About</span></a>
+      <a href="/home"><span>Home</span></a>
+      <a href="/about"><span>About</span></a>
       <a href="#" id="navStoryBtn"><span>Our Story</span></a>
       <a href="#roster"><span>Talent</span></a>
     </div>
     <!-- Mobile-only: single "Contact" link shown top-left instead of the full nav-links list -->
-    <a href="index.html#contact" class="mobile-top-link">Contact</a>
+    <a href="/contact" class="mobile-top-link">Contact</a>
   </div>
 
   <!-- Center Logo -->
-  <a href="index.html" class="brand" aria-label="BRXDGE, back to home">
+  <a href="/home" class="brand" aria-label="BRXDGE, back to home">
     <span class="brand-mark-wrap">
       <svg class="brand-mark" viewBox="0 0 100 100" aria-hidden="true">
         <path class="brand-mark-arc" d="M8 64 Q50 28 92 64" fill="none" stroke="url(#navMarkGrad)" stroke-width="8" stroke-linecap="round"/>
@@ -240,8 +240,8 @@
   <!-- Right column -->
   <div class="nav-col nav-col-right right-group">
     <div class="nav-links right-links">
-      <a href="index.html#what-we-do"><span>Services</span></a>
-      <a href="index.html#contact"><span>Contact</span></a>
+      <a href="/services"><span>Services</span></a>
+      <a href="/contact"><span>Contact</span></a>
     </div>
 
     <!-- NAV TALENTS — shows the current campaign cast (talent added via the
@@ -278,10 +278,10 @@
 
 <!-- MOBILE BOTTOM TAB BAR (replaces the old hamburger + slide-down menu below 860px) -->
 <nav class="mobile-tabbar" id="mobileTabbar">
-  <a href="index.html#home">Home</a>
-  <a href="index.html#about">About</a>
+  <a href="/home">Home</a>
+  <a href="/about">About</a>
   <a href="#roster">Talent</a>
-  <a href="index.html#what-we-do">Services</a>
+  <a href="/services">Services</a>
   <button class="theme-switch" id="themeToggleMobile" aria-label="Toggle dark mode" role="switch" aria-checked="false" type="button">
     <svg class="ts-icon ts-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <svg class="ts-icon ts-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -463,8 +463,8 @@
       <span class="brand-name">BRXDGE</span>
     </div>
     <div class="footer-links">
-      <a href="index.html#home">Home</a><a href="index.html#about">About</a><a href="#roster">Talent</a>
-      <a href="index.html#what-we-do">Services</a><a href="index.html#contact">Contact</a>
+      <a href="/home">Home</a><a href="/about">About</a><a href="#roster">Talent</a>
+      <a href="/services">Services</a><a href="/contact">Contact</a>
       <button type="button" class="footer-faq-link" id="faqTrigger" aria-expanded="false" aria-controls="faqPanel">FAQ</button>
     </div>
   </div>
@@ -970,8 +970,8 @@
       </div>
 
       <div class="footer-links">
-        <a href="index.html#home">Home</a><a href="index.html#about">About</a>
-        <a href="index.html#what-we-do">Services</a><a href="index.html#contact">Contact</a>
+        <a href="/home">Home</a><a href="/about">About</a>
+        <a href="/services">Services</a><a href="/contact">Contact</a>
       </div>
     </div>
     <p class="fineprint wrap">© 2026 BRXDGE. Brxdge to possibilities.</p>
@@ -1277,7 +1277,7 @@
      in script.js. -->
 <script src="config.js?v=2"></script>
 <script src="talent-wizard.js?v=3"></script>
-<script src="script.js?v=56"></script>
+<script src="script.js?v=57"></script>
 <!-- Animated 3D brand mark (hero) — separate module so a WebGL/module
      failure can never take script.js's markup/roster/admin logic down
      with it. Self-hosted three.js build in assets/vendor/, no CDN. -->
