@@ -208,6 +208,42 @@ app.get('/', (req, res, next) => {
   });
 });
 
+// --- CLEAN SECTION/PAGE URLS (client revision: the address bar was showing
+// brxdge.ca/index.html#about or brxdge.ca/talent.html — wanted brxdge.ca/about,
+// brxdge.ca/talent instead, with no #hash and no .html anywhere) ---
+//
+// index.html is still one physical page with plain #id section anchors
+// under the hood; these routes just mean a direct load, refresh, or shared
+// link at one of these clean paths gets the right file instead of a 404.
+// The actual same-page scrolling + address-bar swap while the page is
+// already open is client-side (see SECTION_ROUTES/navigateToRoute() next
+// to scrollToSection() in script.js) — these routes are what makes that
+// same clean path also work with no JS at all (a fresh tab, a shared link,
+// hitting refresh).
+const CLEAN_SECTION_ROUTES = ['home', 'about', 'services', 'contact'];
+CLEAN_SECTION_ROUTES.forEach(route => {
+  app.get(`/${route}`, (req, res) => {
+    // Same no-cache policy as the HTML branch of staticCacheHeaders below —
+    // these responses bypass express.static entirely (sendFile, not a
+    // static-dir lookup), so they'd otherwise skip that policy and let a
+    // browser cache this past the next deploy's bumped script.js?v=N/
+    // style.css?v=N.
+    res.set('Cache-Control', 'no-cache');
+    res.sendFile(INDEX_HTML_PATH);
+  });
+});
+const TALENT_HTML_PATH = path.join(__dirname, '..', 'talent.html');
+app.get('/talent', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(TALENT_HTML_PATH);
+});
+
+// Anything that already linked to the old *.html forms (an old bookmark, a
+// search result indexed before this change) still resolves — it just lands
+// on the new clean path instead of keeping the old one in the address bar.
+app.get('/index.html', (req, res) => res.redirect(301, '/home'));
+app.get('/talent.html', (req, res) => res.redirect(301, '/talent'));
+
 // Serve the frontend (brxdge.html, style.css, script.js, and the assets/
 // folder with card images) from the project root, one level up from this
 // talent-backend folder.
