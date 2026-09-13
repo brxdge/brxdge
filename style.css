@@ -94,6 +94,14 @@
 }
 .services-intro .hero-title{
   font-size: clamp(80px, 12vw, 144px);
+  /* Client revision: the headline used to be just two lines of markup
+     ("BRIDGING TALENT TO" / "BIGGER OPPORTUNITIES") that then wrapped on
+     their own wherever the browser felt like breaking them, landing on 4
+     visual lines at most desktop widths. Client wanted exactly 3 fixed
+     lines instead ("BRIDGING TALENT" / "TO BIGGER" / "OPPORTUNITIES") —
+     see the extra .hero-title-3line rule right below this, which sizes
+     down specifically for that fixed 3-line grouping so its longest line
+     ("BRIDGING TALENT") never wraps a 4th line back in. */
   /* Client revision: "the fonts in the phone is thinner" — this was asking
      for 1000, but Bricolage Grotesque is only loaded up to weight 800 (see
      the fonts.googleapis.com link in <head>), so the browser was silently
@@ -104,6 +112,14 @@
      weight matters more for legibility/impact. */
   font-weight: 900;
   line-height: 1.02;
+}
+/* Sized down from the base 144px/80px clamp above specifically so
+   "BRIDGING TALENT" (the longest of the 3 fixed lines) stays on one line
+   at both ends of that clamp — the base size was tuned for whatever the
+   browser wrapped a single long run of words into, which no longer
+   applies now that each line is fixed markup instead. */
+.services-intro .hero-title-3line{
+  font-size: clamp(74px, 7.34vw, 94px);
 }
 .services-intro .hero-title em{
   font-style: normal;
@@ -134,6 +150,7 @@
 @media (max-width: 760px){
   .services-intro{ margin-bottom: 24px; }
   .services-intro .hero-title{ font-size: clamp(40px, 10vw, 58px); }
+  .services-intro .hero-title-3line{ font-size: clamp(27px, 9vw, 44px); }
   .services-intro p.lede{ font-size: 16px; margin-top: 14px; }
   /* Trimmed from the 44px desktop value — see the .hero padding comment
      above, same "buttons off the first screen" fix. */
@@ -704,6 +721,7 @@
 .hero-anim.play .hero-title-line{ opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
 .hero-title-mask:nth-of-type(1) .hero-title-line{ transition-delay: 0.12s; }
 .hero-title-mask:nth-of-type(2) .hero-title-line{ transition-delay: 0.36s; }
+.hero-title-mask:nth-of-type(3) .hero-title-line{ transition-delay: 0.60s; }
 
 /* Initial state: dramatically offset; direction depends on data-reveal.
    Uses only transform + opacity (no filter/3D-perspective) so the browser
